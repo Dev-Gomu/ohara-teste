@@ -23,9 +23,9 @@ function validar({ titulo, tipo = 'aula', inicio, fim }) {
   return { titulo: limpo, tipo, inicio: i, fim: f };
 }
 
-export function criarAula(estado, disciplinaId, dados, agora) {
+export function criarAula(estado, disciplinaId, dados, agora, icsUid = null) {
   if (!ativas(estado.disciplinas).some((d) => d.id === disciplinaId)) throw new Error('A matéria não existe.');
-  const aula = { id: proximoId(estado.aulas), disciplina_id: disciplinaId, ...validar(dados), anotacoes: '', criado_em: agora, excluido_em: null };
+  const aula = { id: proximoId(estado.aulas), disciplina_id: disciplinaId, ...validar(dados), anotacoes: '', ics_uid: icsUid, criado_em: agora, excluido_em: null };
   return { estado: { ...estado, aulas: [...estado.aulas, aula] }, aula };
 }
 

@@ -1,5 +1,5 @@
 // Núcleo (regras puras, sem I/O): Matérias (disciplinas).
-// O estado é { disciplinas, aulas, arquivos, marcadores, blocos } (listas); cada função devolve um estado novo e nunca altera o recebido.
+// O estado é { disciplinas, aulas, arquivos, marcadores, blocos, provas, tarefas, cartoes } (listas); cada função devolve um estado novo e nunca altera o recebido.
 // Exclusão = lixeira (`excluido_em`). Excluir uma matéria leva as aulas dela junto, com o mesmo instante,
 // e restaurar traz de volta só as que foram junto (as que o usuário já tinha excluído antes continuam na lixeira).
 
@@ -9,7 +9,7 @@ export const LIMITE_NOME = 80;
 const COR = /^#[0-9a-fA-F]{6}$/;
 
 export function estadoVazio() {
-  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [] };
+  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], tarefas: [], cartoes: [] };
 }
 
 export function proximoId(lista) {
@@ -36,7 +36,7 @@ export function validarCor(cor) {
 }
 
 export function criarMateria(estado, { nome, cor }, agora) {
-  const d = { id: proximoId(estado.disciplinas), nome: validarNomeMateria(estado, nome), cor: validarCor(cor), criado_em: agora, excluido_em: null };
+  const d = { id: proximoId(estado.disciplinas), nome: validarNomeMateria(estado, nome), cor: validarCor(cor), dificuldade: 2, criado_em: agora, excluido_em: null };
   return { estado: { ...estado, disciplinas: [...estado.disciplinas, d] }, materia: d };
 }
 
@@ -46,11 +46,17 @@ function trocar(estado, id, mudar) {
   return { ...estado, disciplinas: estado.disciplinas.map((d) => (d.id === id ? mudar(d) : d)) };
 }
 
-export function alterarMateria(estado, id, { nome, cor }) {
+export function validarDificuldade(n) {
+  if (![1, 2, 3].includes(Number(n))) throw new Error('A dificuldade vai de 1 (fácil) a 3 (difícil).');
+  return Number(n);
+}
+
+export function alterarMateria(estado, id, { nome, cor, dificuldade }) {
   return trocar(estado, id, (d) => ({
     ...d,
     nome: nome === undefined ? d.nome : validarNomeMateria(estado, nome, id),
     cor: cor === undefined ? d.cor : validarCor(cor),
+    dificuldade: dificuldade === undefined ? (d.dificuldade ?? 2) : validarDificuldade(dificuldade),
   }));
 }
 
@@ -79,7 +85,7 @@ export function restaurarMateria(estado, id) {
 
 /** Quanto a lixeira tem, para a confirmação "Apagar de vez N matérias, M aulas e K arquivos?". */
 export function contarLixeira(estado) {
-  return { disciplinas: naLixeira(estado.disciplinas).length, aulas: naLixeira(estado.aulas).length, arquivos: naLixeira(estado.arquivos ?? []).length };
+  return { disciplinas: naLixeira(estado.disciplinas).length, aulas: naLixeira(estado.aulas).length, arquivos: naLixeira(estado.arquivos ?? []).length, cartoes: naLixeira(estado.cartoes ?? []).length, provas: naLixeira(estado.provas ?? []).length };
 }
 
 /**
@@ -89,23 +95,33 @@ export function contarLixeira(estado) {
 export function esvaziarLixeira(estado) {
   const apagados = contarLixeira(estado);
   const disciplinasFora = new Set(naLixeira(estado.disciplinas).map((d) => d.id));
+  const disciplinas = ativas(estado.disciplinas);
+  const vivasD = new Set(disciplinas.map((d) => d.id));
   const aulas = ativas(estado.aulas).filter((a) => !disciplinasFora.has(a.disciplina_id));
   const aulasVivas = new Set(aulas.map((a) => a.id));
   const arquivosAntes = estado.arquivos ?? [];
   const arquivos = ativas(arquivosAntes).filter((a) => aulasVivas.has(a.aula_id));
   const vivos = new Set(arquivos.map((a) => a.id));
+  const cartoesAntes = estado.cartoes ?? [];
+  const cartoes = ativas(cartoesAntes).filter((c) => aulasVivas.has(c.aula_id));
+  const cartoesVivos = new Set(cartoes.map((c) => c.id));
   return {
     estado: {
-      disciplinas: ativas(estado.disciplinas),
-      aulas,
-      arquivos,
+      disciplinas, aulas, arquivos, cartoes,
       marcadores: ativas(estado.marcadores ?? []).filter((m) => aulasVivas.has(m.aula_id)),
       blocos: estado.blocos ?? [],
+      provas: ativas(estado.provas ?? []).filter((p) => vivasD.has(p.disciplina_id)),
+      tarefas: (estado.tarefas ?? []).filter((t) => !t.excluido_em && vivasD.has(t.disciplina_id) && (t.aula_id == null || aulasVivas.has(t.aula_id))),
     },
     apagados,
-    arquivosApagados: arquivosAntes.filter((a) => !vivos.has(a.id)).map((a) => a.id),
+    // chaves dos conteúdos guardados à parte (arquivos anexados e imagens de cartões) que deixam de existir
+    arquivosApagados: [...arquivosAntes.filter((a) => !vivos.has(a.id)).map((a) => a.id),
+      ...cartoesAntes.filter((c) => c.tem_imagem && !cartoesVivos.has(c.id)).map((c) => chaveImagemCartao(c.id))],
   };
 }
+
+/** Chave, no armazenamento de conteúdos, da imagem de um cartão (fica acima da faixa dos ids de arquivos anexados). */
+export const chaveImagemCartao = (cartaoId) => 1000000 + cartaoId;
 
 // Cores oferecidas ao criar uma matéria. Na tela, cada uma vira a variável do tema (--m1..--m5), que muda no escuro.
 export const PALETA = ['#9a5a5e', '#7a8794', '#8a8f78', '#5e7f78', '#8b7aa0'];
@@ -132,5 +148,7 @@ export function itensDaLixeira(estado) {
     materias: naLixeira(estado.disciplinas).sort(porData),
     aulas: naLixeira(estado.aulas).filter((a) => ativasIds.has(a.disciplina_id)).sort(porData),
     arquivos: naLixeira(estado.arquivos ?? []).filter((f) => aulasAtivas.has(f.aula_id)).sort(porData),
+    cartoes: naLixeira(estado.cartoes ?? []).filter((c) => aulasAtivas.has(c.aula_id)).sort(porData),
+    provas: naLixeira(estado.provas ?? []).filter((p) => ativasIds.has(p.disciplina_id)).sort(porData),
   };
 }

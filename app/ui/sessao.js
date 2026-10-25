@@ -7,6 +7,11 @@ import { carregarEstado, salvarEstado, gravarAnotacao, inserirVersao, listarVers
 import { anexarArquivo } from '../nucleo/arquivos.js';
 import { esvaziarLixeira } from '../nucleo/materias.js';
 import { registrarBloco } from '../nucleo/foco.js';
+import { reconciliarPlano, planoMudou, marcarTarefaFeita, lerDisponibilidade, validarDisponibilidade } from '../nucleo/planejador.js';
+import { criarCartao, cartoesParaExportar, marcarExportados } from '../nucleo/cartoes.js';
+import { LIMITE_IMAGEM_BYTES } from '../nucleo/cartoes.js';
+import { chaveImagemCartao } from '../nucleo/materias.js';
+import { gerarApkg } from '../armazenamento/apkg.js';
 import { atualizarAnotacao, deveGuardarVersao, textoDoDelta, versoesParaApagar, VERSOES_MAX } from '../nucleo/anotacoes.js';
 import { criarGravador } from '../armazenamento/gravador.js';
 
@@ -35,10 +40,45 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
     estado: () => estado,
     /** Grava os blocos concluídos (da Sala de Foco) no estado. */
     registrarBlocos(registros, agora = new Date().toISOString()) {
-      let novo = estado; for (const r of registros) novo = registrarBloco(novo, r, agora);
+      let novo = estado;
+      for (const r of registros) { novo = registrarBloco(novo, r, agora); if (r.tarefa_id && r.estado === 'concluido' && novo.tarefas.some((t) => t.id === r.tarefa_id)) novo = marcarTarefaFeita(novo, r.tarefa_id, agora); }
       salvarEstado(db, novo); estado = novo; gravador.agendar();
     },
     /** Sessão de foco em andamento (guardada no banco para sobreviver a recarregar a página). */
+    /** Põe o plano em dia (replaneja atrasos, tira o que deixou de valer). Chamar ao abrir Hoje, Planejar e Foco. */
+    sincronizarPlano(hoje, agora = new Date().toISOString()) {
+      const novo = reconciliarPlano(estado, hoje, lerDisponibilidade(lerCfg('disponibilidade')), lerCfg('inicio_uso'), agora);
+      if (planoMudou(estado.tarefas, novo)) { estado = { ...estado, tarefas: novo }; salvarEstado(db, estado); gravador.agendar(); }
+    },
+    disponibilidade: () => lerDisponibilidade(lerCfg('disponibilidade')),
+    gravarDisponibilidade(lista) { gravarCfg('disponibilidade', JSON.stringify(validarDisponibilidade(lista))); },
+    /** Cria o cartão; a imagem (File) é guardada antes, para nunca ficar cartão apontando para imagem que não existe. */
+    async criarCartao(aulaId, dados, imagem = null) {
+      if (imagem && (!/^image\/(png|jpeg|webp|gif)$/.test(imagem.type) || imagem.size > LIMITE_IMAGEM_BYTES)) throw new Error('A imagem do cartão deve ser PNG, JPG, WEBP ou GIF de até 5 MB.');
+      const id = estado.cartoes.reduce((m, c) => Math.max(m, c.id), 0) + 1;
+      const novo = criarCartao(estado, aulaId, { ...dados, temImagem: !!imagem }, new Date().toISOString(), globalThis.crypto.randomUUID()).estado;
+      if (imagem) await armazenamento.gravarArquivo(chaveImagemCartao(id), imagem);
+      salvarEstado(db, novo); estado = novo; gravador.agendar();
+    },
+    async trocarImagemCartao(id, imagem) {
+      if (!/^image\/(png|jpeg|webp|gif)$/.test(imagem.type) || imagem.size > LIMITE_IMAGEM_BYTES) throw new Error('A imagem do cartão deve ser PNG, JPG, WEBP ou GIF de até 5 MB.');
+      await armazenamento.gravarArquivo(chaveImagemCartao(id), imagem);
+    },
+    lerImagemCartao: (id) => armazenamento.lerArquivo(chaveImagemCartao(id)),
+    removerImagemCartao: (id) => armazenamento.apagarArquivo(chaveImagemCartao(id)),
+    /** Gera o .apkg dos cartões (todos, de uma matéria ou de uma aula) e marca como enviados. Devolve { bytes, nome, total }. */
+    async exportarCartoes(filtro = {}) {
+      const itens = cartoesParaExportar(estado, filtro), imagens = new Map();
+      for (const { cartao } of itens) {
+        if (!cartao.tem_imagem) continue;
+        const b = await armazenamento.lerArquivo(chaveImagemCartao(cartao.id)); if (!b) continue;
+        imagens.set(cartao.id, { bytes: new Uint8Array(await b.arrayBuffer()), extensao: ({ 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' })[b.type] ?? 'png' });
+      }
+      const r = await gerarApkg(SQL, itens, imagens);
+      const novo = marcarExportados(estado, itens.map((i) => i.cartao.id), new Date().toISOString());
+      salvarEstado(db, novo); estado = novo; gravador.agendar();
+      return r;
+    },
     lerFocoAtivo() { try { return JSON.parse(lerCfg('foco_ativo') || 'null'); } catch { return null; } },
     gravarFocoAtivo(s) { gravarCfg('foco_ativo', JSON.stringify(s)); },
     /** `mudar(estado)` devolve o estado novo (ou lança Error com mensagem para o usuário). Só então grava. */

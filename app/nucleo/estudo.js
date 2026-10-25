@@ -48,13 +48,14 @@ export function resumoDaSemana(blocos, hoje) {
 }
 
 /** Células do calendário de um mês (ano, mes 1–12): { vazio } para o recuo da primeira semana, ou { dia, n, situacao, hoje, aulas: [disciplina_id] }. */
-export function calendarioDoMes(ano, mes, { blocos, aulas = [], hoje, metaMin, inicioUso }) {
+export function calendarioDoMes(ano, mes, { blocos, aulas = [], provas = [], hoje, metaMin, inicioUso }) {
   const min = minutosPorDia(blocos), p = (n) => String(n).padStart(2, '0');
   const primeiro = `${ano}-${p(mes)}-01`, celulas = [];
   for (let i = 0; i < diaDaSemana(primeiro); i++) celulas.push({ vazio: true });
   for (let n = 1; n <= diasDoMes(ano, mes); n++) {
     const dia = `${ano}-${p(mes)}-${p(n)}`;
     celulas.push({ dia, n, situacao: situacaoDoDia(dia, min, hoje, metaMin, inicioUso), hoje: dia === hoje,
+      prova: provas.some((p) => !p.excluido_em && p.data === dia),
       aulas: aulas.filter((a) => !a.excluido_em && a.inicio && a.inicio.slice(0, 10) === dia).map((a) => a.disciplina_id) });
   }
   return celulas;

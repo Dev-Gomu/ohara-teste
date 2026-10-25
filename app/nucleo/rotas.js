@@ -4,7 +4,9 @@ export const TELAS = [
   { chave: 'hoje', nome: 'Hoje' },
   { chave: 'materias', nome: 'Matérias' },
   { chave: 'foco', nome: 'Foco' },
+  { chave: 'planejar', nome: 'Planejar' },
   { chave: 'painel', nome: 'Painel' },
+  { chave: 'cartoes', nome: 'Cartões' },
   { chave: 'ajustes', nome: 'Ajustes' },
 ];
 
@@ -17,13 +19,14 @@ export function telaDoEndereco(hash) {
 }
 
 /**
- * Lê o endereço completo: #materias, #materias/3 (aulas da matéria 3), #aula/7 (aula 7).
+ * Lê o endereço completo: #materias, #materias/3 (aulas da matéria 3), #aula/7 (aula 7), #foco/5 (Sala de Foco com a tarefa 5).
  * `menu` é a entrada do menu que fica destacada naquela tela.
  */
 export function rotaDoEndereco(hash) {
   const [chave, id] = String(hash ?? '').replace(/^#\/?/, '').split('?')[0].split('/');
   const n = /^\d+$/.test(id ?? '') ? Number(id) : null;
   if (chave === 'materias' && n !== null) return { tela: 'materia', id: n, menu: 'materias' };
+  if (chave === 'foco' && n !== null) return { tela: 'foco', id: n, menu: 'foco' };
   if (chave === 'aula' && n !== null) return { tela: 'aula', id: n, menu: 'materias' };
   const tela = telaDoEndereco(hash);
   return { tela, id: null, menu: tela };

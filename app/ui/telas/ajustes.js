@@ -2,6 +2,8 @@
 import { escaparHtml, formatarBytes } from '../../nucleo/texto.js';
 import { itensDaLixeira, contarLixeira, restaurarMateria } from '../../nucleo/materias.js';
 import { restaurarArquivo } from '../../nucleo/arquivos.js';
+import { restaurarCartao } from '../../nucleo/cartoes.js';
+import { restaurarProva } from '../../nucleo/planejador.js';
 import { CONFIG_PADRAO, ROTULOS_CONFIG, lerConfigFoco, validarConfig } from '../../nucleo/foco.js';
 import { restaurarAula } from '../../nucleo/aulas.js';
 
@@ -12,9 +14,9 @@ export function desenharAjustes(raiz, ctx) {
 
   function desenhar() {
     const estado = ctx.sessao.estado();
-    const { materias, aulas, arquivos } = itensDaLixeira(estado);
+    const { materias, aulas, arquivos, cartoes, provas } = itensDaLixeira(estado);
     const total = contarLixeira(estado);
-    const vazia = !total.disciplinas && !total.aulas && !total.arquivos;
+    const vazia = !total.disciplinas && !total.aulas && !total.arquivos && !total.cartoes && !total.provas;
     raiz.innerHTML = '<h1>Ajustes</h1><p class="sub">Tema, lixeira e armazenamento.</p>' +
       `<div class="card bloco"><h2>Tema</h2><div class="acoes">` +
       ['claro', 'escuro'].map((t) => `<button class="btn peq ${document.documentElement.dataset.tema === t ? '' : 'sec'}" type="button" data-a="tema" data-tema="${t}">${t === 'claro' ? 'Claro' : 'Escuro'}</button>`).join('') +
@@ -25,8 +27,10 @@ export function desenharAjustes(raiz, ctx) {
         : materias.map((m) => `<div class="lin"><div class="t">${escaparHtml(m.nome)}<small>Matéria · com as aulas dela</small></div><button class="btn peq sec" type="button" data-a="rest-m" data-id="${m.id}">Restaurar</button></div>`).join('') +
           aulas.map((a) => `<div class="lin"><div class="t">${escaparHtml(a.titulo)}<small>${a.tipo === 'livro' ? 'Livro' : 'Aula'}</small></div><button class="btn peq sec" type="button" data-a="rest-a" data-id="${a.id}">Restaurar</button></div>`).join('') +
           arquivos.map((f) => `<div class="lin"><div class="t">${escaparHtml(f.nome)}<small>Arquivo anexado</small></div><button class="btn peq sec" type="button" data-a="rest-f" data-id="${f.id}">Restaurar</button></div>`).join('') +
+          cartoes.map((c) => `<div class="lin"><div class="t">${escaparHtml(c.frente.slice(0, 60))}<small>Cartão</small></div><button class="btn peq sec" type="button" data-a="rest-c" data-id="${c.id}">Restaurar</button></div>`).join('') +
+          provas.map((p) => `<div class="lin"><div class="t">${escaparHtml(p.titulo)}<small>Prova de ${escaparHtml(p.data)}</small></div><button class="btn peq sec" type="button" data-a="rest-p" data-id="${p.id}">Restaurar</button></div>`).join('') +
           (confirmando
-            ? `<div class="confirma"><p>Apagar de vez ${plural(total.disciplinas, 'matéria', 'matérias')} e ${plural(total.aulas, 'aula ou livro', 'aulas e livros')} e ${plural(total.arquivos, 'arquivo', 'arquivos')}? Não dá para desfazer.</p>` +
+            ? `<div class="confirma"><p>Apagar de vez ${plural(total.disciplinas, 'matéria', 'matérias')} e ${plural(total.aulas, 'aula ou livro', 'aulas e livros')}, ${plural(total.arquivos, 'arquivo', 'arquivos')}, ${plural(total.cartoes, 'cartão', 'cartões')} e ${plural(total.provas, 'prova', 'provas')}? Não dá para desfazer.</p>` +
               `<div class="acoes"><button class="btn peq ur" type="button" data-a="esvaziar-sim">Apagar de vez</button><button class="btn peq sec" type="button" data-a="esvaziar-nao">Cancelar</button></div></div>`
             : `<p><button class="btn peq sec" type="button" data-a="esvaziar">Esvaziar lixeira</button></p>`)) +
       `</div>` +
@@ -88,6 +92,8 @@ export function desenharAjustes(raiz, ctx) {
       case 'rest-m': restaurar(estado.disciplinas.find((d) => d.id === id)?.nome, (e) => restaurarMateria(e, id)); break;
       case 'rest-a': restaurar(estado.aulas.find((a) => a.id === id)?.titulo, (e) => restaurarAula(e, id)); break;
       case 'rest-f': restaurar(estado.arquivos.find((f) => f.id === id)?.nome, (e) => restaurarArquivo(e, id)); break;
+      case 'rest-c': restaurar(estado.cartoes.find((c) => c.id === id)?.frente.slice(0, 30), (e) => restaurarCartao(e, id)); break;
+      case 'rest-p': restaurar(estado.provas.find((p) => p.id === id)?.titulo, (e) => restaurarProva(e, id)); break;
       case 'esvaziar': confirmando = true; desenhar(); break;
       case 'esvaziar-nao': confirmando = false; desenhar(); break;
       case 'esvaziar-sim': {

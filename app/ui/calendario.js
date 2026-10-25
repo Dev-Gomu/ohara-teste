@@ -8,10 +8,10 @@ const CLASSE = { meta: 'e', parcial: 'pa', nao: 'n', antes: 'ant', futuro: 'fut'
 
 export function htmlCalendario({ ano, mes, estado, hoje, metaMin, inicioUso }) {
   const cores = new Map(estado.disciplinas.map((d) => [d.id, corCss(d.cor)]));
-  const celulas = calendarioDoMes(ano, mes, { blocos: estado.blocos, aulas: estado.aulas.filter((a) => !a.excluido_em), hoje, metaMin, inicioUso });
+  const celulas = calendarioDoMes(ano, mes, { blocos: estado.blocos, aulas: estado.aulas.filter((a) => !a.excluido_em), provas: estado.provas, hoje, metaMin, inicioUso });
   const dias = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map((x) => `<b>${x}</b>`).join('');
   const corpo = celulas.map((c) => c.vazio ? '<span class="v"></span>'
-    : `<span class="${c.hoje ? 'h' : CLASSE[c.situacao]}" title="${c.dia}">${c.n}${c.aulas.length ? `<i class="pts">${[...new Set(c.aulas)].slice(0, 3).map((id) => `<em style="background:${cores.get(id) ?? 'var(--tx2)'}"></em>`).join('')}</i>` : ''}</span>`).join('');
+    : `<span class="${c.hoje ? 'h' : CLASSE[c.situacao]}" title="${c.dia}">${c.n}${c.prova ? '<u class="prova" title="Prova"></u>' : ''}${c.aulas.length ? `<i class="pts">${[...new Set(c.aulas)].slice(0, 3).map((id) => `<em style="background:${cores.get(id) ?? 'var(--tx2)'}"></em>`).join('')}</i>` : ''}</span>`).join('');
   return `<div class="calh"><button type="button" data-mes="-1" aria-label="Mês anterior">‹</button><b>${MESES[mes - 1][0].toUpperCase() + MESES[mes - 1].slice(1)} ${ano}</b><button type="button" data-mes="1" aria-label="Próximo mês">›</button></div><div class="cal">${dias}${corpo}</div>`;
 }
 

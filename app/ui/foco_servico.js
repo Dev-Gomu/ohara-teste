@@ -47,10 +47,10 @@ export function criarServicoFoco(sessao, { aviso = () => {}, agora = () => Date.
     ativa: () => ativa,
     config,
     ouvir(f) { ouvintes.add(f); return () => ouvintes.delete(f); },
-    iniciar({ tarefa, disciplinaId, tipo = 'foco', minutos }) {
+    iniciar({ tarefa, disciplinaId, tipo = 'foco', minutos, tarefaId = null }) {
       if (ativa) throw new Error('Já existe um bloco em andamento.');
       const c = config();
-      ativa = iniciarBloco(c, { tarefa, disciplinaId, tipo }, agora(), ciclo, minutos ?? c.foco_min);
+      ativa = iniciarBloco(c, { tarefa, disciplinaId, tipo, tarefaId }, agora(), ciclo, minutos ?? c.foco_min);
       guardar(); avisar();
     },
     /** Abandona o bloco; devolve os minutos registrados (0 se foi menos de 1 minuto). */

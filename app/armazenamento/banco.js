@@ -29,6 +29,21 @@ export const MIGRACOES = [
      id INTEGER PRIMARY KEY, disciplina_id INTEGER, tarefa TEXT NOT NULL DEFAULT '', tipo TEXT NOT NULL DEFAULT 'foco',
      dia TEXT NOT NULL, inicio TEXT NOT NULL, minutos_previstos INTEGER NOT NULL, minutos_feitos INTEGER NOT NULL,
      estado TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);`,
+  // v4 (Etapas 5 e 6): planejador (dificuldade, provas, tarefas do plano, código do evento .ics) e cartões
+  `ALTER TABLE disciplina ADD COLUMN dificuldade INTEGER NOT NULL DEFAULT 2;
+   ALTER TABLE aula ADD COLUMN ics_uid TEXT;
+   ALTER TABLE bloco_foco ADD COLUMN tarefa_id INTEGER;
+   CREATE TABLE prova (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, titulo TEXT NOT NULL, data TEXT NOT NULL,
+     aulas TEXT NOT NULL DEFAULT '[]', criado_em TEXT NOT NULL, excluido_em TEXT);
+   CREATE TABLE tarefa (
+     id INTEGER PRIMARY KEY, chave TEXT NOT NULL, tipo TEXT NOT NULL, disciplina_id INTEGER NOT NULL, aula_id INTEGER, prova_id INTEGER,
+     titulo TEXT NOT NULL, minutos INTEGER NOT NULL, dia TEXT NOT NULL, dia_original TEXT NOT NULL, sem_vaga INTEGER NOT NULL DEFAULT 0,
+     feita_em TEXT, criado_em TEXT NOT NULL, excluido_em TEXT);
+   CREATE TABLE cartao (
+     id INTEGER PRIMARY KEY, aula_id INTEGER NOT NULL REFERENCES aula(id), pagina INTEGER, frente TEXT NOT NULL, verso TEXT NOT NULL,
+     etiquetas TEXT NOT NULL DEFAULT '', tem_imagem INTEGER NOT NULL DEFAULT 0, guid TEXT NOT NULL,
+     criado_em TEXT NOT NULL, atualizado_em TEXT NOT NULL, exportado_em TEXT, excluido_em TEXT);`,
 ];
 
 export function versaoDoBanco(db) {

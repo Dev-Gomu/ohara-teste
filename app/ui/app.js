@@ -9,11 +9,15 @@ import { desenharAjustes } from './telas/ajustes.js';
 import { desenharHoje } from './telas/hoje.js';
 import { desenharFoco } from './telas/foco.js';
 import { desenharPainel } from './telas/painel.js';
+import { desenharPlanejar } from './telas/planejar.js';
+import { desenharCartoes } from './telas/cartoes.js';
 import { criarServicoFoco } from './foco_servico.js';
 
 const ICONES = {
   hoje: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
   materias: '<path d="M3 7h6l2 2h10v10H3z"/>',
+  planejar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  cartoes: '<rect x="3" y="6" width="14" height="11" rx="2"/><path d="M7 20h14V9"/>',
   foco: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
   painel: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   ajustes: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
@@ -26,6 +30,8 @@ const TEXTOS = {
   ajustes: ['Ajustes', 'Em construção.'],
   foco: ['Foco', 'Em construção.'],
   painel: ['Painel', 'Em construção.'],
+  planejar: ['Planejar', 'Em construção.'],
+  cartoes: ['Cartões', 'Em construção.'],
 };
 
 const CHAVE_TEMA = 'ohara.tema';
@@ -63,7 +69,9 @@ function desenhar() {
   else if (rota.tela === 'aula') limpar = desenharAula(raiz, ctx, rota.id);
   else if (rota.tela === 'ajustes') desenharAjustes(raiz, ctx);
   else if (rota.tela === 'hoje') limpar = desenharHoje(raiz, ctx);
-  else if (rota.tela === 'foco') limpar = desenharFoco(raiz, ctx);
+  else if (rota.tela === 'foco') limpar = desenharFoco(raiz, ctx, rota.id);
+  else if (rota.tela === 'planejar') limpar = desenharPlanejar(raiz, ctx);
+  else if (rota.tela === 'cartoes') limpar = desenharCartoes(raiz, ctx);
   else if (rota.tela === 'painel') limpar = desenharPainel(raiz, ctx);
   else raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(texto)}</p>`;
 }

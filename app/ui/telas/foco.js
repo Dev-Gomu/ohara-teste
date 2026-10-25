@@ -5,7 +5,7 @@ import { formatarRelogio, restanteMs, progresso } from '../../nucleo/foco.js';
 import { sequencia, horasMinutos } from '../../nucleo/estudo.js';
 import { diaDe } from '../foco_servico.js';
 
-export function desenharFoco(raiz, ctx) {
+export function desenharFoco(raiz, ctx, tarefaId = null) {
   const { sessao, foco } = ctx;
   let confirmando = false, erro = '';
   const nomeMateria = (id) => sessao.estado().disciplinas.find((d) => d.id === id);
@@ -26,12 +26,14 @@ export function desenharFoco(raiz, ctx) {
   }
 
   function ocioso(cfg) {
+    const alvo = tarefaId == null ? null : sessao.estado().tarefas.find((t) => t.id === tarefaId && !t.feita_em && !t.excluido_em);
     const metaMin = cfg.meta_diaria_min, sq = sequencia(sessao.estado().blocos, diaDe(Date.now()), metaMin);
     const mats = ativas(sessao.estado().disciplinas);
     return `<p class="sub">Hoje: ${horasMinutos(sq.minutosHoje)} de ${horasMinutos(metaMin)}${sq.dias ? ` · sequência de ${sq.dias} ${sq.dias === 1 ? 'dia' : 'dias'}` : ''}</p>` +
-      `<form class="card form" id="novo"><label class="c">Matéria<select class="in" name="materia"><option value="">Sem matéria</option>${mats.map((m) => `<option value="${m.id}">${escaparHtml(m.nome)}</option>`).join('')}</select></label>` +
-      `<label class="c">O que vai estudar<input class="in" name="tarefa" maxlength="120" autocomplete="off" placeholder="Ex.: ler os slides da aula 4"></label>` +
-      `<label class="c">Minutos<input class="in" name="minutos" type="number" min="1" max="180" value="${cfg.foco_min}" inputmode="numeric"></label>` +
+      `<form class="card form" id="novo"><label class="c">Matéria<select class="in" name="materia"><option value="">Sem matéria</option>${mats.map((m) => `<option value="${m.id}" ${alvo?.disciplina_id === m.id ? 'selected' : ''}>${escaparHtml(m.nome)}</option>`).join('')}</select></label>` +
+      `<label class="c">O que vai estudar<input class="in" name="tarefa" maxlength="120" autocomplete="off" value="${escaparHtml(alvo?.titulo ?? '')}" placeholder="Ex.: ler os slides da aula 4"></label>` +
+      `<label class="c">Minutos<input class="in" name="minutos" type="number" min="1" max="180" value="${alvo ? Math.max(alvo.minutos, 1) : cfg.foco_min}" inputmode="numeric"></label>` +
+      (alvo ? `<input type="hidden" name="tarefa_id" value="${alvo.id}"><p class="sub" style="margin:0">Tarefa do plano: ao concluir o bloco ela é marcada como feita.</p>` : '') +
       (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '') +
       `<div class="acoes"><button class="btn" type="submit" value="foco">Começar bloco</button><button class="btn sec" type="submit" value="anki">Revisão no Anki</button></div></form>`;
   }
@@ -49,7 +51,7 @@ export function desenharFoco(raiz, ctx) {
     ev.preventDefault();
     const f = new FormData(ev.target), tipo = ev.submitter?.value === 'anki' ? 'anki' : 'foco';
     try {
-      foco.iniciar({ tarefa: f.get('tarefa') || (tipo === 'anki' ? 'Revisão no Anki' : ''), disciplinaId: f.get('materia') ? Number(f.get('materia')) : null, tipo, minutos: Number(f.get('minutos')) });
+      foco.iniciar({ tarefa: f.get('tarefa') || (tipo === 'anki' ? 'Revisão no Anki' : ''), disciplinaId: f.get('materia') ? Number(f.get('materia')) : null, tipo, minutos: Number(f.get('minutos')), tarefaId: f.get('tarefa_id') ? Number(f.get('tarefa_id')) : null });
       erro = '';
     } catch (e) { erro = e.message; }
     desenhar();

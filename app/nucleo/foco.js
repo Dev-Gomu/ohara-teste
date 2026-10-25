@@ -29,10 +29,10 @@ export function lerConfigFoco(lerValor) {
 const MIN = 60000;
 
 /** Começa um bloco de foco. `tipo`: 'foco' ou 'anki' (Revisão no Anki, que também conta como estudo). */
-export function iniciarBloco(config, { tarefa = '', disciplinaId = null, tipo = 'foco' }, agoraMs, ciclo = 0, minutos = config.foco_min) {
+export function iniciarBloco(config, { tarefa = '', disciplinaId = null, tipo = 'foco', tarefaId = null }, agoraMs, ciclo = 0, minutos = config.foco_min) {
   if (!['foco', 'anki'].includes(tipo)) throw new Error('Tipo de bloco inválido.');
   const m = validarConfig('foco_min', minutos);
-  return { fase: 'foco', inicio_ms: agoraMs, duracao_ms: m * MIN, tipo, tarefa: normalizarNome(tarefa).slice(0, 120), disciplina_id: disciplinaId, ciclo };
+  return { fase: 'foco', inicio_ms: agoraMs, duracao_ms: m * MIN, tipo, tarefa: normalizarNome(tarefa).slice(0, 120), disciplina_id: disciplinaId, tarefa_id: tarefaId, ciclo };
 }
 
 export const restanteMs = (s, agoraMs) => Math.max(0, s.inicio_ms + s.duracao_ms - agoraMs);
@@ -46,7 +46,7 @@ export function formatarRelogio(ms) {
 }
 
 function registroDe(s, feitos, estado, diaLocal) {
-  return { disciplina_id: s.disciplina_id, tarefa: s.tarefa, tipo: s.tipo, dia: diaLocal, inicio: new Date(s.inicio_ms).toISOString(), minutos_previstos: Math.round(s.duracao_ms / MIN), minutos_feitos: feitos, estado };
+  return { disciplina_id: s.disciplina_id, tarefa: s.tarefa, tarefa_id: s.tarefa_id ?? null, tipo: s.tipo, dia: diaLocal, inicio: new Date(s.inicio_ms).toISOString(), minutos_previstos: Math.round(s.duracao_ms / MIN), minutos_feitos: feitos, estado };
 }
 
 /**
@@ -61,7 +61,7 @@ export function avancar(sessao, agoraMs, config, diaDe) {
     if (s.fase === 'foco') {
       registros.push(registroDe(s, Math.round(s.duracao_ms / MIN), 'concluido', diaDe(s.inicio_ms)));
       const ciclo = s.ciclo + 1, longa = ciclo % config.blocos_ate_pausa_longa === 0;
-      s = { fase: 'pausa', inicio_ms: s.inicio_ms + s.duracao_ms, duracao_ms: (longa ? config.pausa_longa_min : config.pausa_min) * MIN, tipo: s.tipo, tarefa: s.tarefa, disciplina_id: s.disciplina_id, ciclo, longa };
+      s = { fase: 'pausa', inicio_ms: s.inicio_ms + s.duracao_ms, duracao_ms: (longa ? config.pausa_longa_min : config.pausa_min) * MIN, tipo: s.tipo, tarefa: s.tarefa, tarefa_id: s.tarefa_id ?? null, disciplina_id: s.disciplina_id, ciclo, longa };
     } else s = null;
   }
   return { sessao: s, registros };

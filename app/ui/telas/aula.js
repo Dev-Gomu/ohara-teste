@@ -6,6 +6,7 @@ import { descreverHorario } from '../../nucleo/aulas.js';
 import { arquivosDaAula, excluirArquivo, restaurarArquivo, ehPdf } from '../../nucleo/arquivos.js';
 import { criarMarcador, removerMarcador, marcadoresDaAula, descreverMarcador } from '../../nucleo/marcadores.js';
 import { textoDoDelta } from '../../nucleo/anotacoes.js';
+import { cartoesDaAula, excluirCartao, restaurarCartao, importarTexto } from '../../nucleo/cartoes.js';
 import { criarLeitor } from '../leitor.js';
 
 const carregarScript = (src) => new Promise((ok, erro) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => erro(new Error('Não consegui carregar o editor.')); document.head.appendChild(s); });
@@ -29,7 +30,7 @@ export function desenharAula(raiz, ctx, aulaId) {
   document.title = `${aula.titulo} · Ohara`;
   raiz.className = 'cheia';
 
-  let leitor = null, quill = null, arquivoAtual = null, temporizador = null, pendente = false, aba = 'slide', historicoAberto = false;
+  let modoCartoes = false, rascunho = { frente: '', verso: '', etiquetas: '', pagina: null, marcadorId: null }, ultimaSelecao = '', erroCartao = '', leitor = null, quill = null, arquivoAtual = null, temporizador = null, pendente = false, aba = 'slide', historicoAberto = false;
   const lista = () => arquivosDaAula(sessao.estado(), aulaId);
 
   raiz.innerHTML = `<div class="topo"><div class="tt"><a class="voltar" href="#materias/${materia.id}">← ${escaparHtml(materia.nome)}</a>` +
@@ -41,8 +42,8 @@ export function desenharAula(raiz, ctx, aulaId) {
     `<button type="button" class="btn peq sec" id="remover" hidden>Remover</button><span class="esp"></span><span id="pag">—</span><button type="button" id="menos" aria-label="Diminuir">−</button><span id="zoom">100%</span><button type="button" id="mais" aria-label="Aumentar">+</button></div>` +
     `<p class="erro" id="erro-slide" hidden></p><div id="leitor"><p class="vazio" id="sem-arq"></p></div></section>` +
     `<section class="painel" id="p-notas"><div class="cab"><button type="button" class="btn peq" id="marcar" title="Ctrl+M">Marcar ◆</button>` +
-    `<span class="esp" id="salvo"></span><button type="button" class="btn peq sec" id="hist">Histórico</button></div>` +
-    `<div id="hist-lista" hidden></div><div id="editor"></div><div class="marc"><h2>Marcados na aula</h2><div id="marcados"></div></div></section></div>`;
+    `<span class="esp" id="salvo"></span><button type="button" class="btn peq sec" id="modo">Cartões</button><button type="button" class="btn peq sec" id="hist">Histórico</button></div>` +
+    `<div id="hist-lista" hidden></div><div id="cartoes-modo" hidden></div><div id="editor"></div><div class="marc"><h2>Marcados na aula</h2><div id="marcados"></div></div></section></div>`;
   const $ = (s) => raiz.querySelector(s);
 
   // ----- arquivos e leitor -----
@@ -128,6 +129,42 @@ export function desenharAula(raiz, ctx, aulaId) {
     desenharHistorico();
   };
 
+  // ----- modo de produção de cartões (depois da aula) -----
+  function desenharCartoes() {
+    const pn = $('#p-notas'); pn.classList.toggle('modo-cartoes', modoCartoes); $('#cartoes-modo').hidden = !modoCartoes; $('#modo').textContent = modoCartoes ? 'Anotações' : 'Cartões';
+    if (!modoCartoes) return;
+    const ms = marcadoresDaAula(sessao.estado(), aulaId), cs = cartoesDaAula(sessao.estado(), aulaId);
+    $('#cartoes-modo').innerHTML = `<div class="marc" style="max-height:none;border:0"><h2>Marcados na aula</h2>${ms.length ? ms.map((m) => `<div class="it"><span class="ir" style="cursor:default">${escaparHtml(descreverMarcador(m))}</span><button type="button" class="btn peq sec" data-c="virar" data-id="${m.id}">Virar cartão</button></div>`).join('') : '<p class="vazio">Nada marcado. Marque linhas com Ctrl+M enquanto anota.</p>'}</div>` +
+      `<form id="cartao" class="form" style="padding:14px"><label class="c">Frente<textarea class="in" name="frente" maxlength="2000">${escaparHtml(rascunho.frente)}</textarea></label><label class="c">Verso<textarea class="in" name="verso" maxlength="2000">${escaparHtml(rascunho.verso)}</textarea></label>` +
+      `<div class="acoes"><button type="button" class="btn peq sec" data-c="sel-frente">Seleção do texto → frente</button><button type="button" class="btn peq sec" data-c="sel-verso">Seleção do texto → verso</button></div>` +
+      `<label class="c">Etiquetas (opcional)<input class="in" name="etiquetas" value="${escaparHtml(rascunho.etiquetas)}" autocomplete="off"></label><label class="c">Imagem (opcional)<input class="in" type="file" name="imagem" accept="image/png,image/jpeg,image/webp,image/gif"></label>` +
+      (erroCartao ? `<p class="erro">${escaparHtml(erroCartao)}</p>` : '') + `<div class="acoes"><button class="btn peq" type="submit">Criar cartão</button></div></form>` +
+      `<details style="padding:0 14px 8px"><summary class="sub">Importar vários de uma vez (Frente :: Verso)</summary><form id="importar-aula" class="form"><textarea class="in" name="texto" placeholder="Pergunta :: Resposta"></textarea><div class="acoes"><button class="btn peq sec" type="submit">Importar</button></div></form></details>` +
+      `<div style="padding:0 14px 14px"><h2>Cartões desta aula (${cs.length})</h2>${cs.map((c) => `<div class="cartao"><div class="t"><b>${escaparHtml(c.frente)}</b>${escaparHtml(c.verso)}${c.pagina ? `<small>slide ${c.pagina}</small>` : ''}</div><button type="button" class="btn peq sec" data-c="excluir" data-id="${c.id}">Excluir</button></div>`).join('') || '<p class="vazio" style="margin:0">Nenhum cartão ainda.</p>'}</div>`;
+  }
+  $('#modo').onclick = () => { salvarAgora(); modoCartoes = !modoCartoes; if (modoCartoes) { rascunho.pagina = arquivoAtual && leitor.total > 1 ? leitor.pagina : null; } desenharCartoes(); };
+  $('#cartoes-modo').onclick = (e) => {
+    const b = e.target.closest('[data-c]'); if (!b) return;
+    const lerCampos = () => { const f = new FormData($('#cartao')); rascunho = { ...rascunho, frente: f.get('frente'), verso: f.get('verso'), etiquetas: f.get('etiquetas') }; };
+    if (b.dataset.c === 'virar') { const m = marcadoresDaAula(sessao.estado(), aulaId).find((x) => x.id === Number(b.dataset.id)); lerCampos(); rascunho = { ...rascunho, frente: m.trecho, pagina: m.pagina, marcadorId: m.id }; }
+    else if (b.dataset.c === 'sel-frente' || b.dataset.c === 'sel-verso') { lerCampos(); if (!ultimaSelecao) { erroCartao = 'Selecione um trecho no editor de anotações primeiro.'; desenharCartoes(); return; } erroCartao = ''; rascunho[b.dataset.c === 'sel-frente' ? 'frente' : 'verso'] = ultimaSelecao; }
+    else if (b.dataset.c === 'excluir') { const id = Number(b.dataset.id); sessao.aplicar((s) => excluirCartao(s, id, new Date().toISOString())); ctx.aviso('Cartão enviado para a lixeira.', { texto: 'Desfazer', fazer: () => { sessao.aplicar((s) => restaurarCartao(s, id)); desenharCartoes(); } }); }
+    desenharCartoes();
+  };
+  $('#cartoes-modo').onsubmit = async (e) => {
+    e.preventDefault(); const f = new FormData(e.target);
+    try {
+      if (e.target.id === 'cartao') {
+        await sessao.criarCartao(aulaId, { frente: f.get('frente'), verso: f.get('verso'), etiquetas: f.get('etiquetas'), pagina: rascunho.pagina, marcadorId: rascunho.marcadorId }, f.get('imagem')?.size ? f.get('imagem') : null);
+        rascunho = { frente: '', verso: '', etiquetas: f.get('etiquetas'), pagina: rascunho.pagina, marcadorId: null }; erroCartao = ''; ctx.aviso('Cartão criado.'); desenharMarcados();
+      } else if (e.target.id === 'importar-aula') {
+        let r; sessao.aplicar((s) => { r = importarTexto(s, aulaId, f.get('texto'), new Date().toISOString(), () => globalThis.crypto.randomUUID()); return r.estado; });
+        ctx.aviso(`${r.criados.length} criados${r.ignorados.length ? `, ${r.ignorados.length} ignorados (linha ${r.ignorados.map((i) => i.linha).join(', ')})` : ''}.`);
+      }
+    } catch (err) { erroCartao = err.message; }
+    desenharCartoes();
+  };
+
   const aoSair = () => salvarAgora();
   addEventListener('pagehide', aoSair); document.addEventListener('visibilitychange', aoSair);
   const limpar = () => { removeEventListener('pagehide', aoSair); document.removeEventListener('visibilitychange', aoSair); salvarAgora(); leitor.fechar(); raiz.className = ''; };
@@ -139,6 +176,7 @@ export function desenharAula(raiz, ctx, aulaId) {
   carregarQuill().then((Quill) => {
     quill = new Quill($('#editor'), { theme: 'snow', placeholder: 'Escreva as anotações da aula…', modules: { toolbar: [['bold', 'italic'], [{ list: 'ordered' }, { list: 'bullet' }], [{ header: [1, 2, false] }]] } });
     try { const d = sessao.estado().aulas.find((a) => a.id === aulaId).anotacoes; if (d) quill.setContents(JSON.parse(d), 'silent'); } catch { /* texto antigo ilegível: começa vazio, o original continua no histórico */ }
+    quill.on('selection-change', (r) => { if (r && r.length) ultimaSelecao = quill.getText(r.index, r.length).trim(); });
     quill.on('text-change', (_d, _v, origem) => {
       if (origem === 'silent') return;
       pendente = true; clearTimeout(temporizador); temporizador = setTimeout(salvarAgora, 600); $('#salvo').textContent = 'Escrevendo…';
