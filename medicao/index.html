@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ohara — medição do banco</title>
+<style>
+  body{font:16px system-ui,sans-serif;max-width:640px;margin:0 auto;padding:16px;line-height:1.4}
+  button{font:inherit;padding:12px 18px;border-radius:12px;border:1px solid #888;background:#eee;cursor:pointer}
+  pre{background:#f4f4f4;padding:12px;border-radius:12px;white-space:pre-wrap;word-break:break-word}
+  @media (prefers-color-scheme:dark){body{background:#111;color:#eee}pre{background:#222}button{background:#333;color:#eee}}
+</style></head><body>
+<h1>Medição do banco</h1>
+<p>Cria bancos de teste de 5, 10 e 20 MB e mede quanto leva para <b>exportar</b> e <b>gravar</b> (3 repetições cada). Não mexe nos seus dados: usa um banco temporário que é apagado no fim.</p>
+<p><button id="ir">Começar a medição</button> <button id="copiar" hidden>Copiar resultado</button></p>
+<pre id="saida">Pronto para começar.</pre>
+<script type="module">
+import { abrirBanco } from './armazenamento/banco.js';
+import { abrirIndexedDB } from './armazenamento/indexeddb.js';
+
+const saida = document.getElementById('saida');
+const log = (t) => { saida.textContent += '\n' + t; };
+const ms = (n) => n.toFixed(0) + ' ms';
+const mediana = (v) => [...v].sort((a, b) => a - b)[Math.floor(v.length / 2)];
+const carregar = (src) => new Promise((ok, er) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = er; document.head.appendChild(s); });
+
+// Texto parecido com anotações: palavras variadas, pouco repetido entre linhas.
+function texto(n) {
+  let s = ''; while (s.length < n) s += Math.random().toString(36).slice(2) + ' ';
+  return s.slice(0, n);
+}
+
+function criarBanco(SQL, alvoMB) {
+  const db = abrirBanco(SQL);
+  db.run("INSERT INTO disciplina (id,nome,cor,criado_em) VALUES (1,'Medição','#3366cc','x')");
+  const ins = db.prepare("INSERT INTO aula (disciplina_id,titulo,anotacoes,criado_em) VALUES (1,?,?,'x')");
+  db.run('BEGIN');
+  let i = 0;
+  const tamanho = () => db.exec('PRAGMA page_count')[0].values[0][0] * db.exec('PRAGMA page_size')[0].values[0][0];
+  while (tamanho() < alvoMB * 1048576 && i < 100000) {
+    for (let k = 0; k < 200; k++) ins.run(['Aula ' + (++i), texto(2000)]);
+  }
+  db.run('COMMIT'); ins.free();
+  return db;
+}
+
+async function medir() {
+  saida.textContent = 'Aparelho: ' + navigator.userAgent;
+  await carregar('./vendor/sql-wasm.js');
+  const SQL = await initSqlJs({ locateFile: (f) => './vendor/' + f });
+  indexedDB.deleteDatabase('ohara-medicao');
+  const arm = await abrirIndexedDB(indexedDB, 'ohara-medicao');
+  const linhas = [];
+  for (const mb of [5, 10, 20]) {
+    log(`\nCriando banco de ${mb} MB...`);
+    await new Promise((r) => setTimeout(r, 50));
+    const db = criarBanco(SQL, mb);
+    const exp = [], gra = [];
+    let tam = 0;
+    for (let r = 0; r < 3; r++) {
+      let t = performance.now(); const bytes = db.export(); exp.push(performance.now() - t); tam = bytes.length;
+      t = performance.now(); await arm.gravarBanco(bytes); gra.push(performance.now() - t);
+    }
+    db.close();
+    const l = `${mb} MB (real ${(tam / 1048576).toFixed(1)}): exportar ${ms(mediana(exp))} · gravar ${ms(mediana(gra))} · total ${ms(mediana(exp) + mediana(gra))}`;
+    linhas.push(l); log(l);
+  }
+  arm.fechar(); indexedDB.deleteDatabase('ohara-medicao');
+  let quota = '';
+  try { const e = await navigator.storage.estimate(); quota = `Espaço: usado ${(e.usage / 1048576).toFixed(0)} MB de ${(e.quota / 1048576).toFixed(0)} MB`; } catch {}
+  log('\n=== RESULTADO ===\n' + linhas.join('\n') + (quota ? '\n' + quota : ''));
+  document.getElementById('copiar').hidden = false;
+}
+
+document.getElementById('ir').onclick = async (e) => {
+  e.target.disabled = true;
+  try { await medir(); } catch (err) { log('ERRO: ' + err.message); }
+  e.target.disabled = false;
+};
+document.getElementById('copiar').onclick = () => navigator.clipboard.writeText(saida.textContent);
+</script></body></html>
