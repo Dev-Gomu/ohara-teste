@@ -14,9 +14,10 @@ p{color:var(--tx2);margin:0 0 18px}.c{background:var(--cx);border-radius:20px;pa
 .l{display:flex;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--ln)}.l:last-child{border:0}.l small{display:block;color:var(--tx2);font-size:12px}
 .v{font-weight:600;text-align:right}.ok{color:var(--ok)}.ruim{color:var(--ruim)}
 button{margin-top:16px;border:0;border-radius:14px;padding:14px 20px;font:inherit;font-weight:600;background:var(--tx);color:var(--bg)}
-</style></head><body><main>
+.selo{display:inline-block;background:#F6C21B;color:#2B1B00;font-weight:700;padding:6px 14px;border-radius:99px;margin:0 0 16px}</style></head><body><main>
 <h1><img src="icone-192.png" width="40" height="40" alt="">Ohara · teste</h1>
 <p>Página de teste da Etapa 0. Nada daqui é o app de verdade.</p>
+<p class="selo">Batata · versão 3</p>
 <div class="c" id="lista"></div>
 <button id="pedir">Pedir armazenamento persistente</button>
 <p id="msg" style="margin-top:14px"></p>
@@ -30,7 +31,7 @@ async function atualizar(){
   if('serviceWorker' in navigator){reg=await navigator.serviceWorker.getRegistration();if(reg&&reg.active)ativo='sim';if(navigator.serviceWorker.controller)controla='sim'}
   L.push(linha('Service worker','guarda a página para abrir sem internet',ativo==='sim'?'ativo':'não ativo',ativo==='sim'?'ok':'ruim'));
   L.push(linha('Página servida pelo service worker','sim = esta carga veio do aparelho',controla==='sim'?'sim':'ainda não (recarregue)',controla==='sim'?'ok':''));
-  let n='?';try{const c=await caches.open('ohara-teste-v2');n=(await c.keys()).length+' arquivos'}catch(e){}
+  let n='?';try{const c=await caches.open('ohara-teste-v3');n=(await c.keys()).length+' arquivos'}catch(e){}
   L.push(linha('Arquivos guardados no aparelho','cache do app',n));
   L.push(linha('Internet agora','',navigator.onLine?'online':'sem internet',navigator.onLine?'ok':'ruim'));
   const inst=matchMedia('(display-mode: standalone)').matches;
