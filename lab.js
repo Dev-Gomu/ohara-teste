@@ -6,8 +6,8 @@ const abreIdb = () => new Promise((res, rej) => { const r = indexedDB.open('ohar
 const kv = async (modo, k, v) => { const d = await abreIdb(); return new Promise((res, rej) => { const s = d.transaction('kv', modo === 'get' ? 'readonly' : 'readwrite').objectStore('kv'); const q = modo === 'get' ? s.get(k) : modo === 'set' ? s.put(v, k) : s.delete(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); };
 /* ---------- 0.5 leitor de PDF ---------- */
 let pdf = null, zoom = 1, baseW = 0, paginaAtual = 1, arquivoAtual = null, obs = null;
-const leitor = $('#leitor');
-function limpa() { leitor.innerHTML = ''; if (obs) obs.disconnect(); }
+const leitor = $('#leitor'), cont = document.createElement('div'); cont.id = 'conteudo'; leitor.appendChild(cont);
+function limpa() { cont.innerHTML = ''; if (obs) obs.disconnect(); }
 async function abrePdf(bytes, nome, tamanho) {
   const t0 = performance.now(); limpa(); $('#infoPdf').textContent = 'Abrindo…';
   try { pdf = await pdfjs.getDocument({ data: bytes }).promise; } catch (e) { $('#infoPdf').innerHTML = '<span class="ruim">Erro ao abrir: ' + e.message + '</span>'; return; }
@@ -18,9 +18,9 @@ async function abrePdf(bytes, nome, tamanho) {
 function escala() { return Math.min(3, Math.max(.4, (leitor.clientWidth - 20) / baseW * zoom)); }
 async function monta() {
   limpa(); if (!pdf) return; const esc = escala(), p1 = await pdf.getPage(1), v1 = p1.getViewport({ scale: esc });
-  for (let i = 1; i <= pdf.numPages; i++) { const d = document.createElement('div'); d.className = 'pg'; d.dataset.n = i; d.style.width = v1.width + 'px'; d.style.height = v1.height + 'px'; leitor.appendChild(d); }
+  for (let i = 1; i <= pdf.numPages; i++) { const d = document.createElement('div'); d.className = 'pg'; d.dataset.n = i; d.style.width = v1.width + 'px'; d.style.height = v1.height + 'px'; cont.appendChild(d); }
   obs = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? desenha(e.target) : apaga(e.target)), { root: leitor, rootMargin: '900px 0px' });
-  leitor.querySelectorAll('.pg').forEach(d => obs.observe(d)); atualizaPagina();
+  cont.querySelectorAll('.pg').forEach(d => obs.observe(d)); atualizaPagina();
 }
 async function desenha(d) {
   if (d.dataset.feito) return; d.dataset.feito = '1'; const n = +d.dataset.n, page = await pdf.getPage(n), vp = page.getViewport({ scale: escala() }), dpr = Math.min(2, devicePixelRatio || 1);
@@ -33,13 +33,25 @@ async function desenha(d) {
 function apaga(d) { if (!d.dataset.feito) return; d.innerHTML = ''; delete d.dataset.feito; }
 function atualizaPagina() {
   const topo = leitor.scrollTop + leitor.clientHeight / 3; let n = 1;
-  for (const d of leitor.children) { if (d.offsetTop <= topo) n = +d.dataset.n; else break; }
+  for (const d of cont.children) { if (d.offsetTop <= topo) n = +d.dataset.n; else break; }
   paginaAtual = n; $('#pagina').textContent = pdf ? `Página ${n} de ${pdf.numPages}` : '—';
 }
 leitor.addEventListener('scroll', atualizaPagina, { passive: true });
 $('#arq').onchange = async e => { const f = e.target.files[0]; if (!f) return; arquivoAtual = f; abrePdf(new Uint8Array(await f.arrayBuffer()), f.name, f.size); };
-const muda = d => { zoom = Math.min(3, Math.max(.5, zoom + d)); $('#zoom').textContent = Math.round(zoom * 100) + '%'; const frac = leitor.scrollTop / Math.max(1, leitor.scrollHeight); monta().then(() => { leitor.scrollTop = frac * leitor.scrollHeight; }); };
-$('#mais').onclick = () => muda(.25); $('#menos').onclick = () => muda(-.25);
+const limita = z => Math.min(3, Math.max(.5, z));
+async function defineZoom(novo, foco) {  // foco: ponto da tela (cx, cy) que deve ficar no mesmo lugar
+  const antigo = zoom; zoom = limita(novo); $('#zoom').textContent = Math.round(zoom * 100) + '%'; const k = zoom / antigo;
+  const r = leitor.getBoundingClientRect(), cx = foco ? foco.cx - r.left : leitor.clientWidth / 2, cy = foco ? foco.cy - r.top : leitor.clientHeight / 2;
+  const ox = leitor.scrollLeft + cx, oy = leitor.scrollTop + cy; await monta(); leitor.scrollLeft = ox * k - cx; leitor.scrollTop = oy * k - cy;
+}
+$('#mais').onclick = () => defineZoom(zoom + .25); $('#menos').onclick = () => defineZoom(zoom - .25);
+/* pinça com dois dedos: só no leitor (o navegador não amplia a página inteira aqui) */
+let pinca = null;
+const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+leitor.addEventListener('touchstart', e => { if (e.touches.length === 2 && pdf) { const t = e.touches, r = leitor.getBoundingClientRect(); pinca = { d0: dist(t), z0: zoom, f: 1, cx: (t[0].clientX + t[1].clientX) / 2, cy: (t[0].clientY + t[1].clientY) / 2 }; cont.style.transformOrigin = `${leitor.scrollLeft + pinca.cx - r.left}px ${leitor.scrollTop + pinca.cy - r.top}px`; e.preventDefault(); } }, { passive: false });
+leitor.addEventListener('touchmove', e => { if (pinca && e.touches.length === 2) { pinca.f = Math.min(3 / pinca.z0, Math.max(.5 / pinca.z0, dist(e.touches) / pinca.d0)); cont.style.transform = `scale(${pinca.f})`; e.preventDefault(); } }, { passive: false });
+const fimPinca = e => { if (pinca && e.touches.length < 2) { const p = pinca; pinca = null; cont.style.transform = ''; cont.style.transformOrigin = ''; if (Math.abs(p.f - 1) > .02) defineZoom(p.z0 * p.f, p); } };
+leitor.addEventListener('touchend', fimPinca); leitor.addEventListener('touchcancel', fimPinca);
 /* ---------- 0.6 armazenamento ---------- */
 async function estado() {
   let t = ''; try { const g = await kv('get', 'pdf'); t = g ? `PDF guardado: ${g.name} (${MB(g.size)})` : 'Nenhum PDF guardado.'; const e = await navigator.storage.estimate(); t += `\nEspaço usado: ${MB(e.usage)} de ${MB(e.quota)} · persistente: ${(await navigator.storage.persisted()) ? 'sim' : 'não'}`; } catch (e) { t = 'Erro: ' + e.message; }
