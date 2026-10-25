@@ -3,6 +3,8 @@
 export const TELAS = [
   { chave: 'hoje', nome: 'Hoje' },
   { chave: 'materias', nome: 'Matérias' },
+  { chave: 'foco', nome: 'Foco' },
+  { chave: 'painel', nome: 'Painel' },
   { chave: 'ajustes', nome: 'Ajustes' },
 ];
 

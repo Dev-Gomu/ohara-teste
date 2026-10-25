@@ -7,10 +7,15 @@ import { desenharMateria } from './telas/materia.js';
 import { desenharAula } from './telas/aula.js';
 import { desenharAjustes } from './telas/ajustes.js';
 import { desenharHoje } from './telas/hoje.js';
+import { desenharFoco } from './telas/foco.js';
+import { desenharPainel } from './telas/painel.js';
+import { criarServicoFoco } from './foco_servico.js';
 
 const ICONES = {
   hoje: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
   materias: '<path d="M3 7h6l2 2h10v10H3z"/>',
+  foco: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
+  painel: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   ajustes: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
 };
 
@@ -19,6 +24,8 @@ const TEXTOS = {
   hoje: ['Hoje', 'Em construção.'],
   materias: ['Matérias', 'Em construção.'],
   ajustes: ['Ajustes', 'Em construção.'],
+  foco: ['Foco', 'Em construção.'],
+  painel: ['Painel', 'Em construção.'],
 };
 
 const CHAVE_TEMA = 'ohara.tema';
@@ -50,16 +57,18 @@ function desenhar() {
   raiz.onclick = raiz.onsubmit = raiz.onchange = null; raiz.className = '';
   document.title = `${titulo} · Ohara`;
   if (!sessao) { raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(erroSessao || 'Abrindo seus dados…')}</p>`; return; }
-  const ctx = { sessao, aviso, definirTema, agora: () => (window.ohara?.agoraFalso ?? new Date().toISOString()) };
+  const ctx = { sessao, foco, aviso, definirTema, agora: () => window.ohara?.agoraFalsoMs ?? Date.now() };
   if (rota.tela === 'materias') desenharMaterias(raiz, ctx);
   else if (rota.tela === 'materia') desenharMateria(raiz, ctx, rota.id);
   else if (rota.tela === 'aula') limpar = desenharAula(raiz, ctx, rota.id);
   else if (rota.tela === 'ajustes') desenharAjustes(raiz, ctx);
-  else if (rota.tela === 'hoje') desenharHoje(raiz, ctx);
+  else if (rota.tela === 'hoje') limpar = desenharHoje(raiz, ctx);
+  else if (rota.tela === 'foco') limpar = desenharFoco(raiz, ctx);
+  else if (rota.tela === 'painel') limpar = desenharPainel(raiz, ctx);
   else raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(texto)}</p>`;
 }
 
-let sessao = null, erroSessao = '', limpar = null;
+let sessao = null, foco = null, erroSessao = '', limpar = null;
 function aviso(texto, acao) {
   const t = document.getElementById('aviso');
   t.innerHTML = `<span>${escaparHtml(texto)}</span>` + (acao ? `<button type="button">${escaparHtml(acao.texto)}</button>` : '');
@@ -71,7 +80,7 @@ aplicarTema(escolherTema(guardar.ler(), matchMedia('(prefers-color-scheme: dark)
 addEventListener('hashchange', desenhar);
 desenhar();
 iniciarSessao({ aoFalhar: (e) => aviso('Não consegui salvar: ' + e.message) })
-  .then((s) => { sessao = s; window.ohara = { sessao }; desenhar(); })
+  .then((s) => { sessao = s; foco = criarServicoFoco(s, { aviso }); window.ohara = { sessao, foco }; desenhar(); })
   .catch((e) => { erroSessao = 'Não foi possível abrir os dados: ' + e.message; desenhar(); });
 
 // Service worker: o app abre sem internet e atualiza sozinho (a página nova aparece ao recarregar).

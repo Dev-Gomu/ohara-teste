@@ -6,8 +6,9 @@ const COLUNAS = {
   aula: ['id', 'disciplina_id', 'titulo', 'tipo', 'inicio', 'fim', 'anotacoes', 'criado_em', 'excluido_em'],
   arquivo: ['id', 'aula_id', 'nome', 'tipo_mime', 'tamanho', 'criado_em', 'excluido_em'],
   marcador: ['id', 'aula_id', 'arquivo_id', 'pagina', 'trecho', 'criado_em', 'excluido_em'],
+  bloco_foco: ['id', 'disciplina_id', 'tarefa', 'tipo', 'dia', 'inicio', 'minutos_previstos', 'minutos_feitos', 'estado', 'criado_em', 'excluido_em'],
 };
-const CHAVES = { disciplina: 'disciplinas', aula: 'aulas', arquivo: 'arquivos', marcador: 'marcadores' };
+const CHAVES = { disciplina: 'disciplinas', aula: 'aulas', arquivo: 'arquivos', marcador: 'marcadores', bloco_foco: 'blocos' };
 
 function ler(db, tabela) {
   const r = db.exec(`SELECT ${COLUNAS[tabela].join(',')} FROM ${tabela} ORDER BY id`);
@@ -23,7 +24,7 @@ export function salvarEstado(db, estado) {
   db.run('BEGIN');
   try {
     db.run('PRAGMA defer_foreign_keys = ON');
-    for (const t of ['marcador', 'arquivo', 'aula', 'disciplina']) db.run(`DELETE FROM ${t}`);
+    for (const t of ['bloco_foco', 'marcador', 'arquivo', 'aula', 'disciplina']) db.run(`DELETE FROM ${t}`);
     for (const [tabela, chave] of Object.entries(CHAVES)) {
       const linhas = estado[chave] ?? [];
       const cols = COLUNAS[tabela];

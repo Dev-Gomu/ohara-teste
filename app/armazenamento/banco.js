@@ -24,6 +24,11 @@ export const MIGRACOES = [
      trecho TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);
    CREATE TABLE anotacao_versao (
      id INTEGER PRIMARY KEY, aula_id INTEGER NOT NULL REFERENCES aula(id), conteudo TEXT NOT NULL, criado_em TEXT NOT NULL);`,
+  // v3 (Etapa 3): blocos da Sala de Foco. disciplina_id sem chave estrangeira: o histórico de estudo sobrevive à matéria apagada.
+  `CREATE TABLE bloco_foco (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER, tarefa TEXT NOT NULL DEFAULT '', tipo TEXT NOT NULL DEFAULT 'foco',
+     dia TEXT NOT NULL, inicio TEXT NOT NULL, minutos_previstos INTEGER NOT NULL, minutos_feitos INTEGER NOT NULL,
+     estado TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);`,
 ];
 
 export function versaoDoBanco(db) {

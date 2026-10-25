@@ -2,10 +2,11 @@
 import { escaparHtml, formatarBytes } from '../../nucleo/texto.js';
 import { itensDaLixeira, contarLixeira, restaurarMateria } from '../../nucleo/materias.js';
 import { restaurarArquivo } from '../../nucleo/arquivos.js';
+import { CONFIG_PADRAO, ROTULOS_CONFIG, lerConfigFoco, validarConfig } from '../../nucleo/foco.js';
 import { restaurarAula } from '../../nucleo/aulas.js';
 
 export function desenharAjustes(raiz, ctx) {
-  let confirmando = false, armaz = null, pendente = null, erroBackup = '';
+  let confirmando = false, armaz = null, pendente = null, erroBackup = '', erroMetas = '';
 
   const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
@@ -18,6 +19,7 @@ export function desenharAjustes(raiz, ctx) {
       `<div class="card bloco"><h2>Tema</h2><div class="acoes">` +
       ['claro', 'escuro'].map((t) => `<button class="btn peq ${document.documentElement.dataset.tema === t ? '' : 'sec'}" type="button" data-a="tema" data-tema="${t}">${t === 'claro' ? 'Claro' : 'Escuro'}</button>`).join('') +
       `</div></div>` +
+      `<div class="card bloco"><h2>Metas e foco</h2>${blocoMetas()}</div>` +
       `<div class="card bloco"><h2>Lixeira</h2>` +
       (vazia ? '<p class="sub">A lixeira está vazia.</p>'
         : materias.map((m) => `<div class="lin"><div class="t">${escaparHtml(m.nome)}<small>Matéria · com as aulas dela</small></div><button class="btn peq sec" type="button" data-a="rest-m" data-id="${m.id}">Restaurar</button></div>`).join('') +
@@ -31,6 +33,12 @@ export function desenharAjustes(raiz, ctx) {
       `<div class="card bloco"><h2>Backup</h2>${blocoBackup()}</div>` +
       `<div class="card bloco"><h2>Armazenamento</h2>${armazenamento()}</div>` +
       `<div class="card bloco"><h2>Dica do teclado</h2><p class="sub">Se a tecla Alt virar Cmd no teclado bluetooth, aperte Fn+P por 3 segundos para voltar ao modo Android.</p></div>`;
+  }
+
+  function blocoMetas() {
+    const c = lerConfigFoco(ctx.sessao.lerConfig);
+    return `<form id="metas" class="form">${Object.keys(CONFIG_PADRAO).map((k) => `<label class="c">${escaparHtml(ROTULOS_CONFIG[k])}<input class="in" name="${k}" type="number" inputmode="numeric" value="${c[k]}"></label>`).join('')}` +
+      (erroMetas ? `<p class="erro">${escaparHtml(erroMetas)}</p>` : '') + `<div class="acoes"><button class="btn peq" type="submit">Salvar</button></div></form>`;
   }
 
   function blocoBackup() {
@@ -100,6 +108,15 @@ export function desenharAjustes(raiz, ctx) {
       }
       case 'persistir': { try { await navigator.storage.persist(); } catch { /* negado */ } medir(); break; }
     }
+  };
+  raiz.onsubmit = (ev) => {
+    ev.preventDefault();
+    if (ev.target.id !== 'metas') return;
+    try {
+      const f = new FormData(ev.target), v = Object.keys(CONFIG_PADRAO).map((k) => [k, validarConfig(k, f.get(k))]);
+      v.forEach(([k, n]) => ctx.sessao.gravarConfig(k, n)); erroMetas = ''; ctx.aviso('Metas salvas.');
+    } catch (e) { erroMetas = e.message; }
+    desenhar();
   };
   raiz.onchange = async (ev) => {
     if (ev.target.id !== 'arq-backup' || !ev.target.files[0]) return;

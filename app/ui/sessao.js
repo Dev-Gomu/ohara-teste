@@ -6,6 +6,7 @@ import { abrirIndexedDB } from '../armazenamento/indexeddb.js';
 import { carregarEstado, salvarEstado, gravarAnotacao, inserirVersao, listarVersoes, ultimaVersaoEm } from '../armazenamento/repositorio.js';
 import { anexarArquivo } from '../nucleo/arquivos.js';
 import { esvaziarLixeira } from '../nucleo/materias.js';
+import { registrarBloco } from '../nucleo/foco.js';
 import { atualizarAnotacao, deveGuardarVersao, textoDoDelta, versoesParaApagar, VERSOES_MAX } from '../nucleo/anotacoes.js';
 import { criarGravador } from '../armazenamento/gravador.js';
 
@@ -22,11 +23,24 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
   let estado = carregarEstado(db);
   const gravador = criarGravador(armazenamento, () => exportarBanco(db), { aoFalhar });
 
+  const dia = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   addEventListener('pagehide', () => gravador.descarregar());
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') gravador.descarregar(); });
 
+  const lerCfg = (chave) => { const r = db.exec('SELECT valor FROM config WHERE chave = ?', [chave]); return r.length ? r[0].values[0][0] : null; };
+  const gravarCfg = (chave, valor) => { db.run('INSERT OR REPLACE INTO config (chave, valor) VALUES (?, ?)', [chave, String(valor)]); gravador.agendar(); };
+  if (!lerCfg('inicio_uso')) gravarCfg('inicio_uso', dia());          // dias antes disso nunca são "não estudou"
+
   return {
     estado: () => estado,
+    /** Grava os blocos concluídos (da Sala de Foco) no estado. */
+    registrarBlocos(registros, agora = new Date().toISOString()) {
+      let novo = estado; for (const r of registros) novo = registrarBloco(novo, r, agora);
+      salvarEstado(db, novo); estado = novo; gravador.agendar();
+    },
+    /** Sessão de foco em andamento (guardada no banco para sobreviver a recarregar a página). */
+    lerFocoAtivo() { try { return JSON.parse(lerCfg('foco_ativo') || 'null'); } catch { return null; } },
+    gravarFocoAtivo(s) { gravarCfg('foco_ativo', JSON.stringify(s)); },
     /** `mudar(estado)` devolve o estado novo (ou lança Error com mensagem para o usuário). Só então grava. */
     aplicar(mudar) {
       const novo = mudar(estado);
@@ -35,8 +49,8 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
       gravador.agendar();
     },
     descarregar: () => gravador.descarregar(),
-    lerConfig(chave) { const r = db.exec('SELECT valor FROM config WHERE chave = ?', [chave]); return r.length ? r[0].values[0][0] : null; },
-    gravarConfig(chave, valor) { db.run('INSERT OR REPLACE INTO config (chave, valor) VALUES (?, ?)', [chave, String(valor)]); gravador.agendar(); },
+    lerConfig: lerCfg,
+    gravarConfig: gravarCfg,
     /** Gera o .zip e anota a data do último backup. Devolve { bytes, nome }. */
     async fazerBackup(completo) {
       const agora = new Date().toISOString();

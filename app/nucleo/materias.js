@@ -1,5 +1,5 @@
 // Núcleo (regras puras, sem I/O): Matérias (disciplinas).
-// O estado é { disciplinas, aulas, arquivos, marcadores } (listas); cada função devolve um estado novo e nunca altera o recebido.
+// O estado é { disciplinas, aulas, arquivos, marcadores, blocos } (listas); cada função devolve um estado novo e nunca altera o recebido.
 // Exclusão = lixeira (`excluido_em`). Excluir uma matéria leva as aulas dela junto, com o mesmo instante,
 // e restaurar traz de volta só as que foram junto (as que o usuário já tinha excluído antes continuam na lixeira).
 
@@ -9,7 +9,7 @@ export const LIMITE_NOME = 80;
 const COR = /^#[0-9a-fA-F]{6}$/;
 
 export function estadoVazio() {
-  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [] };
+  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [] };
 }
 
 export function proximoId(lista) {
@@ -100,6 +100,7 @@ export function esvaziarLixeira(estado) {
       aulas,
       arquivos,
       marcadores: ativas(estado.marcadores ?? []).filter((m) => aulasVivas.has(m.aula_id)),
+      blocos: estado.blocos ?? [],
     },
     apagados,
     arquivosApagados: arquivosAntes.filter((a) => !vivos.has(a.id)).map((a) => a.id),
