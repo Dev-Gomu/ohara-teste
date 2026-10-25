@@ -19,6 +19,7 @@ button{margin-top:16px;border:0;border-radius:14px;padding:14px 20px;font:inheri
 <p>Página de teste da Etapa 0. Nada daqui é o app de verdade.</p>
 <div class="c" id="lista"></div>
 <button id="pedir">Pedir armazenamento persistente</button>
+<p id="msg" style="margin-top:14px"></p>
 <script>
 const $=s=>document.querySelector(s);
 const linha=(t,sub,v,cls)=>`<div class="l"><div>${t}<small>${sub}</small></div><div class="v ${cls||''}">${v}</div></div>`;
@@ -29,7 +30,7 @@ async function atualizar(){
   if('serviceWorker' in navigator){reg=await navigator.serviceWorker.getRegistration();if(reg&&reg.active)ativo='sim';if(navigator.serviceWorker.controller)controla='sim'}
   L.push(linha('Service worker','guarda a página para abrir sem internet',ativo==='sim'?'ativo':'não ativo',ativo==='sim'?'ok':'ruim'));
   L.push(linha('Página servida pelo service worker','sim = esta carga veio do aparelho',controla==='sim'?'sim':'ainda não (recarregue)',controla==='sim'?'ok':''));
-  let n='?';try{const c=await caches.open('ohara-teste-v1');n=(await c.keys()).length+' arquivos'}catch(e){}
+  let n='?';try{const c=await caches.open('ohara-teste-v2');n=(await c.keys()).length+' arquivos'}catch(e){}
   L.push(linha('Arquivos guardados no aparelho','cache do app',n));
   L.push(linha('Internet agora','',navigator.onLine?'online':'sem internet',navigator.onLine?'ok':'ruim'));
   const inst=matchMedia('(display-mode: standalone)').matches;
@@ -40,12 +41,22 @@ async function atualizar(){
   L.push(linha('Espaço disponível / usado','estimativa do navegador',cota+' / '+uso));
   let k=+localStorage.getItem('aberturas')||0;
   L.push(linha('Vezes que esta página foi aberta','guardado neste aparelho',String(k)));
+  const ua=navigator.userAgent;const nav=/SamsungBrowser/.test(ua)?'Samsung Internet':/Firefox/.test(ua)?'Firefox':/Edg/.test(ua)?'Edge':/Chrome/.test(ua)?'Chrome':'outro';
+  L.push(linha('Navegador','para eu saber onde foi testado',nav+(/Android/.test(ua)?' (Android)':'')));
+  L.push(linha('Pedido de armazenamento persistente','existe neste navegador?',(navigator.storage&&navigator.storage.persist)?'sim':'não'));
   L.push(linha('Carregada em','',new Date().toLocaleString('pt-BR')));
   $('#lista').innerHTML=L.join('');
 }
 localStorage.setItem('aberturas',(+localStorage.getItem('aberturas')||0)+1);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(()=>navigator.serviceWorker.ready).then(atualizar).catch(atualizar);
 addEventListener('online',atualizar);addEventListener('offline',atualizar);
-$('#pedir').onclick=async()=>{try{await navigator.storage.persist()}catch(e){}atualizar()};
+$('#pedir').onclick=async()=>{
+  const m=$('#msg');m.textContent='Pedindo…';
+  let r;try{
+    if(!(navigator.storage&&navigator.storage.persist)){r='este navegador não oferece esse recurso.'}
+    else{const antes=await navigator.storage.persisted();const ok=await navigator.storage.persist();
+      r=ok?'CONCEDIDO: o navegador não vai apagar os dados sozinho.':'NEGADO: o navegador recusou (antes do pedido: '+(antes?'já era persistente':'não era persistente')+'). No Chrome não há pergunta: ele decide sozinho e costuma conceder quando o app está instalado ou é muito usado. No Firefox deveria aparecer uma pergunta de permissão.'}
+  }catch(e){r='ERRO: '+e.name+' - '+e.message}
+  m.textContent='Resposta do navegador às '+new Date().toLocaleTimeString('pt-BR')+': '+r;atualizar()};
 atualizar();
 </script></main></body></html>
