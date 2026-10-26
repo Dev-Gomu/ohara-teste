@@ -74,3 +74,9 @@ details.card.bloco>summary::-webkit-details-marker{display:none}
 details.card.bloco>summary::after{content:"+";font-size:22px;color:var(--tx2);font-weight:400}details.card.bloco[open]>summary::after{content:"−"}
 details.card.bloco[open]>summary{margin-bottom:10px}
 details.mais-cartoes{margin-top:14px}details.mais-cartoes>summary{list-style:none;cursor:pointer;margin-bottom:12px}details.mais-cartoes>summary::-webkit-details-marker{display:none}
+/* editor: H1/H2/H3 em texto leve (sem o ícone grosso) */
+.barra-ed button.txt{font:inherit;font-size:13px;font-weight:500;letter-spacing:0;width:auto;min-width:36px;padding:0 6px}
+.barra-ed button.txt.ql-active{font-weight:600}
+/* Planejar: o "começar" das tarefas que não são a próxima é só uma seta discreta */
+.ir-linha{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;color:var(--tx2);font-size:13px}.ir-linha:hover{background:var(--cx2);color:var(--tx)}
+:is(html[data-visual],html) .btn[hidden],.btn[hidden],button[hidden]{display:none!important}

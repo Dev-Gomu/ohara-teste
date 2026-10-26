@@ -1,4 +1,5 @@
 // Casca do app: navegação por #hoje, #materias e #ajustes, e tema claro/escuro. Sem regra de negócio.
+import { atualizarApp } from './atualizar.js';
 import { TELAS, rotaDoEndereco, escolherTema, outroTema, escolherPaleta, escolherVisual } from '../nucleo/rotas.js';
 import { escaparHtml } from '../nucleo/texto.js';
 import { iniciarSessao } from './sessao.js';
@@ -77,8 +78,7 @@ function desenhar() {
   document.getElementById('nav').innerHTML = '<div class="logo">Ohara</div>' +
     TELAS.map((t) => `<a href="#${t.chave}" class="${t.chave === tela ? 'on' : ''}" ${t.chave === tela ? 'aria-current="page"' : ''}>` +
       `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[t.chave]}</svg>${escaparHtml(t.nome)}</a>`).join('') +
-    `<div class="fim"><button id="fixar" type="button" title="Alt B">${barra.fixa() ? 'Soltar a barra' : 'Fixar a barra'}</button><button id="bt" type="button">Tema: ${tema}</button><button id="ver-atalhos" type="button" title="?">Atalhos (?)</button></div>`;
-  document.getElementById('bt').onclick = () => definirTema(outroTema(document.documentElement.dataset.tema));
+    `<div class="fim"><button id="fixar" type="button" title="Alt B">${barra.fixa() ? 'Soltar a barra' : 'Fixar a barra'}</button><button id="ver-atalhos" type="button" title="?">Atalhos (?)</button></div>`;
   document.getElementById('fixar').onclick = () => barra.alternar();
   document.getElementById('ver-atalhos').onclick = () => teclado.abrirAjuda();
   document.getElementById('nav').onclick = (ev) => { if (ev.target.closest('a') && !barra.fixa()) barra.fechar(); };
@@ -87,7 +87,7 @@ function desenhar() {
   raiz.onclick = raiz.onsubmit = raiz.onchange = null; raiz.className = '';
   document.title = `${titulo} · Ohara`;
   if (!sessao) { raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(erroSessao || 'Abrindo seus dados…')}</p>`; return; }
-  const ctx = { sessao, foco, aviso, definirTema, definirPaleta, definirVisual, agora: () => window.ohara?.agoraFalsoMs ?? Date.now() };
+  const ctx = { sessao, foco, aviso, atualizarApp: () => atualizarApp(aviso), definirTema, definirPaleta, definirVisual, agora: () => window.ohara?.agoraFalsoMs ?? Date.now() };
   if (rota.tela === 'materias') desenharMaterias(raiz, ctx);
   else if (rota.tela === 'materia') desenharMateria(raiz, ctx, rota.id);
   else if (rota.tela === 'aula') limpar = desenharAula(raiz, ctx, rota.id);
@@ -114,7 +114,7 @@ document.getElementById('abrir-barra').onclick = () => (barra.aberta() ? barra.f
 document.getElementById('sair-foco').onclick = () => modoFoco.sair();
 addEventListener('hashchange', () => barra.fechar());
 aplicarTema(escolherTema(guardar.ler(), matchMedia('(prefers-color-scheme: dark)').matches));
-aplicarVisual(escolherVisual((() => { try { return localStorage.getItem(CHAVE_VISUAL); } catch { return null; } })()));
+aplicarVisual('focus');   // por enquanto só o Focus (o Pastas fica guardado em estilos/pastas.css)
 aplicarPaleta(escolherPaleta((() => { try { return localStorage.getItem(CHAVE_PALETA); } catch { return null; } })()));
 addEventListener('hashchange', desenhar);
 desenhar();
@@ -125,4 +125,12 @@ iniciarSessao({ aoFalhar: (e) => aviso('Não consegui salvar: ' + e.message) })
   .catch((e) => { erroSessao = 'Não foi possível abrir os dados: ' + e.message; desenhar(); });
 
 // Service worker: o app abre sem internet e atualiza sozinho (a página nova aparece ao recarregar).
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { /* sem service worker o app funciona, só não abre offline */ });
+// Atualização: a versão nova baixa sozinha e assume; a página aberta continua na antiga até recarregar, então avisamos.
+if ('serviceWorker' in navigator) {
+  const tinhaControle = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    const procurar = () => reg.update().catch(() => {});
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) procurar(); }); setInterval(procurar, 30 * 60 * 1000);
+  }).catch(() => { /* sem service worker o app funciona, só não abre offline */ });
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (tinhaControle) { aviso('Versão nova do Ohara pronta.', { texto: 'Atualizar', fazer: () => location.reload() }); clearTimeout(aviso.t); } });
+}

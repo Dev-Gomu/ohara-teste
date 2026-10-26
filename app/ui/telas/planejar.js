@@ -46,7 +46,7 @@ export function desenharPlanejar(raiz, ctx) {
     const m = porId.get(t.disciplina_id), atrasada = !t.feita_em && t.dia_original < t.dia;
     return `<div class="lin${destaque ? ' prox' : ''}"><button type="button" class="ck ${t.feita_em ? 'f' : ''}" data-a="${t.feita_em ? 'desfazer' : 'feita'}" data-id="${t.id}" aria-label="${t.feita_em ? 'Desmarcar' : 'Marcar como feita'}"></button>` +
       `<span class="pt" style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></span><div class="t" style="${t.feita_em ? 'opacity:.55;text-decoration:line-through' : ''}">${escaparHtml(t.titulo)}<small>${escaparHtml(m?.nome ?? '')} · ${t.minutos} min${atrasada ? ` · <span class="tag-ur">atrasada desde ${escaparHtml(dataPorExtenso(t.dia_original))}</span>` : ''}${t.sem_vaga && !t.feita_em ? ' · <span class="tag-ur">não cabe nas horas</span>' : ''}</small></div>` +
-      (t.feita_em ? '' : destaque ? `<a class="btn peq" href="#foco/${t.id}">Começar</a>` : `<a class="btn peq sec" href="#foco/${t.id}" aria-label="Começar ${escaparHtml(t.titulo)}">Começar</a>`) + '</div>';
+      (t.feita_em ? '' : destaque ? `<a class="btn peq" href="#foco/${t.id}">Começar</a>` : `<a class="ir-linha" href="#foco/${t.id}" aria-label="Começar ${escaparHtml(t.titulo)}">▶</a>`) + '</div>';
   }
 
   function formularioProva(estado) {

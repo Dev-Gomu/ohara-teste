@@ -21,11 +21,10 @@ export function desenharAjustes(raiz, ctx) {
     const total = contarLixeira(estado);
     const vazia = !total.disciplinas && !total.aulas && !total.arquivos && !total.cartoes && !total.provas;
     raiz.innerHTML = '<h1>Ajustes</h1><p class="sub">Tema, lixeira e armazenamento.</p>' +
+      `<div class="card bloco"><h2>Aplicativo</h2><p class="sub" style="margin-bottom:10px">Se uma novidade não aparecer, baixe a versão mais recente (precisa de internet). Seus dados não são apagados.</p><div class="acoes"><button class="btn peq" type="button" data-a="atualizar-app">Atualizar o app</button></div></div>` +
       `<div class="card bloco"><h2>Tema</h2><div class="acoes">` +
       ['claro', 'escuro'].map((t) => `<button class="btn peq ${document.documentElement.dataset.tema === t ? '' : 'sec'}" type="button" data-a="tema" data-tema="${t}">${t === 'claro' ? 'Claro' : 'Escuro'}</button>`).join('') +
       `</div></div>` +
-      `<div class="card bloco"><h2>Visual</h2><p class="sub" style="margin-bottom:10px">Focus: verde, contorno fino. Pastas: cinza-claro, sombras suaves e pastas.</p><div class="acoes">` +
-      VISUAIS.map((v) => `<button class="btn peq ${(document.documentElement.dataset.visual ?? 'focus') === v.chave ? '' : 'sec'}" type="button" data-a="visual" data-visual="${v.chave}">${escaparHtml(v.nome)}</button>`).join('') + `</div></div>` +
       `<div class="card bloco so-focus"><h2>Paleta</h2><p class="sub" style="margin-bottom:10px">Cores do menu e dos destaques (vale para o tema claro e o escuro).</p><div class="acoes">` +
       PALETAS.map((p) => `<button class="btn peq ${(document.documentElement.dataset.paleta ?? 'verde') === p.chave ? '' : 'sec'}" type="button" data-a="paleta" data-paleta="${p.chave}"><span class="amostra" style="background:linear-gradient(90deg,${p.amostra[0]} 50%,${p.amostra[1]} 50%)"></span>${escaparHtml(p.nome)}</button>`).join('') + `</div></div>` +
       `<div class="card bloco"><h2>Metas e foco</h2>${blocoMetas()}</div>` +
@@ -135,6 +134,7 @@ export function desenharAjustes(raiz, ctx) {
     const b = ev.target.closest('[data-a]'); if (!b) return;
     const id = Number(b.dataset.id); const estado = ctx.sessao.estado();
     switch (b.dataset.a) {
+      case 'atualizar-app': ctx.atualizarApp(); break;
       case 'tema': ctx.definirTema(b.dataset.tema); desenhar(); break;
       case 'visual': ctx.definirVisual(escolherVisual(b.dataset.visual)); break;
       case 'paleta': ctx.definirPaleta(escolherPaleta(b.dataset.paleta)); break;

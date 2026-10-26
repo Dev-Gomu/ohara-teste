@@ -37,21 +37,19 @@ export function desenharAula(raiz, ctx, aulaId) {
   raiz.innerHTML = `<div class="topo"><a class="voltar" href="#materias/${materia.id}">← ${escaparHtml(materia.nome)}</a>` +
     `<div class="tt"><b>${escaparHtml(aula.titulo)}</b><small>${aula.tipo === 'livro' ? 'Livro' : 'Aula'}${descreverHorario(aula) ? ' · ' + escaparHtml(descreverHorario(aula)) : ''}</small></div><span class="esp"></span>` +
     `<div class="gp" role="group" aria-label="Slide"><button type="button" id="ant" aria-label="Slide anterior (Alt Page Up)">◀</button><span id="pag">—</span><button type="button" id="prox" aria-label="Próximo slide (Alt Page Down)">▶</button></div>` +
-    `<div class="gp" role="group" aria-label="Zoom"><button type="button" id="menos" aria-label="Diminuir">−</button><span id="zoom">100%</span><button type="button" id="mais" aria-label="Aumentar">+</button></div>` +
     `<button type="button" class="btn peq sec" id="mais-menu" aria-label="Mais opções" aria-haspopup="menu">⋯</button>` +
     `<button type="button" class="btn peq sec" id="foco-btn" title="Tela cheia de foco (Alt Enter)">Foco ⤢</button><div class="abas" role="tablist"><button type="button" data-aba="slide" class="on">Slide</button><button type="button" data-aba="notas">Anotações</button></div>` +
     `<input type="file" id="anexar" accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,.pdf" hidden></div>` +
     `<div class="aula" data-aba="slide">` +
     `<section class="painel" id="p-slide"><p class="erro" id="erro-slide" hidden></p><div id="leitor" tabindex="0" aria-label="Slide (setas e Page Down passam de slide; J e K rolam; + e − dão zoom)"><p class="vazio" id="sem-arq"></p></div></section>` +
-    `<div class="divisoria" id="divisoria" role="separator" aria-orientation="vertical" aria-valuemin="25" aria-valuemax="75" aria-valuenow="50" tabindex="0" aria-label="Divisória entre slide e anotações (setas, ou Alt vírgula e Alt ponto)"></div><section class="painel" id="p-notas"><div class="cab"><button type="button" class="btn peq" id="marcar" title="Marcar a linha (Ctrl M)">Marcar ◆</button><button type="button" class="btn peq sec" id="bt-marc" aria-haspopup="true" aria-expanded="false" title="Ver marcados">◆ <span id="n-marc">0</span></button>` +
-    `<span class="esp" id="salvo"></span><button type="button" class="btn peq sec" id="modo">Cartões</button></div>` +
+    `<div class="divisoria" id="divisoria" role="separator" aria-orientation="vertical" aria-valuemin="25" aria-valuemax="75" aria-valuenow="50" tabindex="0" aria-label="Divisória entre slide e anotações (setas, ou Alt vírgula e Alt ponto)"></div><section class="painel" id="p-notas"><div class="cab"><button type="button" class="btn peq" id="marcar" title="Marcar a linha (Ctrl M)">Marcar ◆</button><button type="button" class="btn peq sec" id="bt-marc" aria-haspopup="true" aria-expanded="false" title="Ver marcados" hidden>◆ <span id="n-marc">0</span></button>` +
+    `<span class="esp" id="salvo"></span></div>` +
     `<div class="barra-ed" id="barra-ed" role="toolbar" aria-label="Formatação">
     <span class="gr"><button type="button" class="ql-header" value="1" title="Título 1 (Ctrl Alt 1)"></button><button type="button" class="ql-header" value="2" title="Título 2 (Ctrl Alt 2)"></button></span>
     <span class="gr"><button type="button" class="ql-bold" title="Negrito (Ctrl B)"></button><button type="button" class="ql-italic" title="Itálico (Ctrl I)"></button><button type="button" class="ql-underline" title="Sublinhado (Ctrl U)"></button></span>
     <span class="gr"><button type="button" class="ql-realce" title="Marca-texto (Ctrl Shift H)"><svg viewBox="0 0 18 18"><path class="ql-stroke" d="M11 3l4 4-6 6H5v-4z"/><path class="ql-stroke" d="M3 16h12"/></svg></button></span>
-    <span class="gr"><button type="button" class="ql-list" value="ordered" title="Lista numerada (Ctrl Shift 7)"></button><button type="button" class="ql-list" value="bullet" title="Lista com marcadores (Ctrl Shift 8)"></button><button type="button" class="ql-list" value="check" title="Lista de tarefas (Ctrl Shift 9)"></button></span>
-    <span class="gr"><button type="button" class="ql-link" title="Link (Ctrl K)"></button></span>
-    <span class="gr resto"><button type="button" class="ql-header" value="3" title="Título 3 (Ctrl Alt 3)"></button><button type="button" class="ql-strike" title="Riscado (Ctrl Shift X)"></button><button type="button" class="ql-code" title="Código (Ctrl E)"></button><button type="button" class="ql-blockquote" title="Citação (> e espaço)"></button><button type="button" class="ql-indent" value="-1" title="Voltar (Shift Tab)"></button><button type="button" class="ql-indent" value="+1" title="Recuar (Tab)"></button><button type="button" class="ql-clean" title="Limpar formatação (Ctrl \\)"></button></span>
+    <span class="gr"><button type="button" class="ql-list" value="ordered" title="Lista numerada (Ctrl Shift 7)"></button><button type="button" class="ql-list" value="bullet" title="Lista com marcadores (Ctrl Shift 8)"></button> </span>
+    <span class="gr resto"><button type="button" class="ql-list" value="check" title="Lista de tarefas (Ctrl Shift 9)"></button><button type="button" class="ql-link" title="Link (Ctrl K)"></button><button type="button" class="ql-header" value="3" title="Título 3 (Ctrl Alt 3)"></button><button type="button" class="ql-strike" title="Riscado (Ctrl Shift X)"></button><button type="button" class="ql-code" title="Código (Ctrl E)"></button><button type="button" class="ql-blockquote" title="Citação (> e espaço)"></button><button type="button" class="ql-indent" value="-1" title="Voltar (Shift Tab)"></button><button type="button" class="ql-indent" value="+1" title="Recuar (Tab)"></button><button type="button" class="ql-clean" title="Limpar formatação (Ctrl \\)"></button></span>
     <button type="button" class="mais-ed" id="mais-ed" aria-label="Mais formatações" aria-expanded="false" title="Mais formatações">⋯</button></div><div id="hist-lista" hidden></div><div id="cartoes-modo" hidden></div><div id="editor"></div><div class="marc-pop" id="marc-pop" hidden><h2>Marcados na aula</h2><div id="marcados"></div></div></section></div>`;
   const $ = (s) => raiz.querySelector(s);
 
@@ -62,7 +60,7 @@ export function desenharAula(raiz, ctx, aulaId) {
     const av = $('#anexar-vazio'); if (av) av.onclick = () => $('#anexar').click();
     raiz.querySelectorAll('#nav-slide-off').forEach((x) => x.remove());
     $('#p-slide').classList.toggle('sem-slide', !l.length);
-    for (const id of ['ant', 'prox', 'menos', 'mais']) $('#' + id).disabled = !l.length;
+    for (const id of ['ant', 'prox']) $('#' + id).disabled = !l.length;
   }
   function mostrarErro(m) { const e = $('#erro-slide'); e.textContent = m || ''; e.hidden = !m; }
   async function abrirArquivo(f) {
@@ -73,7 +71,7 @@ export function desenharAula(raiz, ctx, aulaId) {
   }
   leitor = criarLeitor($('#leitor'), {
     aoMudarPagina: (n, total) => { $('#pag').textContent = `${n} / ${total}`; $('#pag').title = 'Slide atual'; $('#ant').disabled = n <= 1; $('#prox').disabled = n >= total; if (arquivoAtual && leitor.total > 1) sessao.gravarConfig(`pagina_${arquivoAtual.id}`, n); },
-    aoMudarZoom: (z) => { $('#zoom').textContent = Math.round(z * 100) + '%'; },
+    aoMudarZoom: () => {},
   });
   async function removerArquivo() {
     const f = arquivoAtual; if (!f) return;
@@ -89,11 +87,13 @@ export function desenharAula(raiz, ctx, aulaId) {
       { rotulo: 'Anexar slide ou imagem…', fazer: () => $('#anexar').click() },
       ...(l.length > 1 ? l.map((f) => ({ rotulo: f.nome, marcado: f.id === arquivoAtual?.id, fazer: () => abrirArquivo(f) })) : []),
       ...(l.length ? [{ rotulo: cont ? 'Mostrar um slide por vez' : 'Rolar o arquivo contínuo', fazer: () => leitor.definirModo(cont ? 'pagina' : 'continuo') }] : []),
+      ...(l.length ? [{ rotulo: 'Aumentar o slide (+)', fazer: () => leitor.mais() }, { rotulo: 'Diminuir o slide (−)', fazer: () => leitor.menos() }, { rotulo: 'Tamanho que cabe na tela (0)', fazer: () => leitor.normal() }] : []),
+      { sep: true },
+      { rotulo: modoCartoes ? 'Voltar às anotações' : 'Criar cartões desta aula', fazer: alternarCartoes },
       { rotulo: 'Histórico de versões do texto', fazer: alternarHistorico },
       ...(arquivoAtual ? [{ sep: true }, { rotulo: `Remover “${arquivoAtual.nome}”`, perigo: true, fazer: removerArquivo }] : []),
     ]);
   };
-  $('#mais').onclick = () => leitor.mais(); $('#menos').onclick = () => leitor.menos();
   $('#anexar').onchange = async (e) => {
     const arq = e.target.files[0]; e.target.value = ''; if (!arq) return;
     try { const reg = await sessao.anexar(aulaId, arq); desenharSeletor(); await abrirArquivo(reg); ctx.aviso(`"${reg.nome}" anexado (${formatarBytes(reg.tamanho)}).`); }
@@ -120,7 +120,7 @@ export function desenharAula(raiz, ctx, aulaId) {
   }
   function desenharMarcados() {
     const ms = marcadoresDaAula(sessao.estado(), aulaId);
-    $('#n-marc').textContent = String(ms.length); $('#bt-marc').classList.toggle('vazio-m', !ms.length);
+    $('#n-marc').textContent = String(ms.length); $('#bt-marc').hidden = !ms.length; if (!ms.length) $('#marc-pop').hidden = true;
     $('#marcados').innerHTML = ms.length ? ms.map((m) => `<div class="it"><button type="button" class="ir" data-pag="${m.pagina ?? ''}" data-arq="${m.arquivo_id ?? ''}">${escaparHtml(descreverMarcador(m))}</button><button type="button" class="x" data-rem="${m.id}" aria-label="Remover marcador">×</button></div>`).join('')
       : '<p class="vazio">Nenhum marcador. Use o botão Marcar ou Ctrl+M no texto.</p>';
   }
@@ -156,7 +156,7 @@ export function desenharAula(raiz, ctx, aulaId) {
 
   // ----- modo de produção de cartões (depois da aula) -----
   function desenharCartoes() {
-    const pn = $('#p-notas'); pn.classList.toggle('modo-cartoes', modoCartoes); $('#cartoes-modo').hidden = !modoCartoes; $('#modo').textContent = modoCartoes ? 'Anotações' : 'Cartões';
+    const pn = $('#p-notas'); pn.classList.toggle('modo-cartoes', modoCartoes); $('#cartoes-modo').hidden = !modoCartoes; 
     if (!modoCartoes) return;
     const ms = marcadoresDaAula(sessao.estado(), aulaId), cs = cartoesDaAula(sessao.estado(), aulaId);
     $('#cartoes-modo').innerHTML = `<div class="marc" style="max-height:none;border:0"><h2>Marcados na aula</h2>${ms.length ? ms.map((m) => `<div class="it"><span class="ir" style="cursor:default">${escaparHtml(descreverMarcador(m))}</span><button type="button" class="btn peq sec" data-c="virar" data-id="${m.id}">Virar cartão</button></div>`).join('') : '<p class="vazio">Nada marcado. Marque linhas com Ctrl+M enquanto anota.</p>'}</div>` +
@@ -167,7 +167,7 @@ export function desenharAula(raiz, ctx, aulaId) {
       `<details style="padding:0 14px 8px"><summary class="sub">Importar vários de uma vez (Frente :: Verso)</summary><form id="importar-aula" class="form"><textarea class="in" name="texto" placeholder="Pergunta :: Resposta"></textarea><div class="acoes"><button class="btn peq sec" type="submit">Importar</button></div></form></details>` +
       `<div style="padding:0 14px 14px"><h2>Cartões desta aula (${cs.length})</h2>${cs.map((c) => `<div class="cartao"><div class="t"><b>${escaparHtml(c.frente)}</b>${escaparHtml(c.verso)}${c.pagina ? `<small>slide ${c.pagina}</small>` : ''}</div><button type="button" class="btn peq sec" data-c="excluir" data-id="${c.id}">Excluir</button></div>`).join('') || '<p class="vazio" style="margin:0">Nenhum cartão ainda.</p>'}</div>`;
   }
-  $('#modo').onclick = () => { salvarAgora(); modoCartoes = !modoCartoes; if (modoCartoes) { rascunho.pagina = arquivoAtual && leitor.total > 1 ? leitor.pagina : null; } desenharCartoes(); };
+  function alternarCartoes() { salvarAgora(); modoCartoes = !modoCartoes; if (modoCartoes) { rascunho.pagina = arquivoAtual && leitor.total > 1 ? leitor.pagina : null; } desenharCartoes(); }
   $('#cartoes-modo').onclick = (e) => {
     const b = e.target.closest('[data-c]'); if (!b) return;
     const lerCampos = () => { const f = new FormData($('#cartao')); rascunho = { ...rascunho, frente: f.get('frente'), verso: f.get('verso'), etiquetas: f.get('etiquetas') }; };
@@ -244,6 +244,7 @@ export function desenharAula(raiz, ctx, aulaId) {
     quill = new Quill($('#editor'), { theme: 'snow', placeholder: 'Escreva as anotações da aula…  (# título, - lista, > citação; Ctrl K link)',
       formats: ['header', 'bold', 'italic', 'underline', 'strike', 'background', 'code', 'blockquote', 'list', 'indent', 'link'],
       modules: { toolbar: { container: '#barra-ed', handlers: { realce: () => alternarRealce() } } } });
+    $('#barra-ed').querySelectorAll('.ql-header').forEach((b) => { b.textContent = 'H' + b.value; b.classList.add('txt'); });   // texto leve em vez do ícone grosso
     quill.root.setAttribute('spellcheck', 'true'); quill.root.setAttribute('lang', 'pt-BR');
     // "# ", "## ", "### " e "> " no começo da linha viram título e citação (as listas "- " e "1. " o Quill já faz).
     quill.keyboard.addBinding({ key: ' ', collapsed: true, prefix: /^(#{1,3})$/ }, function (range, ctx) { const n = ctx.prefix.length; quill.deleteText(range.index - n, n, 'user'); quill.formatLine(range.index - n, 1, 'header', n, 'user'); return false; });
