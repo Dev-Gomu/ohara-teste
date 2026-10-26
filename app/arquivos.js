@@ -1,7 +1,8 @@
 // Gerado por ferramentas/versao.js — não editar.
 self.OHARA = {
- "versao": "7950ebe55bf7",
+ "versao": "a101bb77ae67",
  "arquivos": [
+  "armazenamento/ankiconnect.js",
   "armazenamento/apkg.js",
   "armazenamento/backup.js",
   "armazenamento/banco.js",
@@ -9,6 +10,7 @@ self.OHARA = {
   "armazenamento/indexeddb.js",
   "armazenamento/memoria.js",
   "armazenamento/repositorio.js",
+  "armazenamento/troca.js",
   "estilos/ohara.css",
   "icones/icone-192.png",
   "icones/icone-512.png",
@@ -17,6 +19,7 @@ self.OHARA = {
   "index.html",
   "manifest.webmanifest",
   "nucleo/agenda.js",
+  "nucleo/anki.js",
   "nucleo/anotacoes.js",
   "nucleo/arquivos.js",
   "nucleo/aulas.js",
@@ -31,6 +34,7 @@ self.OHARA = {
   "nucleo/planejador.js",
   "nucleo/rotas.js",
   "nucleo/texto.js",
+  "nucleo/troca.js",
   "ui/app.js",
   "ui/calendario.js",
   "ui/foco_servico.js",

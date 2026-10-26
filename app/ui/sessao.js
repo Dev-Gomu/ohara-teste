@@ -12,6 +12,8 @@ import { criarCartao, cartoesParaExportar, marcarExportados } from '../nucleo/ca
 import { LIMITE_IMAGEM_BYTES } from '../nucleo/cartoes.js';
 import { chaveImagemCartao } from '../nucleo/materias.js';
 import { gerarApkg } from '../armazenamento/apkg.js';
+import { gerarPacote, analisarPacote, aplicarPacote } from '../armazenamento/troca.js';
+import { criarAnkiConnect, enviarCartoes, situacaoDoAnki } from '../armazenamento/ankiconnect.js';
 import { atualizarAnotacao, deveGuardarVersao, textoDoDelta, versoesParaApagar, VERSOES_MAX } from '../nucleo/anotacoes.js';
 import { criarGravador } from '../armazenamento/gravador.js';
 
@@ -66,18 +68,39 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
     },
     lerImagemCartao: (id) => armazenamento.lerArquivo(chaveImagemCartao(id)),
     removerImagemCartao: (id) => armazenamento.apagarArquivo(chaveImagemCartao(id)),
-    /** Gera o .apkg dos cartões (todos, de uma matéria ou de uma aula) e marca como enviados. Devolve { bytes, nome, total }. */
-    async exportarCartoes(filtro = {}) {
-      const itens = cartoesParaExportar(estado, filtro), imagens = new Map();
+    /** Imagens dos cartões (Map id → { bytes, extensao }), para o .apkg e para o AnkiConnect. */
+    async imagensDosCartoes(itens) {
+      const imagens = new Map();
       for (const { cartao } of itens) {
         if (!cartao.tem_imagem) continue;
         const b = await armazenamento.lerArquivo(chaveImagemCartao(cartao.id)); if (!b) continue;
         imagens.set(cartao.id, { bytes: new Uint8Array(await b.arrayBuffer()), extensao: ({ 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' })[b.type] ?? 'png' });
       }
+      return imagens;
+    },
+    /** Gera o .apkg dos cartões (todos, de uma matéria ou de uma aula) e marca como enviados. Devolve { bytes, nome, total }. */
+    async exportarCartoes(filtro = {}) {
+      const itens = cartoesParaExportar(estado, filtro), imagens = await this.imagensDosCartoes(itens);
       const r = await gerarApkg(SQL, itens, imagens);
       const novo = marcarExportados(estado, itens.map((i) => i.cartao.id), new Date().toISOString());
       salvarEstado(db, novo); estado = novo; gravador.agendar();
       return r;
+    },
+    /** Envia direto ao Anki aberto neste computador (AnkiConnect) e marca como enviados os que chegaram. Devolve o relatório. */
+    async enviarAoAnki(filtro = {}) {
+      const itens = cartoesParaExportar(estado, filtro), r = await enviarCartoes(criarAnkiConnect(), itens, await this.imagensDosCartoes(itens));
+      if (r.enviados.length) { const novo = marcarExportados(estado, r.enviados, new Date().toISOString()); salvarEstado(db, novo); estado = novo; gravador.agendar(); }
+      return r;
+    },
+    situacaoDoAnki: () => situacaoDoAnki(criarAnkiConnect()),
+    /** Troca entre aparelhos: gerar o pacote, ler o pacote do outro (sem alterar nada) e aplicar a decisão. */
+    async gerarPacoteTroca(completo) { await gravador.descarregar(); return gerarPacote({ db, armazenamento, completo }); },
+    async analisarPacoteTroca(zip) { await gravador.descarregar(); return analisarPacote({ SQL, db, armazenamento, zip }); },
+    async aplicarPacoteTroca(zip, analise, escolha) {
+      await gravador.descarregar();
+      const r = await aplicarPacote({ SQL, db, armazenamento, zip, analise, escolha });
+      if (r.db) { db = r.db; estado = carregarEstado(db); }
+      return { trocou: !!r.db, copiaLocal: r.copiaLocal };
     },
     lerFocoAtivo() { try { return JSON.parse(lerCfg('foco_ativo') || 'null'); } catch { return null; } },
     gravarFocoAtivo(s) { gravarCfg('foco_ativo', JSON.stringify(s)); },

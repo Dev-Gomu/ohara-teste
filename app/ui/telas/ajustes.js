@@ -8,7 +8,7 @@ import { CONFIG_PADRAO, ROTULOS_CONFIG, lerConfigFoco, validarConfig } from '../
 import { restaurarAula } from '../../nucleo/aulas.js';
 
 export function desenharAjustes(raiz, ctx) {
-  let confirmando = false, armaz = null, pendente = null, erroBackup = '', erroMetas = '';
+  let confirmando = false, armaz = null, pendente = null, erroBackup = '', erroMetas = '', troca = null, erroTroca = '', ocupado = false;
 
   const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
@@ -35,6 +35,7 @@ export function desenharAjustes(raiz, ctx) {
             : `<p><button class="btn peq sec" type="button" data-a="esvaziar">Esvaziar lixeira</button></p>`)) +
       `</div>` +
       `<div class="card bloco"><h2>Backup</h2>${blocoBackup()}</div>` +
+      `<div class="card bloco"><h2>Trocar dados entre aparelhos</h2>${blocoTroca()}</div>` +
       `<div class="card bloco"><h2>Armazenamento</h2>${armazenamento()}</div>` +
       `<div class="card bloco"><h2>Dica do teclado</h2><p class="sub">Se a tecla Alt virar Cmd no teclado bluetooth, aperte Fn+P por 3 segundos para voltar ao modo Android.</p></div>`;
   }
@@ -55,6 +56,25 @@ export function desenharAjustes(raiz, ctx) {
       (pendente ? `<div class="confirma"><p>Substituir TODOS os dados atuais pelo backup de ${pendente.resumo.criado_em ? new Date(pendente.resumo.criado_em).toLocaleDateString('pt-BR') : 'data desconhecida'} ` +
         `(${plural(pendente.resumo.materias, 'matéria', 'matérias')}, ${plural(pendente.resumo.aulas, 'aula ou livro', 'aulas e livros')}${pendente.resumo.arquivos ? `, ${plural(pendente.resumo.arquivos, 'arquivo', 'arquivos')}` : ''})? ` +
         `Uma cópia dos dados de agora fica guardada no aparelho.</p><div class="acoes"><button class="btn peq ur" type="button" data-a="restaurar-sim">Substituir meus dados</button><button class="btn peq sec" type="button" data-a="restaurar-nao">Cancelar</button></div></div>` : '');
+  }
+
+  function blocoTroca() {
+    const pode = typeof navigator.canShare === 'function';
+    let painel = '';
+    if (troca) {
+      const a = troca.analise, de = a.origem ? `de ${escaparHtml(a.origem)}, ` : '', quando = a.geradoEm ? new Date(a.geradoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'data desconhecida';
+      const resumo = `${de}${escaparHtml(quando)} (${plural(a.resumo.materias, 'matéria', 'matérias')}, ${plural(a.resumo.aulas, 'aula ou livro', 'aulas e livros')}${a.resumo.arquivos ? `, ${plural(a.resumo.arquivos, 'arquivo', 'arquivos')}` : ''})`;
+      const falta = a.faltam ? `<p class="sub">Atenção: ${plural(a.faltam, 'arquivo (PDF ou imagem) não veio', 'arquivos (PDFs ou imagens) não vieram')} neste pacote nem existe${a.faltam === 1 ? '' : 'm'} aqui. Gere o pacote "com arquivos" no outro aparelho para trazê-lo${a.faltam === 1 ? '' : 's'}.</p>` : '';
+      painel = a.acao === 'substituir'
+        ? `<div class="confirma"><p>Pacote ${resumo}. ${escaparHtml(a.motivo)} Receber vai deixar este aparelho igual ao pacote. Uma cópia dos dados de agora fica guardada.</p>${falta}<div class="acoes"><button class="btn peq" type="button" data-a="troca-receber">Receber</button><button class="btn peq sec" type="button" data-a="troca-cancelar">Cancelar</button></div></div>`
+        : `<div class="confirma"><p><b>Os dois aparelhos mudaram.</b> Pacote ${resumo}. ${escaparHtml(a.motivo)} Nada se perde: o que você não escolher fica guardado num arquivo.</p>${falta}` +
+          `<div class="acoes"><button class="btn peq" type="button" data-a="troca-pacote">Ficar com o do pacote (guardo o meu num arquivo)</button><button class="btn peq sec" type="button" data-a="troca-meu">Ficar com o meu (o pacote não é usado)</button><button class="btn peq sec" type="button" data-a="troca-cancelar">Decidir depois</button></div></div>`;
+    }
+    return `<p class="sub">Cada aparelho tem a sua cópia. Para passar o que você fez de um para o outro: <b>envie</b> aqui, leve o arquivo e <b>receba</b> no outro. Faça isso sempre antes de trocar de aparelho. Não há troca automática pela Wi-Fi porque o Ohara não usa servidor; o arquivo pode ir por Compartilhar (Nearby Share, Drive, e-mail para você mesmo) ou por cabo.</p>` +
+      `<div class="acoes"><button class="btn peq" type="button" data-a="troca-enviar" data-completo="0" ${ocupado ? 'disabled' : ''}>Enviar só os dados</button><button class="btn peq sec" type="button" data-a="troca-enviar" data-completo="1" ${ocupado ? 'disabled' : ''}>Enviar com arquivos</button>` +
+      (pode ? `<button class="btn peq sec" type="button" data-a="troca-compartilhar" ${ocupado ? 'disabled' : ''}>Compartilhar…</button>` : '') + `</div>` +
+      `<h2 class="sep">Receber</h2><label class="btn peq sec arquivo">Escolher o arquivo do outro aparelho<input type="file" accept=".zip,application/zip" id="arq-troca" hidden></label>` +
+      (erroTroca ? `<p class="erro">${escaparHtml(erroTroca)}</p>` : '') + painel;
   }
 
   function baixar({ bytes, nome }) {
@@ -112,6 +132,30 @@ export function desenharAjustes(raiz, ctx) {
         try { await ctx.sessao.restaurar(pendente.zip); pendente = null; erroBackup = ''; ctx.aviso('Dados restaurados.'); } catch (e) { erroBackup = e.message; }
         desenhar(); break;
       }
+      case 'troca-enviar': {
+        ocupado = true; erroTroca = ''; desenhar();
+        try { baixar(await ctx.sessao.gerarPacoteTroca(b.dataset.completo === '1')); ctx.aviso('Pacote gerado. Leve o arquivo para o outro aparelho e receba lá.'); } catch (e) { erroTroca = e.message; }
+        ocupado = false; desenhar(); break;
+      }
+      case 'troca-compartilhar': {
+        ocupado = true; erroTroca = ''; desenhar();
+        try {
+          const r = await ctx.sessao.gerarPacoteTroca(false), arquivo = new File([r.bytes], r.nome, { type: 'application/zip' });
+          if (!navigator.canShare({ files: [arquivo] })) baixar(r); else await navigator.share({ files: [arquivo], title: 'Dados do Ohara' });
+        } catch (e) { if (e.name !== 'AbortError') erroTroca = e.message; }
+        ocupado = false; desenhar(); break;
+      }
+      case 'troca-cancelar': troca = null; desenhar(); break;
+      case 'troca-receber': case 'troca-pacote': case 'troca-meu': {
+        const escolha = b.dataset.a === 'troca-meu' ? 'meu' : 'pacote';
+        try {
+          const r = await ctx.sessao.aplicarPacoteTroca(troca.zip, troca.analise, escolha);
+          if (r.copiaLocal) baixar(r.copiaLocal);
+          ctx.aviso(r.trocou ? (r.copiaLocal ? 'Dados do pacote recebidos. A sua versão de antes foi baixada num arquivo.' : 'Dados recebidos.') : 'Certo: ficou o que você tem aqui.');
+          troca = null; erroTroca = '';
+        } catch (e) { erroTroca = e.message; }
+        desenhar(); break;
+      }
       case 'persistir': { try { await navigator.storage.persist(); } catch { /* negado */ } medir(); break; }
     }
   };
@@ -125,6 +169,14 @@ export function desenharAjustes(raiz, ctx) {
     desenhar();
   };
   raiz.onchange = async (ev) => {
+    if (ev.target.id === 'arq-troca' && ev.target.files[0]) {
+      troca = null; erroTroca = '';
+      try {
+        const zip = new Uint8Array(await ev.target.files[0].arrayBuffer()), analise = await ctx.sessao.analisarPacoteTroca(zip);
+        if (analise.acao === 'igual' || analise.acao === 'nada_novo') { await ctx.sessao.aplicarPacoteTroca(zip, analise, 'meu'); ctx.aviso(analise.motivo); } else troca = { zip, analise };
+      } catch (e) { erroTroca = e.message; }
+      ev.target.value = ''; desenhar(); return;
+    }
     if (ev.target.id !== 'arq-backup' || !ev.target.files[0]) return;
     pendente = null; erroBackup = '';
     try {

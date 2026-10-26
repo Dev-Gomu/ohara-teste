@@ -2,11 +2,11 @@
 // o mesmo que o genanki escreve e o Anki 26 importa) dentro de um .zip, mais as imagens. Reenviar o mesmo cartão atualiza em vez de
 // duplicar porque o `guid` e o tipo de nota são estáveis. Estrutura conferida contra os .apkg de teste da Etapa 0.
 import { zipSync, strToU8 } from '../vendor/fflate.mjs';
+import { CAMPOS_NOTA, CSS_NOTA, MODELO_FRENTE, MODELO_VERSO, NOME_TIPO_NOTA, camposDaNota, nomeDoBaralho, nomeImagemAnki } from '../nucleo/anki.js';
 
 export const ID_TIPO_NOTA = 1607392319;           // "Ohara básico" (o mesmo dos .apkg de teste da Etapa 0)
 const SEP = '\x1f';
 
-const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
 const semHtml = (h) => h.replace(/<br>/g, ' ').replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim();
 
 function crc32(texto) {
@@ -36,10 +36,10 @@ const DCONF = '{"1":{"autoplay":true,"id":1,"lapse":{"delays":[10],"leechAction"
 const baralho = (id, nome, mod) => ({ collapsed: false, conf: 1, desc: '', dyn: 0, extendNew: 10, extendRev: 50, id, lrnToday: [0, 0], mod, name: nome, newToday: [0, 0], revToday: [0, 0], timeToday: [0, 0], usn: -1 });
 const campo = (name, ord) => ({ name, ord, font: 'Liberation Sans', media: [], rtl: false, size: 20, sticky: false });
 const modelo = (did, mod) => ({
-  css: '.card{font-family:sans-serif;font-size:20px;text-align:center}', did, id: String(ID_TIPO_NOTA), mod, name: 'Ohara básico', sortf: 0, type: 0, usn: -1, vers: [], tags: [], req: [[0, 'all', [0]]],
-  flds: [campo('Frente', 0), campo('Verso', 1), campo('Origem', 2)],
+  css: CSS_NOTA, did, id: String(ID_TIPO_NOTA), mod, name: NOME_TIPO_NOTA, sortf: 0, type: 0, usn: -1, vers: [], tags: [], req: [[0, 'all', [0]]],
+  flds: CAMPOS_NOTA.map(campo),
   latexPre: '\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n', latexPost: '\\end{document}', latexsvg: false,
-  tmpls: [{ name: 'Cartão 1', qfmt: '{{Frente}}', afmt: '{{FrontSide}}<hr id="answer">{{Verso}}<div style="font-size:11px;color:#888;margin-top:14px">{{Origem}}</div>', ord: 0, bafmt: '', bqfmt: '', bfont: '', bsize: 0, did: null }],
+  tmpls: [{ name: 'Cartão 1', qfmt: MODELO_FRENTE, afmt: MODELO_VERSO, ord: 0, bafmt: '', bqfmt: '', bfont: '', bsize: 0, did: null }],
 });
 
 /**
@@ -53,15 +53,15 @@ export async function gerarApkg(SQL, itens, imagens = new Map(), agoraMs = Date.
   const stmtN = db.prepare('INSERT INTO notes VALUES (?,?,?,?,?,?,?,?,?,?,?)'), stmtC = db.prepare('INSERT INTO cards VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
   let n = 0;
   for (const { cartao: c, aula, disciplina } of itens) {
-    const nome = `${disciplina.nome.replaceAll('::', ':')}::${aula.titulo.replaceAll('::', ':')}`, did = idDoBaralho(nome);
+    const nome = nomeDoBaralho(disciplina, aula), did = idDoBaralho(nome);
     baralhos.set(did, nome);
-    let frente = esc(c.frente);
+    let arq = null;
     const img = imagens.get(c.id);
-    if (c.tem_imagem && img) { const arq = `ohara-cartao-${c.id}.${img.extensao}`, i = Object.keys(media).length; media[i] = arq; arquivos[String(i)] = img.bytes; frente += `<br><img src="${arq}">`; }
-    const origem = esc(`${disciplina.nome} · ${aula.titulo}${c.pagina ? ` · slide ${c.pagina}` : ''}`);
+    if (c.tem_imagem && img) { arq = nomeImagemAnki(c.id, img.extensao); const i = Object.keys(media).length; media[i] = arq; arquivos[String(i)] = img.bytes; }
+    const { frente, verso, origem } = camposDaNota({ cartao: c, aula, disciplina }, arq);
     let nid = Math.floor(Date.parse(c.criado_em) / 1000) * 1000 + (c.id % 500) * 2; while (usados.has(nid)) nid += 2; usados.add(nid);
     const sfld = semHtml(frente);
-    stmtN.run([nid, c.guid, ID_TIPO_NOTA, Math.floor(Date.parse(c.atualizado_em) / 1000), -1, c.etiquetas ? ` ${c.etiquetas} ` : '', [frente, esc(c.verso), origem].join(SEP), sfld, await csum(sfld), 0, '']);
+    stmtN.run([nid, c.guid, ID_TIPO_NOTA, Math.floor(Date.parse(c.atualizado_em) / 1000), -1, c.etiquetas ? ` ${c.etiquetas} ` : '', [frente, verso, origem].join(SEP), sfld, await csum(sfld), 0, '']);
     stmtC.run([nid + 1, nid, did, 0, seg, -1, 0, 0, ++n, 0, 0, 0, 0, 0, 0, 0, 0, '']);
   }
   stmtN.free(); stmtC.free();

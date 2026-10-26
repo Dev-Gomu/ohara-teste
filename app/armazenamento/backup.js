@@ -7,10 +7,11 @@ import { carregarEstado } from './repositorio.js';
 export const CHAVE_SEGURANCA = 'antes-da-restauracao';
 
 /** Gera o .zip. `completo` inclui os arquivos (PDFs e imagens) guardados à parte. Devolve { bytes, nome }. */
-export async function fazerBackup({ db, armazenamento, completo = false, agora = new Date().toISOString() }) {
+export async function fazerBackup({ db, armazenamento, completo = false, agora = new Date().toISOString(), extras = {}, prefixoNome = 'ohara-backup' }) {
   const itens = {
     'info.json': strToU8(JSON.stringify({ app: 'ohara', versao_esquema: MIGRACOES.length, tipo: completo ? 'completo' : 'dados', criado_em: agora }, null, 1)),
     'ohara.sqlite': exportarBanco(db),
+    ...Object.fromEntries(Object.entries(extras).map(([n, t]) => [n, strToU8(t)])),
   };
   if (completo) {
     for (const id of await armazenamento.listarArquivos()) {
@@ -18,7 +19,7 @@ export async function fazerBackup({ db, armazenamento, completo = false, agora =
       if (blob) itens[`arquivos/${id}`] = new Uint8Array(await blob.arrayBuffer());
     }
   }
-  return { bytes: zipSync(itens, { level: 6 }), nome: `ohara-backup-${agora.slice(0, 10)}${completo ? '-completo' : ''}.zip` };
+  return { bytes: zipSync(itens, { level: 6 }), nome: `${prefixoNome}-${agora.slice(0, 10)}${completo ? '-completo' : ''}.zip` };
 }
 
 /** Lê e valida um .zip de backup. Lança Error com mensagem para o usuário se não servir. Não altera nada. */
@@ -36,7 +37,9 @@ export function lerBackup(SQL, zip) {
   try { db = abrirBanco(SQL, itens['ohara.sqlite']); } catch { throw new Error('O backup está danificado (os dados não abriram).'); }
   const arquivos = Object.entries(itens).filter(([n]) => n.startsWith('arquivos/') && n.length > 9).map(([n, bytes]) => [n.slice(9), bytes]);
   const estado = carregarEstado(db);
-  return { info, db, arquivos, resumo: { criado_em: info.criado_em, tipo: info.tipo, materias: estado.disciplinas.filter((d) => !d.excluido_em).length, aulas: estado.aulas.filter((a) => !a.excluido_em).length, arquivos: arquivos.length } };
+  let troca = null;
+  try { if (itens['troca.json']) troca = JSON.parse(strFromU8(itens['troca.json'])); } catch { /* pacote de troca ilegível: vale como backup comum */ }
+  return { info, db, arquivos, troca, resumo: { criado_em: info.criado_em, tipo: info.tipo, materias: estado.disciplinas.filter((d) => !d.excluido_em).length, aulas: estado.aulas.filter((a) => !a.excluido_em).length, arquivos: arquivos.length } };
 }
 
 /**
