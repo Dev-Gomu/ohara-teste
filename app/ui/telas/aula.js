@@ -8,6 +8,7 @@ import { criarMarcador, removerMarcador, marcadoresDaAula, descreverMarcador } f
 import { textoDoDelta } from '../../nucleo/anotacoes.js';
 import { cartoesDaAula, excluirCartao, restaurarCartao, importarTexto } from '../../nucleo/cartoes.js';
 import { criarLeitor } from '../leitor.js';
+import { abrirMenu } from '../menu.js';
 
 const carregarScript = (src) => new Promise((ok, erro) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => erro(new Error('Não consegui carregar o editor.')); document.head.appendChild(s); });
 async function carregarQuill() {
@@ -33,31 +34,35 @@ export function desenharAula(raiz, ctx, aulaId) {
   let modoCartoes = false, rascunho = { frente: '', verso: '', etiquetas: '', pagina: null, marcadorId: null }, ultimaSelecao = '', erroCartao = '', leitor = null, quill = null, arquivoAtual = null, temporizador = null, pendente = false, aba = 'slide', historicoAberto = false;
   const lista = () => arquivosDaAula(sessao.estado(), aulaId);
 
-  raiz.innerHTML = `<div class="topo"><div class="tt"><a class="voltar" href="#materias/${materia.id}">← ${escaparHtml(materia.nome)}</a>` +
-    `<b>${escaparHtml(aula.titulo)}</b><small>${aula.tipo === 'livro' ? 'Livro' : 'Aula'}${descreverHorario(aula) ? ' · ' + escaparHtml(descreverHorario(aula)) : ''}</small></div>` +
-    `<button type="button" class="btn peq sec" id="foco-btn" title="Tela cheia de foco (Alt Enter)">Foco ⤢</button><div class="abas" role="tablist"><button type="button" data-aba="slide" class="on">Slide</button><button type="button" data-aba="notas">Anotações</button></div></div>` +
+  raiz.innerHTML = `<div class="topo"><a class="voltar" href="#materias/${materia.id}">← ${escaparHtml(materia.nome)}</a>` +
+    `<div class="tt"><b>${escaparHtml(aula.titulo)}</b><small>${aula.tipo === 'livro' ? 'Livro' : 'Aula'}${descreverHorario(aula) ? ' · ' + escaparHtml(descreverHorario(aula)) : ''}</small></div><span class="esp"></span>` +
+    `<div class="gp" role="group" aria-label="Slide"><button type="button" id="ant" aria-label="Slide anterior (Alt Page Up)">◀</button><span id="pag">—</span><button type="button" id="prox" aria-label="Próximo slide (Alt Page Down)">▶</button></div>` +
+    `<div class="gp" role="group" aria-label="Zoom"><button type="button" id="menos" aria-label="Diminuir">−</button><span id="zoom">100%</span><button type="button" id="mais" aria-label="Aumentar">+</button></div>` +
+    `<button type="button" class="btn peq sec" id="mais-menu" aria-label="Mais opções" aria-haspopup="menu">⋯</button>` +
+    `<button type="button" class="btn peq sec" id="foco-btn" title="Tela cheia de foco (Alt Enter)">Foco ⤢</button><div class="abas" role="tablist"><button type="button" data-aba="slide" class="on">Slide</button><button type="button" data-aba="notas">Anotações</button></div>` +
+    `<input type="file" id="anexar" accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,.pdf" hidden></div>` +
     `<div class="aula" data-aba="slide">` +
-    `<section class="painel" id="p-slide"><div class="cab"><select id="sel-arq" aria-label="Arquivo"></select>` +
-    `<label class="btn peq sec">Anexar<input type="file" id="anexar" accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,.pdf" hidden></label>` +
-    `<button type="button" class="btn peq sec" id="remover" hidden>Remover</button><span class="esp"></span><span id="pag">—</span><button type="button" id="menos" aria-label="Diminuir">−</button><span id="zoom">100%</span><button type="button" id="mais" aria-label="Aumentar">+</button></div>` +
-    `<p class="erro" id="erro-slide" hidden></p><div id="leitor" tabindex="0" aria-label="Slide (J e K rolam; Page Down e Page Up trocam de página; + e − dão zoom)"><p class="vazio" id="sem-arq"></p></div></section>` +
-    `<div class="divisoria" id="divisoria" role="separator" aria-orientation="vertical" aria-valuemin="25" aria-valuemax="75" aria-valuenow="50" tabindex="0" aria-label="Divisória entre slide e anotações (setas, ou Alt vírgula e Alt ponto)"></div><section class="painel" id="p-notas"><div class="cab"><button type="button" class="btn peq" id="marcar" title="Ctrl+M">Marcar ◆</button>` +
-    `<span class="esp" id="salvo"></span><button type="button" class="btn peq sec" id="modo">Cartões</button><button type="button" class="btn peq sec" id="hist">Histórico</button></div>` +
+    `<section class="painel" id="p-slide"><p class="erro" id="erro-slide" hidden></p><div id="leitor" tabindex="0" aria-label="Slide (setas e Page Down passam de slide; J e K rolam; + e − dão zoom)"><p class="vazio" id="sem-arq"></p></div></section>` +
+    `<div class="divisoria" id="divisoria" role="separator" aria-orientation="vertical" aria-valuemin="25" aria-valuemax="75" aria-valuenow="50" tabindex="0" aria-label="Divisória entre slide e anotações (setas, ou Alt vírgula e Alt ponto)"></div><section class="painel" id="p-notas"><div class="cab"><button type="button" class="btn peq" id="marcar" title="Marcar a linha (Ctrl M)">Marcar ◆</button><button type="button" class="btn peq sec" id="bt-marc" aria-haspopup="true" aria-expanded="false" title="Ver marcados">◆ <span id="n-marc">0</span></button>` +
+    `<span class="esp" id="salvo"></span><button type="button" class="btn peq sec" id="modo">Cartões</button></div>` +
     `<div class="barra-ed" id="barra-ed" role="toolbar" aria-label="Formatação">
-    <span class="gr"><button type="button" class="ql-header" value="1" title="Título 1 (Ctrl Alt 1)"></button><button type="button" class="ql-header" value="2" title="Título 2 (Ctrl Alt 2)"></button><button type="button" class="ql-header" value="3" title="Título 3 (Ctrl Alt 3)"></button></span>
-    <span class="gr"><button type="button" class="ql-bold" title="Negrito (Ctrl B)"></button><button type="button" class="ql-italic" title="Itálico (Ctrl I)"></button><button type="button" class="ql-underline" title="Sublinhado (Ctrl U)"></button><button type="button" class="ql-strike" title="Riscado (Ctrl Shift X)"></button></span>
-    <span class="gr"><button type="button" class="ql-realce" title="Marca-texto (Ctrl Shift H)"><svg viewBox="0 0 18 18"><path class="ql-stroke" d="M11 3l4 4-6 6H5v-4z"/><path class="ql-stroke" d="M3 16h12"/></svg></button><button type="button" class="ql-code" title="Código (Ctrl E)"></button></span>
-    <span class="gr"><button type="button" class="ql-list" value="ordered" title="Lista numerada (Ctrl Shift 7)"></button><button type="button" class="ql-list" value="bullet" title="Lista com marcadores (Ctrl Shift 8)"></button><button type="button" class="ql-list" value="check" title="Lista de tarefas (Ctrl Shift 9)"></button><button type="button" class="ql-indent" value="-1" title="Voltar (Shift Tab)"></button><button type="button" class="ql-indent" value="+1" title="Recuar (Tab)"></button></span>
-    <span class="gr"><button type="button" class="ql-blockquote" title="Citação (> e espaço)"></button><button type="button" class="ql-link" title="Link (Ctrl K)"></button><button type="button" class="ql-clean" title="Limpar formatação (Ctrl \\)"></button></span></div><div id="hist-lista" hidden></div><div id="cartoes-modo" hidden></div><div id="editor"></div><div class="marc"><h2>Marcados na aula</h2><div id="marcados"></div></div></section></div>`;
+    <span class="gr"><button type="button" class="ql-header" value="1" title="Título 1 (Ctrl Alt 1)"></button><button type="button" class="ql-header" value="2" title="Título 2 (Ctrl Alt 2)"></button></span>
+    <span class="gr"><button type="button" class="ql-bold" title="Negrito (Ctrl B)"></button><button type="button" class="ql-italic" title="Itálico (Ctrl I)"></button><button type="button" class="ql-underline" title="Sublinhado (Ctrl U)"></button></span>
+    <span class="gr"><button type="button" class="ql-realce" title="Marca-texto (Ctrl Shift H)"><svg viewBox="0 0 18 18"><path class="ql-stroke" d="M11 3l4 4-6 6H5v-4z"/><path class="ql-stroke" d="M3 16h12"/></svg></button></span>
+    <span class="gr"><button type="button" class="ql-list" value="ordered" title="Lista numerada (Ctrl Shift 7)"></button><button type="button" class="ql-list" value="bullet" title="Lista com marcadores (Ctrl Shift 8)"></button><button type="button" class="ql-list" value="check" title="Lista de tarefas (Ctrl Shift 9)"></button></span>
+    <span class="gr"><button type="button" class="ql-link" title="Link (Ctrl K)"></button></span>
+    <span class="gr resto"><button type="button" class="ql-header" value="3" title="Título 3 (Ctrl Alt 3)"></button><button type="button" class="ql-strike" title="Riscado (Ctrl Shift X)"></button><button type="button" class="ql-code" title="Código (Ctrl E)"></button><button type="button" class="ql-blockquote" title="Citação (> e espaço)"></button><button type="button" class="ql-indent" value="-1" title="Voltar (Shift Tab)"></button><button type="button" class="ql-indent" value="+1" title="Recuar (Tab)"></button><button type="button" class="ql-clean" title="Limpar formatação (Ctrl \\)"></button></span>
+    <button type="button" class="mais-ed" id="mais-ed" aria-label="Mais formatações" aria-expanded="false" title="Mais formatações">⋯</button></div><div id="hist-lista" hidden></div><div id="cartoes-modo" hidden></div><div id="editor"></div><div class="marc-pop" id="marc-pop" hidden><h2>Marcados na aula</h2><div id="marcados"></div></div></section></div>`;
   const $ = (s) => raiz.querySelector(s);
 
   // ----- arquivos e leitor -----
   function desenharSeletor() {
-    const l = lista(), sel = $('#sel-arq');
-    sel.innerHTML = l.map((f) => `<option value="${f.id}">${escaparHtml(f.nome)}</option>`).join('');
-    sel.hidden = !l.length; $('#remover').hidden = !l.length;
-    if (arquivoAtual) sel.value = String(arquivoAtual.id);
-    $('#sem-arq').textContent = l.length ? '' : 'Nenhum arquivo ainda. Toque em Anexar para escolher um PDF ou uma imagem.';
+    const l = lista();
+    $('#sem-arq').innerHTML = l.length ? '' : 'Nenhum slide ainda.<br><button type="button" class="btn" id="anexar-vazio">Anexar PDF ou imagem</button>';
+    const av = $('#anexar-vazio'); if (av) av.onclick = () => $('#anexar').click();
+    raiz.querySelectorAll('#nav-slide-off').forEach((x) => x.remove());
+    $('#p-slide').classList.toggle('sem-slide', !l.length);
+    for (const id of ['ant', 'prox', 'menos', 'mais']) $('#' + id).disabled = !l.length;
   }
   function mostrarErro(m) { const e = $('#erro-slide'); e.textContent = m || ''; e.hidden = !m; }
   async function abrirArquivo(f) {
@@ -67,16 +72,26 @@ export function desenharAula(raiz, ctx, aulaId) {
     try { await leitor.abrir(ehPdf(f) ? 'pdf' : 'imagem', blob, Number(sessao.lerConfig(`pagina_${f.id}`)) || 1); } catch (e) { mostrarErro(e.message); }
   }
   leitor = criarLeitor($('#leitor'), {
-    aoMudarPagina: (n, total) => { $('#pag').textContent = `Página ${n} de ${total}`; if (arquivoAtual && leitor.total > 1) sessao.gravarConfig(`pagina_${arquivoAtual.id}`, n); },
+    aoMudarPagina: (n, total) => { $('#pag').textContent = `${n} / ${total}`; $('#pag').title = 'Slide atual'; $('#ant').disabled = n <= 1; $('#prox').disabled = n >= total; if (arquivoAtual && leitor.total > 1) sessao.gravarConfig(`pagina_${arquivoAtual.id}`, n); },
     aoMudarZoom: (z) => { $('#zoom').textContent = Math.round(z * 100) + '%'; },
   });
-  $('#sel-arq').onchange = (e) => { const f = lista().find((x) => x.id === Number(e.target.value)); if (f) abrirArquivo(f); };
-  $('#remover').onclick = async () => {
+  async function removerArquivo() {
     const f = arquivoAtual; if (!f) return;
     sessao.aplicar((e) => excluirArquivo(e, f.id, new Date().toISOString()));
     arquivoAtual = null; leitor.fechar(); desenharSeletor(); mostrarErro('');
     const resto = lista(); if (resto.length) await abrirArquivo(resto[resto.length - 1]); else $('#pag').textContent = '—';
     ctx.aviso(`"${f.nome}" foi para a lixeira.`, { texto: 'Desfazer', fazer: async () => { sessao.aplicar((e) => restaurarArquivo(e, f.id)); desenharSeletor(); await abrirArquivo(f); desenharSeletor(); } });
+  }
+  $('#ant').onclick = () => leitor.anterior(); $('#prox').onclick = () => leitor.proximo();
+  $('#mais-menu').onclick = (e) => {
+    const l = lista(), cont = leitor.modo === 'continuo';
+    abrirMenu(e.currentTarget, [
+      { rotulo: 'Anexar slide ou imagem…', fazer: () => $('#anexar').click() },
+      ...(l.length > 1 ? l.map((f) => ({ rotulo: f.nome, marcado: f.id === arquivoAtual?.id, fazer: () => abrirArquivo(f) })) : []),
+      ...(l.length ? [{ rotulo: cont ? 'Mostrar um slide por vez' : 'Rolar o arquivo contínuo', fazer: () => leitor.definirModo(cont ? 'pagina' : 'continuo') }] : []),
+      { rotulo: 'Histórico de versões do texto', fazer: alternarHistorico },
+      ...(arquivoAtual ? [{ sep: true }, { rotulo: `Remover “${arquivoAtual.nome}”`, perigo: true, fazer: removerArquivo }] : []),
+    ]);
   };
   $('#mais').onclick = () => leitor.mais(); $('#menos').onclick = () => leitor.menos();
   $('#anexar').onchange = async (e) => {
@@ -101,20 +116,24 @@ export function desenharAula(raiz, ctx, aulaId) {
     const pag = arquivoAtual && leitor.total > 1 ? leitor.pagina : null;
     sessao.aplicar((e) => criarMarcador(e, aulaId, { arquivoId: arquivoAtual?.id ?? null, pagina: pag, trecho: texto }, new Date().toISOString()).estado);
     quill.insertText(inicio, `◆ ${pag ? `p.${pag} ` : ''}`, { bold: true }, 'user');
-    desenharMarcados();
+    desenharMarcados(); ctx.aviso(pag ? `◆ Marcado no slide ${pag}.` : '◆ Linha marcada.');
   }
   function desenharMarcados() {
     const ms = marcadoresDaAula(sessao.estado(), aulaId);
+    $('#n-marc').textContent = String(ms.length); $('#bt-marc').classList.toggle('vazio-m', !ms.length);
     $('#marcados').innerHTML = ms.length ? ms.map((m) => `<div class="it"><button type="button" class="ir" data-pag="${m.pagina ?? ''}" data-arq="${m.arquivo_id ?? ''}">${escaparHtml(descreverMarcador(m))}</button><button type="button" class="x" data-rem="${m.id}" aria-label="Remover marcador">×</button></div>`).join('')
       : '<p class="vazio">Nenhum marcador. Use o botão Marcar ou Ctrl+M no texto.</p>';
   }
+  $('#bt-marc').onclick = () => { const p = $('#marc-pop'); p.hidden = !p.hidden; $('#bt-marc').setAttribute('aria-expanded', String(!p.hidden)); };
+  const foraMarc = (e) => { const p = $('#marc-pop'); if (!p.hidden && !p.contains(e.target) && !e.target.closest('#bt-marc')) { p.hidden = true; $('#bt-marc').setAttribute('aria-expanded', 'false'); } };
+  document.addEventListener('pointerdown', foraMarc);
   $('#marcados').onclick = async (e) => {
     const ir = e.target.closest('.ir'), x = e.target.closest('.x');
     if (x) { sessao.aplicar((s) => removerMarcador(s, Number(x.dataset.rem), new Date().toISOString())); desenharMarcados(); }
     else if (ir && ir.dataset.pag) {
       const f = lista().find((a) => a.id === Number(ir.dataset.arq));
       if (f && f.id !== arquivoAtual?.id) { await abrirArquivo(f); desenharSeletor(); }
-      aba = 'slide'; $('.aula').dataset.aba = aba; raiz.querySelectorAll('.abas button').forEach((b) => b.classList.toggle('on', b.dataset.aba === aba));
+      $('#marc-pop').hidden = true; aba = 'slide'; $('.aula').dataset.aba = aba; raiz.querySelectorAll('.abas button').forEach((b) => b.classList.toggle('on', b.dataset.aba === aba));
       leitor.irPara(Number(ir.dataset.pag));
     }
   };
@@ -127,7 +146,8 @@ export function desenharAula(raiz, ctx, aulaId) {
     h.innerHTML = vs.length ? `<p class="sub">Versões anteriores do texto. Restaurar guarda o texto de agora no histórico.</p>` + vs.map((v) => `<div class="lin"><div class="t">${escaparHtml(dataHora(v.criado_em))}<small>${escaparHtml(textoDoDelta(v.conteudo).slice(0, 90) || '(vazio)')}</small></div><button type="button" class="btn peq sec" data-v="${v.id}">Restaurar</button></div>`).join('')
       : '<p class="sub">Ainda não há versões anteriores. O histórico guarda um ponto de volta a cada 5 minutos de escrita.</p>';
   }
-  $('#hist').onclick = () => { salvarAgora(); historicoAberto = !historicoAberto; desenharHistorico(); };
+  function alternarHistorico() { salvarAgora(); historicoAberto = !historicoAberto; desenharHistorico(); }
+  $('#mais-ed').onclick = () => { const b = $('#barra-ed'); b.classList.toggle('aberta'); $('#mais-ed').setAttribute('aria-expanded', String(b.classList.contains('aberta'))); };
   $('#hist-lista').onclick = (e) => {
     const b = e.target.closest('[data-v]'); if (!b) return;
     try { salvarAgora(); quill.setContents(JSON.parse(sessao.restaurarVersao(aulaId, Number(b.dataset.v))), 'silent'); $('#salvo').textContent = 'Versão restaurada'; } catch (err) { ctx.aviso(err.message); }
@@ -172,7 +192,7 @@ export function desenharAula(raiz, ctx, aulaId) {
 
   const aoSair = () => salvarAgora();
   addEventListener('pagehide', aoSair); document.addEventListener('visibilitychange', aoSair);
-  const limpar = () => { document.removeEventListener('ohara-divisoria', aoDivisoria); removeEventListener('pagehide', aoSair); document.removeEventListener('visibilitychange', aoSair); salvarAgora(); leitor.fechar(); raiz.className = ''; };
+  const limpar = () => { document.removeEventListener('pointerdown', foraMarc); document.removeEventListener('ohara-divisoria', aoDivisoria); removeEventListener('pagehide', aoSair); document.removeEventListener('visibilitychange', aoSair); salvarAgora(); leitor.fechar(); raiz.className = ''; };
 
   desenharSeletor(); desenharMarcados();
   const l = lista();
@@ -205,11 +225,17 @@ export function desenharAula(raiz, ctx, aulaId) {
     else if (d === 'esq' && emNotas) { e.preventDefault(); focarSlide(); }
   };
   raiz.addEventListener('ohara-mover', aoMover);
+  // Passar de slide sem sair do texto: Alt+Page Down / Page Up e Alt+] / Alt+[
+  raiz.addEventListener('keydown', (e) => {
+    if (!e.altKey || e.ctrlKey || e.metaKey || !arquivoAtual) return;
+    if (e.code === 'PageDown' || e.code === 'BracketRight') { e.preventDefault(); leitor.proximo(); }
+    else if (e.code === 'PageUp' || e.code === 'BracketLeft') { e.preventDefault(); leitor.anterior(); }
+  });
   $('#leitor').addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     const l = $('#leitor');
     if (e.key === 'j') { l.scrollBy({ top: 90 }); e.preventDefault(); } else if (e.key === 'k') { l.scrollBy({ top: -90 }); e.preventDefault(); }
-    else if (e.key === 'PageDown') { leitor.irPara(leitor.pagina + 1); e.preventDefault(); } else if (e.key === 'PageUp') { leitor.irPara(leitor.pagina - 1); e.preventDefault(); }
+    else if (e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === ' ') { leitor.proximo(); e.preventDefault(); } else if (e.key === 'PageUp' || e.key === 'ArrowLeft') { leitor.anterior(); e.preventDefault(); }
     else if (e.key === '+' || e.key === '=') { leitor.mais(); e.preventDefault(); } else if (e.key === '-') { leitor.menos(); e.preventDefault(); } else if (e.key === '0') { leitor.normal(); e.preventDefault(); }
   });
   $('#foco-btn').onclick = () => window.ohara?.teclado?.alternarFoco?.();

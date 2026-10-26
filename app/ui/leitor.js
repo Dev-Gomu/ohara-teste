@@ -10,13 +10,18 @@ async function carregarPdfjs() {
 }
 
 export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () => {} } = {}) {
-  let pdf = null, imagem = null, zoom = 1, baseW = 0, pagina = 1, obs = null, geracao = 0;
+  let pdf = null, imagem = null, zoom = 1, baseW = 0, baseH = 0, pagina = 1, obs = null, geracao = 0, modo = 'pagina';
+  try { if (localStorage.getItem('ohara.leitor') === 'continuo') modo = 'continuo'; } catch { /* sem armazenamento */ }
+  let medido = [0, 0];
   const conteudo = document.createElement('div');
   raiz.appendChild(conteudo);
 
   const limita = (z) => Math.min(3, Math.max(0.5, z));
   const larguraBase = () => Math.max(120, raiz.clientWidth - 20);
-  const escala = () => Math.min(3, Math.max(0.4, larguraBase() / baseW * zoom));
+  const alturaBase = () => Math.max(120, raiz.clientHeight - 20);
+  // modo 'pagina': o slide inteiro cabe na tela (largura e altura); 'continuo': ajusta só à largura e rola.
+  const ajuste = () => (modo === 'pagina' && baseH ? Math.min(larguraBase() / baseW, alturaBase() / baseH) : larguraBase() / baseW);
+  const escala = () => Math.min(3, Math.max(0.2, ajuste() * zoom));
 
   function limpar() { geracao++; conteudo.innerHTML = ''; if (obs) obs.disconnect(); obs = null; }
 
@@ -36,17 +41,21 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
 
   async function montarPdf() {
     limpar(); if (!pdf) return;
+    conteudo.style.cssText = modo === 'pagina' ? 'display:flex;flex-direction:column' : '';
     const g = geracao, p1 = await pdf.getPage(1), v1 = p1.getViewport({ scale: escala() });
     for (let i = 1; i <= pdf.numPages; i++) {
-      const d = document.createElement('div'); d.className = 'pg'; d.dataset.n = i; d.style.width = v1.width + 'px'; d.style.height = v1.height + 'px'; conteudo.appendChild(d);
+      const d = document.createElement('div'); d.className = 'pg'; d.dataset.n = i; d.style.width = v1.width + 'px'; d.style.height = v1.height + 'px'; if (modo === 'pagina') d.style.margin = `${Math.max(0, Math.floor((alturaBase() - v1.height) / 2)) + 5}px auto`; conteudo.appendChild(d);
     }
     obs = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? desenharPagina(e.target, g) : apagarPagina(e.target))), { root: raiz, rootMargin: '900px 0px' });
     conteudo.querySelectorAll('.pg').forEach((d) => obs.observe(d));
+    raiz.classList.toggle('ajustado', modo === 'pagina' && zoom <= 1.001);
+    medido = [raiz.clientWidth, raiz.clientHeight];
     atualizarPagina();
   }
 
   function montarImagem() {
-    imagem.style.width = (larguraBase() * zoom) + 'px';
+    imagem.style.width = (modo === 'pagina' ? Math.min(larguraBase(), alturaBase() * (imagem.naturalWidth / (imagem.naturalHeight || 1) || 1)) * zoom : larguraBase() * zoom) + 'px';
+    if (modo === 'pagina') imagem.style.maxHeight = 'none';
     atualizarPagina();
   }
 
@@ -54,7 +63,7 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
     let n = 1, total = 1;
     if (pdf) {
       total = pdf.numPages;
-      const topo = raiz.scrollTop + raiz.clientHeight / 3;
+      const topo = raiz.scrollTop + raiz.clientHeight / (modo === 'pagina' ? 2 : 3);
       for (const d of conteudo.children) { if (d.offsetTop - conteudo.offsetTop <= topo) n = Number(d.dataset.n); else break; }
     }
     pagina = n;
@@ -70,6 +79,21 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
     if (pdf) await montarPdf(); else if (imagem) montarImagem();
     raiz.scrollLeft = ox * k - cx; raiz.scrollTop = oy * k - cy;
   }
+
+  // Ao mudar o tamanho do painel (divisória, giro do tablet), o slide é redesenhado para continuar inteiro na tela.
+  let refaz = null;
+  new ResizeObserver(() => {
+    if (!pdf || Math.abs(raiz.clientWidth - medido[0]) < 24 && Math.abs(raiz.clientHeight - medido[1]) < 24) return;
+    clearTimeout(refaz); refaz = setTimeout(async () => { const n = pagina; await montarPdf(); const d = conteudo.querySelector(`.pg[data-n="${n}"]`); if (d) raiz.scrollTop = d.offsetTop - conteudo.offsetTop - 8; }, 150);
+  }).observe(raiz);
+  // Deslizar com um dedo para o lado passa de slide (só com o slide inteiro à vista).
+  let dedo = null;
+  raiz.addEventListener('touchstart', (e) => { dedo = e.touches.length === 1 && raiz.classList.contains('ajustado') ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null; }, { passive: true });
+  raiz.addEventListener('touchend', (e) => {
+    if (!dedo || !e.changedTouches.length) return;
+    const dx = e.changedTouches[0].clientX - dedo.x, dy = e.changedTouches[0].clientY - dedo.y, rapido = Date.now() - dedo.t < 600; dedo = null;
+    if (rapido && Math.abs(dx) > 70 && Math.abs(dy) < 45) (dx < 0 ? api.proximo() : api.anterior());
+  });
 
   // Pinça: enquanto os dois dedos estão na tela só escala o conteúdo; ao soltar, redesenha no zoom novo.
   let pinca = null;
@@ -92,7 +116,7 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
   };
   raiz.addEventListener('touchend', fimPinca); raiz.addEventListener('touchcancel', fimPinca);
 
-  return {
+  const api = {
     /** Abre um arquivo anexado. `tipo` é 'pdf' ou 'imagem'; `blob` o conteúdo. Lança Error com mensagem para o usuário. */
     async abrir(tipo, blob, paginaInicial = 1) {
       limpar(); pdf = null; imagem = null; pagina = 1; zoom = 1; aoMudarZoom(zoom);
@@ -100,21 +124,25 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
         const lib = await carregarPdfjs();
         try { pdf = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise; }
         catch { throw new Error('Não consegui abrir este PDF. Ele pode estar danificado ou protegido por senha.'); }
-        baseW = (await (await pdf.getPage(1)).getViewport({ scale: 1 })).width;
+        { const v = (await pdf.getPage(1)).getViewport({ scale: 1 }); baseW = v.width; baseH = v.height; }
         await montarPdf();
-        if (paginaInicial > 1) this.irPara(paginaInicial);
+        if (paginaInicial > 1) api.irPara(paginaInicial);
       } else {
         const url = URL.createObjectURL(blob);
         imagem = document.createElement('img'); imagem.className = 'imagem'; imagem.alt = ''; imagem.src = url;
-        imagem.onload = () => URL.revokeObjectURL(url);
+        imagem.onload = () => { URL.revokeObjectURL(url); montarImagem(); };
         conteudo.appendChild(imagem); montarImagem();
       }
     },
     irPara(n) {
       if (!pdf) return;
       const d = conteudo.querySelector(`.pg[data-n="${Math.min(Math.max(1, n), pdf.numPages)}"]`);
-      if (d) raiz.scrollTop = d.offsetTop - conteudo.offsetTop - 8;
+      if (d) { raiz.scrollTop = d.offsetTop - conteudo.offsetTop - 8; pagina = Number(d.dataset.n); aoMudarPagina(pagina, pdf.numPages); }
     },
+    proximo() { return api.irPara(pagina + 1); },
+    anterior() { return api.irPara(pagina - 1); },
+    get modo() { return modo; },
+    async definirModo(m) { modo = m === 'continuo' ? 'continuo' : 'pagina'; try { localStorage.setItem('ohara.leitor', modo); } catch { /* vale só agora */ } const n = pagina; zoom = 1; aoMudarZoom(1); if (pdf) { await montarPdf(); api.irPara(n); } else if (imagem) montarImagem(); },
     mais() { return definirZoom(zoom + 0.25); },
     menos() { return definirZoom(zoom - 0.25); },
     normal() { return definirZoom(1); },
@@ -123,4 +151,5 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
     get zoom() { return zoom; },
     fechar() { limpar(); pdf = null; imagem = null; },
   };
+  return api;
 }

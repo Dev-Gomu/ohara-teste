@@ -12,7 +12,7 @@ export function baixarBytes(bytes, nome, tipo) {
 
 export function desenharCartoes(raiz, ctx) {
   const { sessao } = ctx;
-  let filtro = '', editando = null, erro = '', relatorio = null, urls = [], anki = null, enviando = false;
+  let abertoMais = false, filtro = '', editando = null, erro = '', relatorio = null, urls = [], anki = null, enviando = false;
   const liberar = () => { urls.forEach((u) => URL.revokeObjectURL(u)); urls = []; };
 
   function desenhar() {
@@ -31,6 +31,11 @@ export function desenharCartoes(raiz, ctx) {
       `<div class="acoes"><button class="btn peq" type="submit" ${aulas.length ? '' : 'disabled'}>Importar</button></div>${relatorioHtml()}</form></div>` +
       `<div class="card bloco"><div class="acoes" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Seus cartões</h2><select class="in" id="filtro" style="width:auto"><option value="">Todas as matérias</option>${ativas(estado.disciplinas).map((d) => `<option value="${d.id}" ${String(d.id) === filtro ? 'selected' : ''}>${escaparHtml(d.nome)}</option>`).join('')}</select></div>` +
       (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '') + (itens.map(({ cartao: c, aula, disciplina }) => editando === c.id ? formEdicao(c) : cartaoHtml(c, aula, disciplina)).join('') || '<p class="sub">Nada por aqui.</p>') + '</div>';
+    // O uso de todo dia (ver e editar cartões) vem primeiro; Anki e importação ficam recolhidos.
+    const blocos = [...raiz.querySelectorAll(':scope > .card.bloco')], listaCards = blocos.pop(), det = document.createElement('details');
+    det.className = 'mais-cartoes'; det.open = abertoMais; det.innerHTML = '<summary class="btn sec">Enviar ao Anki e importar texto</summary>';
+    blocos.forEach((c) => det.appendChild(c)); raiz.querySelector('p.sub').after(listaCards); listaCards.after(det);
+    det.addEventListener('toggle', () => { abertoMais = det.open; });
     for (const { cartao: c } of itens) if (c.tem_imagem) sessao.lerImagemCartao(c.id).then((b) => { const el = raiz.querySelector(`img[data-cartao="${c.id}"]`); if (b && el) { const u = URL.createObjectURL(b); urls.push(u); el.src = u; } });
     document.title = 'Cartões · Ohara';
   }

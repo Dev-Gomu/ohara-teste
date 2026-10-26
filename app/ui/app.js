@@ -111,6 +111,7 @@ function aviso(texto, acao) {
 aplicarBarra(lerBarra());
 document.addEventListener('click', (ev) => { if (barra.aberta() && !ev.target.closest('#nav') && !ev.target.closest('#abrir-barra')) barra.fechar(); });
 document.getElementById('abrir-barra').onclick = () => (barra.aberta() ? barra.fechar() : barra.abrir());
+document.getElementById('sair-foco').onclick = () => modoFoco.sair();
 addEventListener('hashchange', () => barra.fechar());
 aplicarTema(escolherTema(guardar.ler(), matchMedia('(prefers-color-scheme: dark)').matches));
 aplicarVisual(escolherVisual((() => { try { return localStorage.getItem(CHAVE_VISUAL); } catch { return null; } })()));

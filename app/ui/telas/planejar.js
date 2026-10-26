@@ -28,8 +28,10 @@ export function desenharPlanejar(raiz, ctx) {
     const semVaga = estado.tarefas.filter((t) => !t.feita_em && t.sem_vaga).length;
     raiz.innerHTML = `<h1>Planejar</h1><p class="sub">O plano se refaz sozinho: o que atrasa passa para os próximos dias, sempre antes da prova.</p>` +
       (semVaga ? `<div class="aviso ur"><span>${semVaga} ${semVaga === 1 ? 'bloco não cabe' : 'blocos não cabem'} nas horas disponíveis. Aumente o tempo livre abaixo ou fale com o professor sobre a data.</span></div>` : '') +
-      `<div class="card bloco"><h2>Próximos 7 dias</h2>${dias.map((d) => { const ts = doDia(d); return `<div class="dia-plano"><div class="sec">${escaparHtml(diaComSemana(d))}${d === h ? ' · hoje' : ''}</div>` +
-        (ts.length ? ts.map((t) => linhaTarefa(t, porId)).join('') : '<p class="sub" style="margin:4px 0 10px">Nada planejado.</p>') + '</div>'; }).join('')}</div>` +
+      `<div class="card bloco"><h2>Próximos 7 dias</h2>${(() => { let primeiro = true; return dias.map((d, i) => { const ts = doDia(d), pend = ts.filter((t) => !t.feita_em).length, titulo = `${escaparHtml(diaComSemana(d))}${d === h ? ' · hoje' : ''}`;
+        const corpo = ts.length ? ts.map((t) => { const eh = primeiro && !t.feita_em; if (eh) primeiro = false; return linhaTarefa(t, porId, eh); }).join('') : '<p class="sub" style="margin:4px 0 10px">Nada planejado.</p>';
+        return i < 2 ? `<div class="dia-plano${d === h ? ' hoje-p' : ''}"><h3 class="dia-t">${titulo}</h3>${corpo}</div>`
+          : `<details class="dia-plano"><summary>${titulo} <span>${ts.length ? `${ts.length} ${ts.length === 1 ? 'tarefa' : 'tarefas'}` : 'livre'}</span></summary>${corpo}</details>`; }).join(''); })()}</div>` +
       `<div class="card bloco"><h2>Provas</h2>${provasFuturas(estado, h).map((p) => { const m = porId.get(p.disciplina_id), n = diasEntre(h, p.data); return `<div class="lin"><span class="pt" style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></span><div class="t">${escaparHtml(p.titulo)}<small>${escaparHtml(m?.nome ?? '')} · ${escaparHtml(dataPorExtenso(p.data))} · ${n === 0 ? 'hoje' : n === 1 ? 'amanhã' : `em ${n} dias`} · ${aulasDaProva(p).length} ${aulasDaProva(p).length === 1 ? 'aula' : 'aulas'}</small></div><button class="btn peq sec" type="button" data-a="excluir-prova" data-id="${p.id}">Excluir</button></div>`; }).join('') || '<p class="sub">Nenhuma prova marcada.</p>'}` +
       (formProva ? formularioProva(estado) : '<p><button class="btn peq" type="button" data-a="nova-prova">Nova prova</button></p>') + '</div>' +
       `<div class="card bloco"><h2>Dificuldade das matérias</h2><p class="sub">De 1 (fácil) a 3 (difícil): matéria mais difícil pede mais blocos de estudo por aula.</p>${mats().map((m) => `<div class="lin"><span class="pt" style="background:${corCss(m.cor)}"></span><div class="t">${escaparHtml(m.nome)}</div><select class="in curto" data-dif="${m.id}" aria-label="Dificuldade de ${escaparHtml(m.nome)}">${[1, 2, 3].map((n) => `<option value="${n}" ${(m.dificuldade ?? 2) === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`).join('') || '<p class="sub">Crie matérias primeiro.</p>'}</div>` +
@@ -40,11 +42,11 @@ export function desenharPlanejar(raiz, ctx) {
     document.title = 'Planejar · Ohara';
   }
 
-  function linhaTarefa(t, porId) {
+  function linhaTarefa(t, porId, destaque = false) {
     const m = porId.get(t.disciplina_id), atrasada = !t.feita_em && t.dia_original < t.dia;
-    return `<div class="lin"><button type="button" class="ck ${t.feita_em ? 'f' : ''}" data-a="${t.feita_em ? 'desfazer' : 'feita'}" data-id="${t.id}" aria-label="${t.feita_em ? 'Desmarcar' : 'Marcar como feita'}"></button>` +
+    return `<div class="lin${destaque ? ' prox' : ''}"><button type="button" class="ck ${t.feita_em ? 'f' : ''}" data-a="${t.feita_em ? 'desfazer' : 'feita'}" data-id="${t.id}" aria-label="${t.feita_em ? 'Desmarcar' : 'Marcar como feita'}"></button>` +
       `<span class="pt" style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></span><div class="t" style="${t.feita_em ? 'opacity:.55;text-decoration:line-through' : ''}">${escaparHtml(t.titulo)}<small>${escaparHtml(m?.nome ?? '')} · ${t.minutos} min${atrasada ? ` · <span class="tag-ur">atrasada desde ${escaparHtml(dataPorExtenso(t.dia_original))}</span>` : ''}${t.sem_vaga && !t.feita_em ? ' · <span class="tag-ur">não cabe nas horas</span>' : ''}</small></div>` +
-      (t.feita_em ? '' : `<a class="btn peq" href="#foco/${t.id}">Começar</a>`) + '</div>';
+      (t.feita_em ? '' : destaque ? `<a class="btn peq" href="#foco/${t.id}">Começar</a>` : `<a class="btn peq sec" href="#foco/${t.id}" aria-label="Começar ${escaparHtml(t.titulo)}">Começar</a>`) + '</div>';
   }
 
   function formularioProva(estado) {

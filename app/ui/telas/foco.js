@@ -4,10 +4,11 @@ import { ativas, corCss } from '../../nucleo/materias.js';
 import { formatarRelogio, restanteMs, progresso } from '../../nucleo/foco.js';
 import { sequencia, horasMinutos } from '../../nucleo/estudo.js';
 import { diaDe } from '../foco_servico.js';
+import { tarefasDoDia } from '../../nucleo/planejador.js';
 
 export function desenharFoco(raiz, ctx, tarefaId = null) {
   const { sessao, foco } = ctx;
-  let confirmando = false, erro = '';
+  let confirmando = false, erro = '', outra = false;
   const nomeMateria = (id) => sessao.estado().disciplinas.find((d) => d.id === id);
 
   function desenhar() {
@@ -26,10 +27,21 @@ export function desenharFoco(raiz, ctx, tarefaId = null) {
   }
 
   function ocioso(cfg) {
-    const alvo = tarefaId == null ? null : sessao.estado().tarefas.find((t) => t.id === tarefaId && !t.feita_em && !t.excluido_em);
+    const escolhida = tarefaId == null ? null : sessao.estado().tarefas.find((t) => t.id === tarefaId && !t.feita_em && !t.excluido_em);
+    const sugerida = escolhida ?? tarefasDoDia(sessao.estado(), diaDe(Date.now())).pendentes[0] ?? null;
+    const alvo = outra ? null : sugerida;
     const metaMin = cfg.meta_diaria_min, sq = sequencia(sessao.estado().blocos, diaDe(Date.now()), metaMin);
     const mats = ativas(sessao.estado().disciplinas);
-    return `<p class="sub">Hoje: ${horasMinutos(sq.minutosHoje)} de ${horasMinutos(metaMin)}${sq.dias ? ` · sequência de ${sq.dias} ${sq.dias === 1 ? 'dia' : 'dias'}` : ''}</p>` +
+    const resumo = `<p class="sub">Hoje: ${horasMinutos(sq.minutosHoje)} de ${horasMinutos(metaMin)}${sq.dias ? ` · sequência de ${sq.dias} ${sq.dias === 1 ? 'dia' : 'dias'}` : ''}</p>`;
+    if (alvo) {
+      const m = nomeMateria(alvo.disciplina_id);
+      return resumo + `<form class="card sugestao" id="novo"><div class="ov">${escaparHtml(escolhida ? 'Tarefa escolhida' : 'Sugestão do plano')}</div><h2 class="st">${escaparHtml(alvo.titulo)}</h2>` +
+        `<p class="sub">${m ? escaparHtml(m.nome) + ' · ' : ''}bloco de ${Math.max(alvo.minutos, 1)} min</p>` +
+        `<input type="hidden" name="materia" value="${alvo.disciplina_id ?? ''}"><input type="hidden" name="tarefa" value="${escaparHtml(alvo.titulo)}"><input type="hidden" name="minutos" value="${Math.max(alvo.minutos, 1)}"><input type="hidden" name="tarefa_id" value="${alvo.id}">` +
+        (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '') +
+        `<div class="acoes"><button class="btn" type="submit" value="foco">Começar bloco</button><button class="btn sec" type="button" data-a="outra">Escolher outra coisa</button><button class="btn sec" type="submit" value="anki">Revisão no Anki</button></div></form>`;
+    }
+    return resumo +
       `<form class="card form" id="novo"><label class="c">Matéria<select class="in" name="materia"><option value="">Sem matéria</option>${mats.map((m) => `<option value="${m.id}" ${alvo?.disciplina_id === m.id ? 'selected' : ''}>${escaparHtml(m.nome)}</option>`).join('')}</select></label>` +
       `<label class="c">O que vai estudar<input class="in" name="tarefa" maxlength="120" autocomplete="off" value="${escaparHtml(alvo?.titulo ?? '')}" placeholder="Ex.: ler os slides da aula 4"></label>` +
       `<label class="c">Minutos<input class="in" name="minutos" type="number" min="1" max="180" value="${alvo ? Math.max(alvo.minutos, 1) : cfg.foco_min}" inputmode="numeric"></label>` +
@@ -58,7 +70,8 @@ export function desenharFoco(raiz, ctx, tarefaId = null) {
   };
   raiz.onclick = (ev) => {
     const b = ev.target.closest('[data-a]'); if (!b) return;
-    if (b.dataset.a === 'abandonar') { confirmando = true; desenhar(); }
+    if (b.dataset.a === 'outra') { outra = true; desenhar(); }
+    else if (b.dataset.a === 'abandonar') { confirmando = true; desenhar(); }
     else if (b.dataset.a === 'abandonar-nao') { confirmando = false; desenhar(); }
     else if (b.dataset.a === 'abandonar-sim') { const m = foco.abandonar(); confirmando = false; ctx.aviso(m ? `Bloco abandonado: ${m} min registrados.` : 'Bloco abandonado (menos de 1 minuto, nada registrado).'); desenhar(); }
     else if (b.dataset.a === 'pular') { foco.pularPausa(); desenhar(); }

@@ -49,7 +49,7 @@ export function desenharHoje(raiz, ctx) {
 
     const agoraMin = Number(agoraLocal(agora).slice(11, 13)) * 60 + Number(agoraLocal(agora).slice(14, 16));
     const aulasDia = aulasDoDia(estado, hoje), enc = encaixarEstudo(aulasDia, plano.pendentes, { agoraMin });
-    const faixa = faixaDeHoras([...aulasDia, ...enc.colocados], [8, 21]), PX = 52, altura = (faixa.ate - faixa.de) * PX;
+    const faixa = faixaDeHoras([...aulasDia, ...enc.colocados], [9, 17]), PX = 52, altura = (faixa.ate - faixa.de) * PX;
     const hhmm = (m) => `${dois(Math.floor(m / 60))}:${dois(m % 60)}`, topo = (m) => (m - faixa.de * 60) / 60 * PX;
     const minDia = minutosPorDia(estado.blocos), semana = diasDaSemana(inicioDaSemana(hoje), hoje, somarDias);
     const horas = []; for (let h = faixa.de; h <= faixa.ate; h += 2) horas.push(h);
@@ -72,7 +72,7 @@ export function desenharHoje(raiz, ctx) {
       (pendentes.length ? `<div class="card"><h2>Estudo sem horário hoje</h2><div class="lst">${pendentes.map((t) => { const m = porId.get(t.disciplina_id); return `<a class="r" href="#foco/${t.id}" style="--c:${m ? corCss(m.cor) : 'var(--tx2)'}"><span class="h">${t.minutos} min</span><i class="d"></i><div class="t">${escaparHtml(t.titulo)}<small>${escaparHtml(m?.nome ?? '')}${t.dia_original < hoje ? ' · <span class="tag-ur">atrasada</span>' : ''}</small></div></a>`; }).join('')}</div>${plano.feitas.length ? `<div class="feito">Feito hoje: ${plano.feitas.map((t) => escaparHtml(t.titulo)).join('; ')}</div>` : ''}</div>` : (plano.feitas.length ? `<div class="feito">Feito hoje do plano: ${plano.feitas.map((t) => escaparHtml(t.titulo)).join('; ')}</div>` : '')) +
       `<div class="card" id="cal">${htmlCalendario({ ano, mes, estado, hoje, metaMin: cfg.meta_diaria_min, inicioUso })}${proxima ? `<div class="prova-linha"><i style="background:${porId.get(proxima.disciplina_id) ? corCss(porId.get(proxima.disciplina_id).cor) : 'var(--ur)'}"></i>${escaparHtml(proxima.titulo)} · ${escaparHtml(porId.get(proxima.disciplina_id)?.nome ?? '')}<span>${escaparHtml(dataPorExtenso(proxima.data))} · ${diasEntre(hoje, proxima.data) === 0 ? 'hoje' : `em ${diasEntre(hoje, proxima.data)} dias`}</span></div>` : ''}</div>` +
       (bk.estado === 'nada' ? '' : `<div class="bk${bk.estado === 'ok' ? '' : ' ur'}" id="aviso-backup">${escaparHtml(bk.texto)} <a href="#ajustes">Fazer backup</a></div>`) + `</div></div>` +
-      `<a class="fab" href="#foco" title="Novo bloco de foco" aria-label="Novo bloco de foco">+</a></div>`;
+      `<a class="fab" href="#foco" title="Novo bloco de foco" aria-label="Novo bloco de foco"><span aria-hidden="true">+</span> Novo bloco</a></div>`;
     document.title = 'Hoje · Ohara';
   }
 

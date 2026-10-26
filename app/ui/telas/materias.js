@@ -1,4 +1,5 @@
 // Tela Matérias: listar, criar (com cor), renomear e excluir (vai para a lixeira, com "Desfazer").
+import { abrirMenu } from '../menu.js';
 import { escaparHtml } from '../../nucleo/texto.js';
 import { ABA, codigoDaMateria } from '../aba.js';
 import { proximaAula, rotuloDaAula } from '../../nucleo/aulas.js';
@@ -37,7 +38,7 @@ export function desenharMaterias(raiz, ctx) {
     return `<div class="til" style="--c:${corCss(d.cor)}"><a class="pasta" href="#materias/${d.id}" aria-label="Abrir ${escaparHtml(d.nome)}">${ABA}<span class="corpo"><span class="ini">${inicial}</span>` +
       `<span class="cod">${escaparHtml(codigoDaMateria(d.nome))}</span><span class="seta" aria-hidden="true">↗</span></span></a>` +
       `<div class="info"><a href="#materias/${d.id}" class="nome">${escaparHtml(d.nome)}</a><small>${n} ${n === 1 ? 'aula ou livro' : 'aulas e livros'} · ${quando}</small>` +
-      `<div class="acoes"><button class="btn peq sec" type="button" data-a="renomear" data-id="${d.id}">Renomear</button><button class="btn peq sec" type="button" data-a="excluir" data-id="${d.id}">Excluir</button></div></div></div>`;
+      `<div class="acoes"><button class="btn peq sec mais" type="button" data-a="menu" data-id="${d.id}" aria-label="Mais opções de ${escaparHtml(d.nome)}" aria-haspopup="menu">⋯</button></div></div></div>`;
   }
 
   function tentar(acao) {
@@ -51,17 +52,17 @@ export function desenharMaterias(raiz, ctx) {
     switch (b.dataset.a) {
       case 'nova': criando = true; renomeando = null; erro = ''; corEscolhida = proximaCor(ctx.sessao.estado()); desenhar(); break;
       case 'cancelar': criando = false; renomeando = null; erro = ''; desenhar(); break;
+      case 'menu': abrirMenu(b, [{ rotulo: 'Renomear', fazer: () => { renomeando = id; criando = false; erro = ''; desenhar(); } }, { sep: true }, { rotulo: 'Excluir (vai para a lixeira)', perigo: true, fazer: () => excluirDaLista(id) }]); break;
       case 'renomear': renomeando = id; criando = false; erro = ''; desenhar(); break;
-      case 'excluir': {
-        const nome = lista().find((d) => d.id === id)?.nome;
-        if (tentar(() => ctx.sessao.aplicar((e) => excluirMateria(e, id, new Date().toISOString())))) {
-          desenhar();
-          ctx.aviso(`"${nome}" foi para a lixeira.`, { texto: 'Desfazer', fazer: () => { ctx.sessao.aplicar((e) => restaurarMateria(e, id)); desenhar(); } });
-        }
-        break;
-      }
     }
   };
+  function excluirDaLista(id) {
+    const nome = lista().find((d) => d.id === id)?.nome;
+    if (tentar(() => ctx.sessao.aplicar((e) => excluirMateria(e, id, new Date().toISOString())))) {
+      desenhar();
+      ctx.aviso(`"${nome}" foi para a lixeira.`, { texto: 'Desfazer', fazer: () => { ctx.sessao.aplicar((e) => restaurarMateria(e, id)); desenhar(); } });
+    }
+  }
   raiz.onsubmit = (ev) => {
     ev.preventDefault();
     const nome = new FormData(ev.target).get('nome');

@@ -13,6 +13,8 @@ export function desenharAjustes(raiz, ctx) {
 
   const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
+  const abertas = new Set();
+
   function desenhar() {
     const estado = ctx.sessao.estado();
     const { materias, aulas, arquivos, cartoes, provas } = itensDaLixeira(estado);
@@ -43,6 +45,26 @@ export function desenharAjustes(raiz, ctx) {
       `<div class="card bloco"><h2>Trocar dados entre aparelhos</h2>${blocoTroca()}</div>` +
       `<div class="card bloco"><h2>Armazenamento</h2>${armazenamento()}</div>` +
       `<div class="card bloco"><h2>Dica do teclado</h2><p class="sub">Se a tecla Alt virar Cmd no teclado bluetooth, aperte Fn+P por 3 segundos para voltar ao modo Android.</p></div>`;
+    refinar();
+  }
+
+  // Seções em ordem de uso: Aparência e Metas abertas; o resto recolhido. Números ganham − e +.
+  const RECOLHIVEIS = ['Lixeira', 'Backup', 'Trocar dados entre aparelhos', 'Armazenamento', 'Dica do teclado'];
+  function refinar() {
+    raiz.querySelectorAll(':scope > .card.bloco').forEach((card) => {
+      const h = card.querySelector(':scope > h2'), nome = h?.textContent;
+      if (!RECOLHIVEIS.includes(nome)) return;
+      const det = document.createElement('details'); det.className = card.className; det.open = abertas.has(nome);
+      const sm = document.createElement('summary'); sm.textContent = nome; h.remove();
+      det.appendChild(sm); while (card.firstChild) det.appendChild(card.firstChild);
+      det.addEventListener('toggle', () => { det.open ? abertas.add(nome) : abertas.delete(nome); });
+      card.replaceWith(det);
+    });
+    raiz.querySelectorAll('#metas input[type=number]').forEach((inp) => {
+      const w = document.createElement('div'); w.className = 'passo';
+      const mk = (t, d, r) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.setAttribute('aria-label', r); b.onclick = () => { inp.value = Math.max(Number(inp.min || 0), (Number(inp.value) || 0) + d); }; return b; };
+      inp.before(w); w.append(mk('−', -5, 'Diminuir'), inp, mk('+', 5, 'Aumentar'));
+    });
   }
 
   function blocoMetas() {

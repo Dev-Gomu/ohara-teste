@@ -36,3 +36,42 @@ main.cheia #p-notas>.marc h2{font-size:12px}
 .ql-snow .ql-tooltip{background:var(--cx);color:var(--tx);border:1px solid var(--ln);border-radius:12px;box-shadow:0 12px 30px -10px rgba(0,0,0,.35);z-index:20}
 .ql-snow .ql-tooltip input[type=text]{border:1px solid var(--ln);background:var(--cx2);color:var(--tx);border-radius:8px}
 .ql-snow .ql-tooltip a.ql-action::after,.ql-snow .ql-tooltip a.ql-remove::before{color:var(--tx)}
+/* Cabeçalho único (52 px): ← matéria · título · slide ◀ n/total ▶ · zoom · ⋯ · Foco */
+main.cheia .topo{display:flex;align-items:center;gap:8px;min-height:52px;padding:4px 12px}
+main.cheia .topo .esp{flex:1}
+main.cheia .topo .tt{flex:0 1 auto}
+.gp{display:inline-flex;align-items:center;gap:2px;background:var(--cx2);border-radius:14px;padding:2px;flex:none}
+.gp button{width:40px;height:40px;border:0;border-radius:11px;background:transparent;color:var(--tx);font-size:15px;cursor:pointer;display:grid;place-items:center}
+.gp button:hover:not(:disabled){background:var(--cx)}.gp button:disabled{opacity:.35;cursor:default}
+.gp span{min-width:54px;text-align:center;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--tx)}
+#zoom{font-weight:500;color:var(--tx2);min-width:48px}
+#mais-menu{min-width:44px;font-size:18px;line-height:1;padding:0 14px;letter-spacing:.06em}
+/* slide inteiro por vez */
+#leitor.ajustado{scroll-snap-type:y proximity}
+#leitor.ajustado .pg{scroll-snap-align:center;margin-bottom:10px}
+#p-slide.sem-slide #leitor{display:grid;place-items:center;text-align:center}
+#sem-arq{color:var(--tx2);font-size:15px;line-height:2.2}
+#p-notas{position:relative}
+/* barra do editor em uma linha; o que é raro fica atrás do ⋯ */
+.barra-ed{flex-wrap:nowrap;overflow:hidden}
+.barra-ed .gr.resto{display:none}
+.barra-ed.aberta{flex-wrap:wrap;overflow:visible}.barra-ed.aberta .gr.resto{display:inline-flex}
+.barra-ed .mais-ed{margin-left:auto;font-size:18px;letter-spacing:.06em}
+.barra-ed.aberta .gr.resto{border-right:0}
+/* marcados: botão com contador e lista por cima */
+#bt-marc{min-width:56px}#bt-marc.vazio-m{opacity:.65}
+.marc-pop{position:absolute;right:10px;top:54px;z-index:15;width:min(380px,calc(100% - 20px));max-height:55%;overflow:auto;background:var(--cx);border:1px solid var(--ln);border-radius:16px;padding:10px 12px;box-shadow:0 16px 40px -14px rgba(0,0,0,.45)}
+.marc-pop[hidden]{display:none}
+.marc-pop h2{font-size:12px;color:var(--tx2);font-weight:600;margin:0 0 6px}
+.marc-pop .it{display:flex;gap:6px;align-items:center}
+.marc-pop .ir{flex:1;text-align:left;border:0;background:transparent;cursor:pointer;padding:10px 8px;min-height:44px;border-radius:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:inherit;font-size:14px;color:var(--tx)}.marc-pop .ir:hover{background:var(--cx2)}
+.marc-pop .x{border:0;background:transparent;cursor:pointer;font-size:20px;color:var(--tx2);width:44px;height:44px;border-radius:10px}
+/* menu ⋯ */
+.menu-pop{position:fixed;z-index:120;min-width:250px;max-width:min(92vw,360px);background:var(--cx);color:var(--tx);border:1px solid var(--ln);border-radius:16px;padding:6px;box-shadow:0 22px 50px -14px rgba(0,0,0,.5);display:flex;flex-direction:column}
+.menu-pop .mi{min-height:48px;padding:0 14px;border:0;border-radius:11px;background:transparent;color:inherit;font:inherit;font-size:15px;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu-pop .mi:hover,.menu-pop .mi:focus-visible{background:var(--cx2);outline:0}
+.menu-pop .mi.perigo{color:var(--ur)}
+.menu-pop hr{border:0;border-top:1px solid var(--ln);margin:4px 6px}
+@media(max-width:1000px){main.cheia .topo .tt small{display:none}.abas{margin-left:4px}}
+@media(pointer:coarse){.gp button{width:44px;height:44px}.abas button{min-height:44px}}
+#leitor.ajustado{overflow-x:hidden}

@@ -78,6 +78,7 @@ export function iniciarTeclado(app) {
   }
 
   document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented) return;   // quem tratou antes (slide, menu) já resolveu
     const r = interpretar(e, { digitando: digitando(document.activeElement) });
     if (!r) return;
     if (aberto() && r.acao !== 'sair' && r.acao !== 'lancador' && r.acao !== 'ajuda') return;

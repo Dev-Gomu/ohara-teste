@@ -130,5 +130,5 @@ html[data-tema="escuro"] .hero{color:#141414}.hero.ne{--c:var(--cx);color:var(--
 .cartao img{max-width:120px;max-height:80px;border-radius:8px;display:block;margin-top:6px}
 textarea.in{min-height:76px;resize:vertical;font-family:inherit}
 @media(max-width:820px){.semana{grid-template-columns:repeat(4,1fr)}}
-#p-notas.modo-cartoes #editor,#p-notas.modo-cartoes .ql-toolbar,#p-notas.modo-cartoes>.marc,#p-notas.modo-cartoes #hist-lista{display:none}#cartoes-modo{flex:1;overflow:auto;min-height:0}
+#p-notas.modo-cartoes #editor,#p-notas.modo-cartoes .ql-toolbar,#p-notas.modo-cartoes>.marc-pop,#p-notas.modo-cartoes #hist-lista{display:none}#cartoes-modo{flex:1;overflow:auto;min-height:0}
 .prova-linha{display:flex;gap:10px;align-items:center;font-size:14px;border-top:1px solid var(--ln);margin-top:14px;padding-top:14px}.prova-linha i{width:10px;height:10px;border-radius:50%;flex:none}.prova-linha span{margin-left:auto;color:var(--tx2);text-align:right}.feito{font-size:13px;color:var(--tx2)}
