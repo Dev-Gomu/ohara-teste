@@ -1,8 +1,8 @@
 /* Identidade do protótipo v1: base neutra, cor só nas matérias, vermelho só na urgência. */
 :root{--bg:#ECECEC;--cx:#fff;--cx2:#F4F4F4;--tx:#141414;--tx2:#6B6B6B;--ln:#DDD;--pr:#141414;--prt:#fff;--ur:#F31E57;--urt:#fff;
- --m1:#9A5A5E;--m2:#7A8794;--m3:#8A8F78;--m4:#5E7F78;--m5:#8B7AA0;--ok:#2B734A;--okf:#EAF6EF}
+ --m1:#9A5A5E;--m2:#7A8794;--m3:#8A8F78;--m4:#5E7F78;--m5:#8B7AA0;--m6:#5F7FA6;--m7:#A06A8A;--m8:#A8924A;--ok:#2B734A;--okf:#EAF6EF}
 html[data-tema="escuro"]{--bg:#17171A;--cx:#222226;--cx2:#2B2B30;--tx:#F2F2F2;--tx2:#A0A0A8;--ln:#34343A;--pr:#F2F2F2;--prt:#141414;
- --m1:#C07E82;--m2:#98A6B3;--m3:#A9AE96;--m4:#7FA39B;--m5:#B4A6C8;--ok:#8DD9AE;--okf:#1B3225}
+ --m1:#C07E82;--m2:#98A6B3;--m3:#A9AE96;--m4:#7FA39B;--m5:#B4A6C8;--m6:#8FAAC9;--m7:#C48DAE;--m8:#CBB778;--ok:#8DD9AE;--okf:#1B3225}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx);line-height:1.35;display:grid;grid-template-columns:216px 1fr;overflow:hidden}

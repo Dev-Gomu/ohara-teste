@@ -1,0 +1,55 @@
+/* Visual "Pastas" (alternativo): cinza-claro, sombras difusas, pastas com recorte e folhas atrás, título enorme e leve, sem contorno.
+   Referências: refs 1 e 2 (prototipos/referencias_visuais) e protótipo prototipos/ohara/hubs-comparar.html (slide B).
+   Ligado por data-visual="pastas" no <html> (Ajustes › Visual). Fica por cima de ohara.css (o visual clássico). */
+html[data-visual="pastas"]{--bg:#E6E7E8;--cx:#F5F5F6;--cx2:#E9E9EB;--tx:#141414;--tx2:#6E6E73;--ln:#DADADD;--pr:#141414;--prt:#fff;--nav:#EDEDEE;--folha:#fff;--sh:0 18px 40px -12px rgba(30,30,40,.16),0 2px 6px rgba(30,30,40,.05);--shp:0 22px 40px -16px rgba(30,30,40,.4)}
+html[data-visual="pastas"][data-tema="escuro"]{--bg:#161618;--cx:#202024;--cx2:#2B2B30;--tx:#EDEDEF;--tx2:#9B9BA3;--ln:#2F2F35;--pr:#EDEDEF;--prt:#141414;--nav:#1B1B1E;--folha:#34343a;--sh:0 18px 40px -12px rgba(0,0,0,.55);--shp:0 22px 40px -16px rgba(0,0,0,.7)}
+html[data-visual="pastas"] nav{background:var(--nav)}
+html[data-visual="pastas"] nav a.on{background:var(--cx2)}
+html[data-visual="pastas"] h1{font-size:40px;font-weight:300;letter-spacing:-.03em}
+html[data-visual="pastas"] .card,html[data-visual="pastas"] .cd,html[data-visual="pastas"] .painel{border-radius:30px;box-shadow:var(--sh)}
+html[data-visual="pastas"] .btn{border-radius:99px}html[data-visual="pastas"] .btn.peq{border-radius:99px}
+html[data-visual="pastas"] .confirma{border-radius:20px}
+/* Hoje */
+html[data-visual="pastas"] .hoje2{display:flex;flex-direction:column;gap:18px;max-width:1180px}
+html[data-visual="pastas"] .faixa{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+html[data-visual="pastas"] .faixa h1{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx2);font-weight:600;margin:0 0 4px}
+html[data-visual="pastas"] .faixa .dt .dia{display:block;font-size:44px;font-weight:300;letter-spacing:-.03em;color:var(--tx);line-height:1.05}html[data-visual="pastas"] .faixa .dt .hora{display:block;font-size:14px;color:var(--tx2);margin-top:2px}html[data-visual="pastas"] .faixa .dt .sep{display:none}
+html[data-visual="pastas"] .semana{display:flex;gap:8px}html[data-visual="pastas"] .semana div{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10.5px;color:var(--tx2);font-weight:600;position:relative}
+html[data-visual="pastas"] .semana b{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:500;background:var(--cx);color:var(--tx);box-shadow:0 6px 14px -8px rgba(0,0,0,.25)}
+html[data-visual="pastas"] .semana .h b{background:var(--tx);color:var(--cx)}html[data-visual="pastas"] .semana i{position:absolute;bottom:-6px;width:5px;height:5px;border-radius:50%;background:var(--tx2)}
+html[data-visual="pastas"] .h2g{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start}
+html[data-visual="pastas"] .dia{padding:18px 22px}html[data-visual="pastas"] .eixo{position:relative;margin-top:10px}
+html[data-visual="pastas"] .eixo .hr{position:absolute;left:0;font-size:10.5px;color:var(--tx2);opacity:.7;transform:translateY(-6px)}
+html[data-visual="pastas"] .eixo .ev{position:absolute;left:46px;right:0;display:block;border-radius:7px 18px 18px 18px;padding:7px 14px;font-size:13.5px;background:color-mix(in srgb,var(--c) 26%,var(--cx));border-left:5px solid var(--c);overflow:hidden;box-shadow:0 6px 14px -8px rgba(30,30,40,.3)}
+html[data-visual="pastas"] .ev b{display:block;font-weight:600;line-height:1.2}html[data-visual="pastas"] .ev small{display:block;font-size:11.5px;color:var(--tx2)}html[data-visual="pastas"] .ev.passou{opacity:.45;box-shadow:none}
+html[data-visual="pastas"] .eixo .agora{position:absolute;left:32px;right:0;border-top:2px solid var(--tx);z-index:3}html[data-visual="pastas"] .eixo .agora span{position:absolute;left:-32px;top:-10px;font-size:10.5px;font-weight:700;background:var(--tx);color:var(--cx);border-radius:99px;padding:2px 7px}
+/* "Agora" como pasta: recorte, folhas atrás, sombra embaixo */
+html[data-visual="pastas"] .hero{position:relative;margin-top:34px;border-radius:6px 30px 30px 30px;box-shadow:var(--shp);padding:22px 26px;min-height:0;gap:14px}
+html[data-visual="pastas"] .hero::before{content:"";position:absolute;left:7%;top:-36px;width:54%;height:46px;background:var(--folha);border-radius:14px 14px 0 0}
+html[data-visual="pastas"] .hero::after{content:"";position:absolute;left:0;top:-18px;width:62%;height:20px;background:var(--c,var(--tx));border-radius:18px 18px 0 0;clip-path:polygon(0 0,88% 0,100% 100%,0 100%);z-index:1}
+html[data-visual="pastas"] .hero>*{position:relative;z-index:2}
+html[data-visual="pastas"] .hero h1{font-size:32px;margin:8px 0 4px}html[data-visual="pastas"] .hero .sb{font-size:14px}
+html[data-visual="pastas"] .hero .pr{height:4px}
+html[data-visual="pastas"] .bt{padding:12px 26px;font-size:15px}
+html[data-visual="pastas"] .dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}html[data-visual="pastas"] .dois .cd{padding:16px 20px}
+html[data-visual="pastas"] .big{font-size:36px}
+html[data-visual="pastas"] .feito{font-size:13px;color:var(--tx2);padding-top:12px;border-top:1px solid var(--ln);margin-top:6px}
+html[data-visual="pastas"] .fab{position:fixed;right:30px;bottom:26px;width:56px;height:56px;border-radius:50%;background:var(--pr);color:var(--prt);display:grid;place-items:center;font-size:32px;line-height:1;box-shadow:0 14px 24px -10px rgba(0,0,0,.5);z-index:5}
+/* Matérias como pastas */
+html[data-visual="pastas"] .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:38px 18px;padding-top:34px}
+html[data-visual="pastas"] .til{position:relative;background:var(--c);color:#fff;border-radius:6px 28px 28px 28px;padding:26px 14px 14px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;box-shadow:var(--shp)}
+html[data-visual="pastas"][data-tema="escuro"] .til{color:#141414}
+html[data-visual="pastas"] .til::before{content:"";position:absolute;left:8%;top:-30px;width:52%;height:34px;background:var(--folha);border-radius:12px 12px 0 0}
+html[data-visual="pastas"] .til::after{content:"";position:absolute;left:0;top:-14px;width:46%;height:16px;background:var(--c);border-radius:12px 12px 0 0;clip-path:polygon(0 0,84% 0,100% 100%,0 100%)}
+html[data-visual="pastas"] .til .ini{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.28);display:grid;place-items:center;font-weight:300;font-size:22px}
+html[data-visual="pastas"] .til .nome{font-weight:500;font-size:16px}html[data-visual="pastas"] .til .nome::after{content:"";position:absolute;inset:0;border-radius:6px 28px 28px 28px;z-index:1}
+html[data-visual="pastas"] .til small{font-size:12px;opacity:.85}html[data-visual="pastas"] .til .acoes{justify-content:center;position:relative;z-index:2;margin-top:8px}
+html[data-visual="pastas"] .til .btn.sec{background:rgba(255,255,255,.24);color:inherit}
+html[data-visual="pastas"] .til.edit{align-items:stretch;text-align:left}html[data-visual="pastas"] .til.edit .in{color:var(--tx)}
+/* calendário e barras: sem contorno */
+html[data-visual="pastas"] .bar,html[data-visual="pastas"] .fino{height:6px}
+html[data-visual="pastas"] .tag-ur{color:var(--ur)}
+html[data-visual="pastas"] .amostra{display:none}
+html[data-visual="pastas"] .so-focus{display:none}
+@media(max-width:1000px){html[data-visual="pastas"] .h2g{grid-template-columns:1fr}}
+@media(max-width:820px){html[data-visual="pastas"] .fab{bottom:84px;right:16px}html[data-visual="pastas"] .faixa .dt .dia{font-size:32px}}

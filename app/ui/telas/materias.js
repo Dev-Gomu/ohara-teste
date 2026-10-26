@@ -16,20 +16,19 @@ export function desenharMaterias(raiz, ctx) {
         `<div class="cores" role="group" aria-label="Cor">${bolas(corEscolhida)}</div>${erro ? `<p class="erro">${escaparHtml(erro)}</p>` : ''}` +
         `<div class="acoes"><button class="btn" type="submit">Criar</button><button class="btn sec" type="button" data-a="cancelar">Cancelar</button></div></form>`
         : `<p><button class="btn" type="button" data-a="nova">Nova matéria</button></p>`) +
-      (l.length ? `<div class="card">${l.map((d) => linha(d)).join('')}</div>` : '');
+      (l.length ? `<div class="tiles">${l.map((d) => linha(d)).join('')}</div>` : '');
     const campo = raiz.querySelector('input[name="nome"]');
     if (campo) campo.focus();
   }
 
   function linha(d) {
     if (renomeando === d.id) {
-      return `<form class="lin" data-renomear="${d.id}"><span class="pt" style="background:${corCss(d.cor)}"></span><input class="in" name="nome" maxlength="80" value="${escaparHtml(d.nome)}" autocomplete="off" required>` +
-        `<button class="btn peq" type="submit">Salvar</button><button class="btn peq sec" type="button" data-a="cancelar">Cancelar</button></form>` + (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '');
+      return `<form class="til edit" style="--c:${corCss(d.cor)}" data-renomear="${d.id}"><span class="ini">${escaparHtml(d.nome.slice(0, 1).toUpperCase())}</span><input class="in" name="nome" maxlength="80" value="${escaparHtml(d.nome)}" autocomplete="off" required>` +
+        (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '') + `<div class="acoes"><button class="btn peq" type="submit">Salvar</button><button class="btn peq sec" type="button" data-a="cancelar">Cancelar</button></div></form>`;
     }
     const n = contarAulas(d.id);
-    return `<div class="lin"><span class="pt" style="background:${corCss(d.cor)}"></span><div class="t"><a href="#materias/${d.id}" class="nome">${escaparHtml(d.nome)}</a><small>${n} ${n === 1 ? 'aula ou livro' : 'aulas e livros'}</small></div>` +
-      `<button class="btn peq sec" type="button" data-a="renomear" data-id="${d.id}">Renomear</button>` +
-      `<button class="btn peq sec" type="button" data-a="excluir" data-id="${d.id}">Excluir</button></div>`;
+    return `<div class="til" style="--c:${corCss(d.cor)}"><span class="ini">${escaparHtml(d.nome.slice(0, 1).toUpperCase())}</span><a href="#materias/${d.id}" class="nome">${escaparHtml(d.nome)}</a><small>${n} ${n === 1 ? 'aula ou livro' : 'aulas e livros'}</small>` +
+      `<div class="acoes"><button class="btn peq sec" type="button" data-a="renomear" data-id="${d.id}">Renomear</button><button class="btn peq sec" type="button" data-a="excluir" data-id="${d.id}">Excluir</button></div></div>`;
   }
 
   function tentar(acao) {

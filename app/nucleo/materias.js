@@ -124,7 +124,7 @@ export function esvaziarLixeira(estado) {
 export const chaveImagemCartao = (cartaoId) => 1000000 + cartaoId;
 
 // Cores oferecidas ao criar uma matéria. Na tela, cada uma vira a variável do tema (--m1..--m5), que muda no escuro.
-export const PALETA = ['#9a5a5e', '#7a8794', '#8a8f78', '#5e7f78', '#8b7aa0'];
+export const PALETA = ['#9a5a5e', '#7a8794', '#8a8f78', '#5e7f78', '#8b7aa0', '#5f7fa6', '#a06a8a', '#a8924a'];
 
 /** Valor CSS da cor de uma matéria: a variável do tema se for da paleta, senão o próprio #RRGGBB. */
 export function corCss(cor) {

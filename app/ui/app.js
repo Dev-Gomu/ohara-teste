@@ -1,5 +1,5 @@
 // Casca do app: navegação por #hoje, #materias e #ajustes, e tema claro/escuro. Sem regra de negócio.
-import { TELAS, rotaDoEndereco, escolherTema, outroTema } from '../nucleo/rotas.js';
+import { TELAS, rotaDoEndereco, escolherTema, outroTema, escolherPaleta, escolherVisual } from '../nucleo/rotas.js';
 import { escaparHtml } from '../nucleo/texto.js';
 import { iniciarSessao } from './sessao.js';
 import { desenharMaterias } from './telas/materias.js';
@@ -40,13 +40,20 @@ const guardar = {
   gravar(v) { try { localStorage.setItem(CHAVE_TEMA, v); } catch { /* sem armazenamento: o tema vale só nesta sessão */ } },
 };
 
-function aplicarTema(tema) {
-  document.documentElement.dataset.tema = tema;
+const CHAVE_PALETA = 'ohara.paleta';
+function corDaBarra() {
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = tema === 'escuro' ? '#17171A' : '#ECECEC';
+  if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue('--nav').trim() || '#0B5A44';
 }
+function aplicarTema(tema) { document.documentElement.dataset.tema = tema; corDaBarra(); }
+function aplicarPaleta(p) { if (p === 'verde') delete document.documentElement.dataset.paleta; else document.documentElement.dataset.paleta = p; corDaBarra(); }
+
+const CHAVE_VISUAL = 'ohara.visual';
+function aplicarVisual(v) { document.documentElement.dataset.visual = v; corDaBarra(); }
+function definirVisual(v) { try { localStorage.setItem(CHAVE_VISUAL, v); } catch { /* vale só nesta sessão */ } aplicarVisual(v); desenhar(); }
 
 function definirTema(tema) { guardar.gravar(tema); aplicarTema(tema); desenhar(); }
+function definirPaleta(p) { try { localStorage.setItem(CHAVE_PALETA, p); } catch { /* vale só nesta sessão */ } aplicarPaleta(p); desenhar(); }
 
 function desenhar() {
   if (limpar) { limpar(); limpar = null; }
@@ -63,7 +70,7 @@ function desenhar() {
   raiz.onclick = raiz.onsubmit = raiz.onchange = null; raiz.className = '';
   document.title = `${titulo} · Ohara`;
   if (!sessao) { raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(erroSessao || 'Abrindo seus dados…')}</p>`; return; }
-  const ctx = { sessao, foco, aviso, definirTema, agora: () => window.ohara?.agoraFalsoMs ?? Date.now() };
+  const ctx = { sessao, foco, aviso, definirTema, definirPaleta, definirVisual, agora: () => window.ohara?.agoraFalsoMs ?? Date.now() };
   if (rota.tela === 'materias') desenharMaterias(raiz, ctx);
   else if (rota.tela === 'materia') desenharMateria(raiz, ctx, rota.id);
   else if (rota.tela === 'aula') limpar = desenharAula(raiz, ctx, rota.id);
@@ -85,6 +92,8 @@ function aviso(texto, acao) {
 }
 
 aplicarTema(escolherTema(guardar.ler(), matchMedia('(prefers-color-scheme: dark)').matches));
+aplicarVisual(escolherVisual((() => { try { return localStorage.getItem(CHAVE_VISUAL); } catch { return null; } })()));
+aplicarPaleta(escolherPaleta((() => { try { return localStorage.getItem(CHAVE_PALETA); } catch { return null; } })()));
 addEventListener('hashchange', desenhar);
 desenhar();
 iniciarSessao({ aoFalhar: (e) => aviso('Não consegui salvar: ' + e.message) })
