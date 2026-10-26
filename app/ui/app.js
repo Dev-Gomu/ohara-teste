@@ -113,7 +113,7 @@ document.addEventListener('click', (ev) => { if (barra.aberta() && !ev.target.cl
 document.getElementById('abrir-barra').onclick = () => (barra.aberta() ? barra.fechar() : barra.abrir());
 document.getElementById('sair-foco').onclick = () => modoFoco.sair();
 addEventListener('hashchange', () => barra.fechar());
-aplicarTema(escolherTema(guardar.ler(), matchMedia('(prefers-color-scheme: dark)').matches));
+aplicarTema(escolherTema(guardar.ler(), false));   // claro por padrão; o escuro só se a pessoa escolher
 aplicarVisual('focus');   // por enquanto só o Focus (o Pastas fica guardado em estilos/pastas.css)
 aplicarPaleta(escolherPaleta((() => { try { return localStorage.getItem(CHAVE_PALETA); } catch { return null; } })()));
 addEventListener('hashchange', desenhar);

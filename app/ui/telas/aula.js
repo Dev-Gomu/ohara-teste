@@ -42,15 +42,15 @@ export function desenharAula(raiz, ctx, aulaId) {
     `<input type="file" id="anexar" accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,.pdf" hidden></div>` +
     `<div class="aula" data-aba="slide">` +
     `<section class="painel" id="p-slide"><p class="erro" id="erro-slide" hidden></p><div id="leitor" tabindex="0" aria-label="Slide (setas e Page Down passam de slide; J e K rolam; + e − dão zoom)"><p class="vazio" id="sem-arq"></p></div></section>` +
-    `<div class="divisoria" id="divisoria" role="separator" aria-orientation="vertical" aria-valuemin="25" aria-valuemax="75" aria-valuenow="50" tabindex="0" aria-label="Divisória entre slide e anotações (setas, ou Alt vírgula e Alt ponto)"></div><section class="painel" id="p-notas"><div class="cab"><button type="button" class="btn peq" id="marcar" title="Marcar a linha (Ctrl M)">Marcar ◆</button><button type="button" class="btn peq sec" id="bt-marc" aria-haspopup="true" aria-expanded="false" title="Ver marcados" hidden>◆ <span id="n-marc">0</span></button>` +
+    `<div class="divisoria" id="divisoria" role="separator" aria-orientation="vertical" aria-valuemin="25" aria-valuemax="75" aria-valuenow="50" tabindex="0" aria-label="Divisória entre slide e anotações (setas, ou Alt vírgula e Alt ponto)"></div><section class="painel" id="p-notas"><div class="cab"><button type="button" class="btn peq" id="marcar" title="Marcar a linha (Ctrl M)">Marcar ◆</button><button type="button" class="btn peq sec" id="ver-slide" hidden>Mostrar slide</button><button type="button" class="btn peq sec" id="bt-marc" aria-haspopup="true" aria-expanded="false" title="Ver marcados" hidden>◆ <span id="n-marc">0</span></button>` +
     `<span class="esp" id="salvo"></span></div>` +
-    `<div class="barra-ed" id="barra-ed" role="toolbar" aria-label="Formatação">
+    `<div id="hist-lista" hidden></div><div id="cartoes-modo" hidden></div><div id="editor"></div><div class="barra-ed" id="barra-ed" role="toolbar" aria-label="Formatação">
     <span class="gr"><button type="button" class="ql-header" value="1" title="Título 1 (Ctrl Alt 1)"></button><button type="button" class="ql-header" value="2" title="Título 2 (Ctrl Alt 2)"></button></span>
     <span class="gr"><button type="button" class="ql-bold" title="Negrito (Ctrl B)"></button><button type="button" class="ql-italic" title="Itálico (Ctrl I)"></button><button type="button" class="ql-underline" title="Sublinhado (Ctrl U)"></button></span>
     <span class="gr"><button type="button" class="ql-realce" title="Marca-texto (Ctrl Shift H)"><svg viewBox="0 0 18 18"><path class="ql-stroke" d="M11 3l4 4-6 6H5v-4z"/><path class="ql-stroke" d="M3 16h12"/></svg></button></span>
     <span class="gr"><button type="button" class="ql-list" value="ordered" title="Lista numerada (Ctrl Shift 7)"></button><button type="button" class="ql-list" value="bullet" title="Lista com marcadores (Ctrl Shift 8)"></button> </span>
     <span class="gr resto"><button type="button" class="ql-list" value="check" title="Lista de tarefas (Ctrl Shift 9)"></button><button type="button" class="ql-link" title="Link (Ctrl K)"></button><button type="button" class="ql-header" value="3" title="Título 3 (Ctrl Alt 3)"></button><button type="button" class="ql-strike" title="Riscado (Ctrl Shift X)"></button><button type="button" class="ql-code" title="Código (Ctrl E)"></button><button type="button" class="ql-blockquote" title="Citação (> e espaço)"></button><button type="button" class="ql-indent" value="-1" title="Voltar (Shift Tab)"></button><button type="button" class="ql-indent" value="+1" title="Recuar (Tab)"></button><button type="button" class="ql-clean" title="Limpar formatação (Ctrl \\)"></button></span>
-    <button type="button" class="mais-ed" id="mais-ed" aria-label="Mais formatações" aria-expanded="false" title="Mais formatações">⋯</button></div><div id="hist-lista" hidden></div><div id="cartoes-modo" hidden></div><div id="editor"></div><div class="marc-pop" id="marc-pop" hidden><h2>Marcados na aula</h2><div id="marcados"></div></div></section></div>`;
+    <button type="button" class="mais-ed" id="mais-ed" aria-label="Mais formatações" aria-expanded="false" title="Mais formatações">⋯</button><button type="button" class="ocultar-b" id="ocultar-b" title="Ocultar a barra (Alt T)">Ocultar ⌄</button></div><button type="button" class="abarra" id="abarra" title="Mostrar a barra (Alt T)">⌃ Barra</button><div class="bolha-ed" id="bolha-ed" role="toolbar" aria-label="Formatar o trecho selecionado" hidden><button type="button" data-f="h1">H1</button><button type="button" data-f="h2">H2</button><button type="button" data-f="bold" class="b">B</button><button type="button" data-f="italic" class="i">I</button><button type="button" data-f="underline" class="u">U</button><button type="button" data-f="realce" title="Marca-texto">Marca</button><button type="button" data-f="link">Link</button><button type="button" data-f="code">&lt;/&gt;</button></div><div class="marc-pop" id="marc-pop" hidden><h2>Marcados na aula</h2><div id="marcados"></div></div></section></div>`;
   const $ = (s) => raiz.querySelector(s);
 
   // ----- arquivos e leitor -----
@@ -89,6 +89,8 @@ export function desenharAula(raiz, ctx, aulaId) {
       ...(l.length ? [{ rotulo: cont ? 'Mostrar um slide por vez' : 'Rolar o arquivo contínuo', fazer: () => leitor.definirModo(cont ? 'pagina' : 'continuo') }] : []),
       ...(l.length ? [{ rotulo: 'Aumentar o slide (+)', fazer: () => leitor.mais() }, { rotulo: 'Diminuir o slide (−)', fazer: () => leitor.menos() }, { rotulo: 'Tamanho que cabe na tela (0)', fazer: () => leitor.normal() }] : []),
       { sep: true },
+      { rotulo: soNotas ? 'Mostrar o slide (Alt S)' : 'Só anotações, sem slide (Alt S)', fazer: () => aplicarSoNotas(!soNotas) },
+      { rotulo: fantasma ? 'Mostrar a barra do editor (Alt T)' : 'Ocultar a barra do editor (Alt T)', fazer: () => aplicarFantasma(!fantasma) },
       { rotulo: modoCartoes ? 'Voltar às anotações' : 'Criar cartões desta aula', fazer: alternarCartoes },
       { rotulo: 'Histórico de versões do texto', fazer: alternarHistorico },
       ...(arquivoAtual ? [{ sep: true }, { rotulo: `Remover “${arquivoAtual.nome}”`, perigo: true, fazer: removerArquivo }] : []),
@@ -146,7 +148,16 @@ export function desenharAula(raiz, ctx, aulaId) {
     h.innerHTML = vs.length ? `<p class="sub">Versões anteriores do texto. Restaurar guarda o texto de agora no histórico.</p>` + vs.map((v) => `<div class="lin"><div class="t">${escaparHtml(dataHora(v.criado_em))}<small>${escaparHtml(textoDoDelta(v.conteudo).slice(0, 90) || '(vazio)')}</small></div><button type="button" class="btn peq sec" data-v="${v.id}">Restaurar</button></div>`).join('')
       : '<p class="sub">Ainda não há versões anteriores. O histórico guarda um ponto de volta a cada 5 minutos de escrita.</p>';
   }
+  // ----- barra do editor: colada embaixo; oculta = modo fantasma (bolha sobre o texto selecionado) -----
+  const lembra = (k, v) => { try { v === undefined ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch { /* vale só agora */ } };
+  const lido = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+  let fantasma = lido('ohara.barraEd') === 'oculta', soNotas = lido('ohara.soNotas') === '1';
+  function aplicarFantasma(v) { fantasma = v; $('#p-notas').classList.toggle('fantasma', v); lembra('ohara.barraEd', v ? 'oculta' : 'visivel'); if (!v) $('#bolha-ed').hidden = true; }
+  function aplicarSoNotas(v) { soNotas = v; $('.aula').classList.toggle('solo', v); lembra('ohara.soNotas', v ? '1' : '0'); $('#ver-slide').hidden = !v; if (v) quill?.focus(); }
+  $('#ocultar-b').onclick = () => aplicarFantasma(true);
+  $('#abarra').onclick = () => { aplicarFantasma(false); quill?.focus(); };
   function alternarHistorico() { salvarAgora(); historicoAberto = !historicoAberto; desenharHistorico(); }
+  $('#ver-slide').onclick = () => aplicarSoNotas(false);
   $('#mais-ed').onclick = () => { const b = $('#barra-ed'); b.classList.toggle('aberta'); $('#mais-ed').setAttribute('aria-expanded', String(b.classList.contains('aberta'))); };
   $('#hist-lista').onclick = (e) => {
     const b = e.target.closest('[data-v]'); if (!b) return;
@@ -225,6 +236,11 @@ export function desenharAula(raiz, ctx, aulaId) {
     else if (d === 'esq' && emNotas) { e.preventDefault(); focarSlide(); }
   };
   raiz.addEventListener('ohara-mover', aoMover);
+  raiz.addEventListener('keydown', (e) => {
+    if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.code === 'KeyT') { e.preventDefault(); aplicarFantasma(!fantasma); if (!fantasma) quill?.focus(); }
+    else if (e.code === 'KeyS') { e.preventDefault(); aplicarSoNotas(!soNotas); }
+  });
   // Passar de slide sem sair do texto: Alt+Page Down / Page Up e Alt+] / Alt+[
   raiz.addEventListener('keydown', (e) => {
     if (!e.altKey || e.ctrlKey || e.metaKey || !arquivoAtual) return;
@@ -240,6 +256,24 @@ export function desenharAula(raiz, ctx, aulaId) {
   });
   $('#foco-btn').onclick = () => window.ohara?.teclado?.alternarFoco?.();
 
+  // bolha de formatação sobre o texto selecionado (só no modo fantasma)
+  function mostrarBolha(r) {
+    const bo = $('#bolha-ed');
+    if (!fantasma || !r || !r.length || !quill) { bo.hidden = true; return; }
+    bo.hidden = false;
+    const b = quill.getBounds(r.index, r.length), ed = quill.container.getBoundingClientRect(), pn = $('#p-notas').getBoundingClientRect();
+    const w = bo.offsetWidth, esq = ed.left - pn.left + b.left, topo = ed.top - pn.top + b.top - bo.offsetHeight - 10;
+    const x = Math.max(8, Math.min(pn.width - w - 8, esq)); bo.style.left = x + 'px'; bo.style.top = Math.max(8, topo) + 'px'; bo.style.setProperty('--seta', Math.max(14, Math.min(w - 26, esq - x + 10)) + 'px');
+  }
+  $('#bolha-ed').onmousedown = (e) => e.preventDefault();
+  $('#bolha-ed').onclick = (e) => {
+    const b = e.target.closest('[data-f]'); if (!b || !quill) return; const f = b.dataset.f, fmt = quill.getFormat();
+    if (f === 'h1' || f === 'h2') quill.format('header', fmt.header === Number(f[1]) ? false : Number(f[1]), 'user');
+    else if (f === 'realce') alternarRealce();
+    else if (f === 'link') { const u = prompt('Endereço do link (https://…):', 'https://'); if (u) quill.format('link', u, 'user'); }
+    else quill.format(f, !fmt[f], 'user');
+  };
+  aplicarFantasma(fantasma); aplicarSoNotas(soNotas);
   carregarQuill().then((Quill) => {
     quill = new Quill($('#editor'), { theme: 'snow', placeholder: 'Escreva as anotações da aula…  (# título, - lista, > citação; Ctrl K link)',
       formats: ['header', 'bold', 'italic', 'underline', 'strike', 'background', 'code', 'blockquote', 'list', 'indent', 'link'],
@@ -250,7 +284,10 @@ export function desenharAula(raiz, ctx, aulaId) {
     quill.keyboard.addBinding({ key: ' ', collapsed: true, prefix: /^(#{1,3})$/ }, function (range, ctx) { const n = ctx.prefix.length; quill.deleteText(range.index - n, n, 'user'); quill.formatLine(range.index - n, 1, 'header', n, 'user'); return false; });
     quill.keyboard.addBinding({ key: ' ', collapsed: true, prefix: /^>$/ }, function (range) { quill.deleteText(range.index - 1, 1, 'user'); quill.formatLine(range.index - 1, 1, 'blockquote', true, 'user'); return false; });
     try { const d = sessao.estado().aulas.find((a) => a.id === aulaId).anotacoes; if (d) quill.setContents(JSON.parse(d), 'silent'); } catch { /* texto antigo ilegível: começa vazio, o original continua no histórico */ }
-    quill.on('selection-change', (r) => { if (r && r.length) ultimaSelecao = quill.getText(r.index, r.length).trim(); });
+    quill.on('selection-change', (r) => {
+      if (r && r.length) ultimaSelecao = quill.getText(r.index, r.length).trim();
+      mostrarBolha(r);
+    });
     quill.on('text-change', (_d, _v, origem) => {
       if (origem === 'silent') return;
       pendente = true; clearTimeout(temporizador); temporizador = setTimeout(salvarAgora, 600); $('#salvo').textContent = 'Escrevendo…';
