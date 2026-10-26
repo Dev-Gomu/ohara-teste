@@ -35,15 +35,20 @@ export function desenharAula(raiz, ctx, aulaId) {
 
   raiz.innerHTML = `<div class="topo"><div class="tt"><a class="voltar" href="#materias/${materia.id}">← ${escaparHtml(materia.nome)}</a>` +
     `<b>${escaparHtml(aula.titulo)}</b><small>${aula.tipo === 'livro' ? 'Livro' : 'Aula'}${descreverHorario(aula) ? ' · ' + escaparHtml(descreverHorario(aula)) : ''}</small></div>` +
-    `<div class="abas" role="tablist"><button type="button" data-aba="slide" class="on">Slide</button><button type="button" data-aba="notas">Anotações</button></div></div>` +
+    `<button type="button" class="btn peq sec" id="foco-btn" title="Tela cheia de foco (Alt Enter)">Foco ⤢</button><div class="abas" role="tablist"><button type="button" data-aba="slide" class="on">Slide</button><button type="button" data-aba="notas">Anotações</button></div></div>` +
     `<div class="aula" data-aba="slide">` +
     `<section class="painel" id="p-slide"><div class="cab"><select id="sel-arq" aria-label="Arquivo"></select>` +
     `<label class="btn peq sec">Anexar<input type="file" id="anexar" accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,.pdf" hidden></label>` +
     `<button type="button" class="btn peq sec" id="remover" hidden>Remover</button><span class="esp"></span><span id="pag">—</span><button type="button" id="menos" aria-label="Diminuir">−</button><span id="zoom">100%</span><button type="button" id="mais" aria-label="Aumentar">+</button></div>` +
-    `<p class="erro" id="erro-slide" hidden></p><div id="leitor"><p class="vazio" id="sem-arq"></p></div></section>` +
-    `<section class="painel" id="p-notas"><div class="cab"><button type="button" class="btn peq" id="marcar" title="Ctrl+M">Marcar ◆</button>` +
+    `<p class="erro" id="erro-slide" hidden></p><div id="leitor" tabindex="0" aria-label="Slide (J e K rolam; Page Down e Page Up trocam de página; + e − dão zoom)"><p class="vazio" id="sem-arq"></p></div></section>` +
+    `<div class="divisoria" id="divisoria" role="separator" aria-orientation="vertical" aria-valuemin="25" aria-valuemax="75" aria-valuenow="50" tabindex="0" aria-label="Divisória entre slide e anotações (setas, ou Alt vírgula e Alt ponto)"></div><section class="painel" id="p-notas"><div class="cab"><button type="button" class="btn peq" id="marcar" title="Ctrl+M">Marcar ◆</button>` +
     `<span class="esp" id="salvo"></span><button type="button" class="btn peq sec" id="modo">Cartões</button><button type="button" class="btn peq sec" id="hist">Histórico</button></div>` +
-    `<div id="hist-lista" hidden></div><div id="cartoes-modo" hidden></div><div id="editor"></div><div class="marc"><h2>Marcados na aula</h2><div id="marcados"></div></div></section></div>`;
+    `<div class="barra-ed" id="barra-ed" role="toolbar" aria-label="Formatação">
+    <span class="gr"><button type="button" class="ql-header" value="1" title="Título 1 (Ctrl Alt 1)"></button><button type="button" class="ql-header" value="2" title="Título 2 (Ctrl Alt 2)"></button><button type="button" class="ql-header" value="3" title="Título 3 (Ctrl Alt 3)"></button></span>
+    <span class="gr"><button type="button" class="ql-bold" title="Negrito (Ctrl B)"></button><button type="button" class="ql-italic" title="Itálico (Ctrl I)"></button><button type="button" class="ql-underline" title="Sublinhado (Ctrl U)"></button><button type="button" class="ql-strike" title="Riscado (Ctrl Shift X)"></button></span>
+    <span class="gr"><button type="button" class="ql-realce" title="Marca-texto (Ctrl Shift H)"><svg viewBox="0 0 18 18"><path class="ql-stroke" d="M11 3l4 4-6 6H5v-4z"/><path class="ql-stroke" d="M3 16h12"/></svg></button><button type="button" class="ql-code" title="Código (Ctrl E)"></button></span>
+    <span class="gr"><button type="button" class="ql-list" value="ordered" title="Lista numerada (Ctrl Shift 7)"></button><button type="button" class="ql-list" value="bullet" title="Lista com marcadores (Ctrl Shift 8)"></button><button type="button" class="ql-list" value="check" title="Lista de tarefas (Ctrl Shift 9)"></button><button type="button" class="ql-indent" value="-1" title="Voltar (Shift Tab)"></button><button type="button" class="ql-indent" value="+1" title="Recuar (Tab)"></button></span>
+    <span class="gr"><button type="button" class="ql-blockquote" title="Citação (> e espaço)"></button><button type="button" class="ql-link" title="Link (Ctrl K)"></button><button type="button" class="ql-clean" title="Limpar formatação (Ctrl \\)"></button></span></div><div id="hist-lista" hidden></div><div id="cartoes-modo" hidden></div><div id="editor"></div><div class="marc"><h2>Marcados na aula</h2><div id="marcados"></div></div></section></div>`;
   const $ = (s) => raiz.querySelector(s);
 
   // ----- arquivos e leitor -----
@@ -167,23 +172,74 @@ export function desenharAula(raiz, ctx, aulaId) {
 
   const aoSair = () => salvarAgora();
   addEventListener('pagehide', aoSair); document.addEventListener('visibilitychange', aoSair);
-  const limpar = () => { removeEventListener('pagehide', aoSair); document.removeEventListener('visibilitychange', aoSair); salvarAgora(); leitor.fechar(); raiz.className = ''; };
+  const limpar = () => { document.removeEventListener('ohara-divisoria', aoDivisoria); removeEventListener('pagehide', aoSair); document.removeEventListener('visibilitychange', aoSair); salvarAgora(); leitor.fechar(); raiz.className = ''; };
 
   desenharSeletor(); desenharMarcados();
   const l = lista();
   if (l.length) abrirArquivo(l[l.length - 1]);
 
+  function alternarRealce() { if (!quill) return; const f = quill.getFormat(); quill.format('background', f.background ? false : 'rgba(255, 196, 46, .42)', 'user'); }
+  function alternarLista(tipo) { if (!quill) return; quill.format('list', quill.getFormat().list === tipo ? false : tipo, 'user'); }
+
+  // ----- divisória no meio, com margens mínimas; arrasta, usa as setas ou Alt , e Alt . -----
+  const aulaEl = $('.aula'), divisoria = $('#divisoria'), CHAVE_FATIA = 'ohara.fatia';
+  let fatia = 50; try { fatia = Number(localStorage.getItem(CHAVE_FATIA)) || 50; } catch { /* sem armazenamento: começa no meio */ }
+  const aplicarFatia = (v) => { fatia = Math.min(75, Math.max(25, v)); aulaEl.style.setProperty('--fatia', fatia + '%'); divisoria.setAttribute('aria-valuenow', String(Math.round(fatia))); try { localStorage.setItem(CHAVE_FATIA, String(fatia)); } catch { /* vale só agora */ } };
+  aplicarFatia(fatia);
+  divisoria.onpointerdown = (e) => {
+    divisoria.setPointerCapture(e.pointerId); const r = aulaEl.getBoundingClientRect();
+    const mover = (ev) => aplicarFatia((ev.clientX - r.left) / r.width * 100), parar = () => { divisoria.removeEventListener('pointermove', mover); divisoria.removeEventListener('pointerup', parar); };
+    divisoria.addEventListener('pointermove', mover); divisoria.addEventListener('pointerup', parar);
+  };
+  divisoria.onkeydown = (e) => { const d = { ArrowLeft: -2, ArrowRight: 2 }[e.key]; if (d) { e.preventDefault(); aplicarFatia(fatia + d); } else if (e.key === 'Home' || e.key === 'Enter') { e.preventDefault(); aplicarFatia(50); } };
+  divisoria.ondblclick = () => aplicarFatia(50);
+  const aoDivisoria = (e) => aplicarFatia(fatia + e.detail * 3);
+  document.addEventListener('ohara-divisoria', aoDivisoria);
+
+  // ----- teclado: ir entre slide e anotações (Alt L / Alt H) e comandos do slide -----
+  const focarEditor = () => { if (aba !== 'notas' && getComputedStyle($('.abas')).display !== 'none') $('.abas [data-aba="notas"]').click(); quill?.focus(); };
+  const focarSlide = () => { if (aba !== 'slide' && getComputedStyle($('.abas')).display !== 'none') $('.abas [data-aba="slide"]').click(); $('#leitor').focus(); };
+  const aoMover = (e) => {
+    const d = e.detail.direcao, emSlide = !!e.target.closest('#p-slide'), emNotas = !!e.target.closest('#p-notas');
+    if (d === 'dir' && emSlide) { e.preventDefault(); focarEditor(); }
+    else if (d === 'esq' && emNotas) { e.preventDefault(); focarSlide(); }
+  };
+  raiz.addEventListener('ohara-mover', aoMover);
+  $('#leitor').addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    const l = $('#leitor');
+    if (e.key === 'j') { l.scrollBy({ top: 90 }); e.preventDefault(); } else if (e.key === 'k') { l.scrollBy({ top: -90 }); e.preventDefault(); }
+    else if (e.key === 'PageDown') { leitor.irPara(leitor.pagina + 1); e.preventDefault(); } else if (e.key === 'PageUp') { leitor.irPara(leitor.pagina - 1); e.preventDefault(); }
+    else if (e.key === '+' || e.key === '=') { leitor.mais(); e.preventDefault(); } else if (e.key === '-') { leitor.menos(); e.preventDefault(); } else if (e.key === '0') { leitor.normal(); e.preventDefault(); }
+  });
+  $('#foco-btn').onclick = () => window.ohara?.teclado?.alternarFoco?.();
+
   carregarQuill().then((Quill) => {
-    quill = new Quill($('#editor'), { theme: 'snow', placeholder: 'Escreva as anotações da aula…', modules: { toolbar: [['bold', 'italic'], [{ list: 'ordered' }, { list: 'bullet' }], [{ header: [1, 2, false] }]] } });
+    quill = new Quill($('#editor'), { theme: 'snow', placeholder: 'Escreva as anotações da aula…  (# título, - lista, > citação; Ctrl K link)',
+      formats: ['header', 'bold', 'italic', 'underline', 'strike', 'background', 'code', 'blockquote', 'list', 'indent', 'link'],
+      modules: { toolbar: { container: '#barra-ed', handlers: { realce: () => alternarRealce() } } } });
+    quill.root.setAttribute('spellcheck', 'true'); quill.root.setAttribute('lang', 'pt-BR');
+    // "# ", "## ", "### " e "> " no começo da linha viram título e citação (as listas "- " e "1. " o Quill já faz).
+    quill.keyboard.addBinding({ key: ' ', collapsed: true, prefix: /^(#{1,3})$/ }, function (range, ctx) { const n = ctx.prefix.length; quill.deleteText(range.index - n, n, 'user'); quill.formatLine(range.index - n, 1, 'header', n, 'user'); return false; });
+    quill.keyboard.addBinding({ key: ' ', collapsed: true, prefix: /^>$/ }, function (range) { quill.deleteText(range.index - 1, 1, 'user'); quill.formatLine(range.index - 1, 1, 'blockquote', true, 'user'); return false; });
     try { const d = sessao.estado().aulas.find((a) => a.id === aulaId).anotacoes; if (d) quill.setContents(JSON.parse(d), 'silent'); } catch { /* texto antigo ilegível: começa vazio, o original continua no histórico */ }
     quill.on('selection-change', (r) => { if (r && r.length) ultimaSelecao = quill.getText(r.index, r.length).trim(); });
     quill.on('text-change', (_d, _v, origem) => {
       if (origem === 'silent') return;
       pendente = true; clearTimeout(temporizador); temporizador = setTimeout(salvarAgora, 600); $('#salvo').textContent = 'Escrevendo…';
     });
-    // Ctrl+M (ou Alt+M, Ctrl+Shift+M se o teclado/Android capturar o primeiro) só vale dentro do editor.
+    // Atalhos de formatação (Ctrl no Linux/Windows, Cmd no Mac). Alt sozinho é do sistema (ver nucleo/teclado.js).
     quill.root.addEventListener('keydown', (e) => {
-      if (e.key.toLowerCase() === 'm' && !e.metaKey && (e.ctrlKey || e.altKey)) { e.preventDefault(); marcar(); }
+      const ctrl = e.ctrlKey || e.metaKey, c = e.code;
+      if (e.key.toLowerCase() === 'm' && !e.metaKey && (e.ctrlKey || e.altKey)) { e.preventDefault(); marcar(); return; }   // Ctrl+M ou Alt+M: marcar a linha
+      if (ctrl && e.altKey && !e.shiftKey && /^Digit[123]$/.test(c)) { e.preventDefault(); const n = Number(c.slice(5)); quill.format('header', quill.getFormat().header === n ? false : n, 'user'); }
+      else if (ctrl && e.shiftKey && !e.altKey && c === 'Digit7') { e.preventDefault(); alternarLista('ordered'); }
+      else if (ctrl && e.shiftKey && !e.altKey && c === 'Digit8') { e.preventDefault(); alternarLista('bullet'); }
+      else if (ctrl && e.shiftKey && !e.altKey && c === 'Digit9') { e.preventDefault(); alternarLista('check'); }
+      else if (ctrl && e.shiftKey && !e.altKey && c === 'KeyX') { e.preventDefault(); quill.format('strike', !quill.getFormat().strike, 'user'); }
+      else if (ctrl && e.shiftKey && !e.altKey && c === 'KeyH') { e.preventDefault(); alternarRealce(); }
+      else if (ctrl && !e.shiftKey && !e.altKey && c === 'KeyE') { e.preventDefault(); quill.format('code', !quill.getFormat().code, 'user'); }
+      else if (ctrl && !e.shiftKey && !e.altKey && c === 'Backslash') { e.preventDefault(); const r = quill.getSelection(); if (r) quill.removeFormat(r.index, r.length, 'user'); }
     });
   }).catch((e) => { $('#salvo').textContent = e.message; });
 

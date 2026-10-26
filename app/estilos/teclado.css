@@ -1,0 +1,31 @@
+/* Barra lateral fixa/solta, modo foco e as janelas do teclado ("Ir para…" e atalhos). Vale para os dois visuais. */
+#abrir-barra{display:none;position:fixed;top:10px;left:10px;z-index:30;width:38px;height:38px;border-radius:12px;border:1px solid var(--ln);background:var(--cx);color:var(--tx);cursor:pointer;font-size:18px;line-height:1;place-items:center;box-shadow:0 1px 2px rgba(0,0,0,.12),0 6px 12px -8px rgba(0,0,0,.3)}
+html[data-barra="solta"] #abrir-barra{display:grid}
+html[data-foco] #abrir-barra{display:none!important}
+html[data-barra="solta"] body{grid-template-columns:1fr!important}
+html[data-barra="solta"] nav{position:fixed;left:0;top:0;bottom:0;width:216px;z-index:40;transform:translateX(-104%);visibility:hidden;transition:transform .18s ease,visibility 0s .18s}
+html[data-visual="pastas"][data-barra="solta"] nav{width:104px}
+html[data-barra="solta"][data-barra-aberta] nav{transform:none;visibility:visible;transition:transform .18s ease,visibility 0s;box-shadow:0 0 44px rgba(0,0,0,.38)}
+html[data-barra="solta"] main:not(.cheia){padding-top:62px}
+html[data-barra="solta"] main.cheia .topo{padding-left:46px}
+html[data-foco] body{grid-template-columns:1fr!important}
+html[data-foco] nav,html[data-foco] .topo,html[data-foco] .fab{display:none!important}
+@media(max-width:820px){html[data-barra="solta"] body{grid-template-rows:1fr!important}html[data-barra="solta"] nav{width:auto;left:0;right:0;top:auto;bottom:0;height:auto;transform:translateY(104%)}html[data-barra="solta"][data-barra-aberta] nav{transform:none}}
+/* janelas do teclado */
+#lancador,#ajuda-atalhos{position:fixed;inset:0;z-index:100;background:rgba(10,14,12,.42);display:flex;justify-content:center;align-items:flex-start;padding-top:13vh}
+#lancador[hidden],#ajuda-atalhos[hidden]{display:none}
+#lancador .caixa,#ajuda-atalhos .caixa{background:var(--cx);color:var(--tx);border-radius:18px;width:min(580px,92vw);box-shadow:0 24px 70px -12px rgba(0,0,0,.5),0 0 0 1px var(--ln);overflow:hidden;outline:0}
+#ajuda-atalhos .caixa{width:min(860px,94vw);padding:22px 26px 14px;max-height:78vh;overflow:auto}
+#lanc-q{width:100%;border:0;border-bottom:1px solid var(--ln);background:transparent;padding:18px 22px;font-size:18px;color:var(--tx);outline:0}
+#lanc-l{list-style:none;margin:0;padding:6px;max-height:50vh;overflow:auto}
+#lanc-l li{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:baseline;padding:10px 16px;border-radius:12px;cursor:pointer}
+#lanc-l li.on{background:var(--cx2)}#lanc-l li.on .t{font-weight:600}
+#lanc-l .t{font-size:15px}#lanc-l .d{font-size:12px;color:var(--tx2)}#lanc-l .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx2);min-width:52px;text-align:right}
+#lanc-l .nada{color:var(--tx2);cursor:default;grid-template-columns:1fr}
+.dica{margin:0;padding:10px 22px 14px;font-size:12px;color:var(--tx2)}#ajuda-atalhos .dica{padding:10px 0 0}
+#ajuda-atalhos h2{margin:0 0 14px;font-size:20px;text-transform:none;letter-spacing:0}
+#ajuda-atalhos .grupos{display:grid;grid-template-columns:1fr 1fr;gap:6px 36px}
+#ajuda-atalhos h3{margin:14px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx2)}
+#ajuda-atalhos .at{display:grid;grid-template-columns:minmax(150px,1.1fr) 1.4fr;gap:12px;align-items:baseline;padding:5px 0;border-top:1px solid var(--ln);font-size:13px}
+#ajuda-atalhos kbd{font:inherit;font-size:12px;background:var(--cx2);border:1px solid var(--ln);border-bottom-width:2px;border-radius:8px;padding:2px 8px;white-space:normal}
+@media(max-width:820px){#ajuda-atalhos .grupos{grid-template-columns:1fr}}

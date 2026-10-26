@@ -12,6 +12,7 @@ import { desenharPainel } from './telas/painel.js';
 import { desenharPlanejar } from './telas/planejar.js';
 import { desenharCartoes } from './telas/cartoes.js';
 import { criarServicoFoco } from './foco_servico.js';
+import { iniciarTeclado } from './teclado.js';
 
 const ICONES = {
   hoje: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
@@ -40,6 +41,19 @@ const guardar = {
   gravar(v) { try { localStorage.setItem(CHAVE_TEMA, v); } catch { /* sem armazenamento: o tema vale só nesta sessão */ } },
 };
 
+const CHAVE_BARRA = 'ohara.barra';
+const html = document.documentElement;
+const lerBarra = () => { try { return localStorage.getItem(CHAVE_BARRA) === 'solta' ? 'solta' : 'fixa'; } catch { return 'fixa'; } };
+function aplicarBarra(v) { html.dataset.barra = v; html.removeAttribute('data-barra-aberta'); }
+const barra = {
+  fixa: () => html.dataset.barra !== 'solta',
+  aberta: () => !!html.dataset.barraAberta,
+  abrir() { if (!barra.fixa()) html.dataset.barraAberta = '1'; },
+  fechar() { html.removeAttribute('data-barra-aberta'); },
+  alternar() { const v = barra.fixa() ? 'solta' : 'fixa'; try { localStorage.setItem(CHAVE_BARRA, v); } catch { /* vale só nesta sessão */ } aplicarBarra(v); atualizarBotaoBarra(); },
+};
+function atualizarBotaoBarra() { const b = document.getElementById('fixar'); if (b) b.textContent = barra.fixa() ? 'Soltar a barra' : 'Fixar a barra'; }
+const modoFoco = { ativo: () => !!html.dataset.foco, sair() { html.removeAttribute('data-foco'); }, alternar() { if (html.dataset.foco) html.removeAttribute('data-foco'); else { html.dataset.foco = '1'; barra.fechar(); } } };
 const CHAVE_PALETA = 'ohara.paleta';
 function corDaBarra() {
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -63,8 +77,11 @@ function desenhar() {
   document.getElementById('nav').innerHTML = '<div class="logo">Ohara</div>' +
     TELAS.map((t) => `<a href="#${t.chave}" class="${t.chave === tela ? 'on' : ''}" ${t.chave === tela ? 'aria-current="page"' : ''}>` +
       `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[t.chave]}</svg>${escaparHtml(t.nome)}</a>`).join('') +
-    `<div class="fim"><button id="bt" type="button">Tema: ${tema}</button></div>`;
+    `<div class="fim"><button id="fixar" type="button" title="Alt B">${barra.fixa() ? 'Soltar a barra' : 'Fixar a barra'}</button><button id="bt" type="button">Tema: ${tema}</button><button id="ver-atalhos" type="button" title="?">Atalhos (?)</button></div>`;
   document.getElementById('bt').onclick = () => definirTema(outroTema(document.documentElement.dataset.tema));
+  document.getElementById('fixar').onclick = () => barra.alternar();
+  document.getElementById('ver-atalhos').onclick = () => teclado.abrirAjuda();
+  document.getElementById('nav').onclick = (ev) => { if (ev.target.closest('a') && !barra.fixa()) barra.fechar(); };
   const [titulo, texto] = TEXTOS[tela];
   const raiz = document.getElementById('app');
   raiz.onclick = raiz.onsubmit = raiz.onchange = null; raiz.className = '';
@@ -91,13 +108,19 @@ function aviso(texto, acao) {
   t.classList.add('on'); clearTimeout(aviso.t); aviso.t = setTimeout(() => t.classList.remove('on'), 6000);
 }
 
+aplicarBarra(lerBarra());
+document.addEventListener('click', (ev) => { if (barra.aberta() && !ev.target.closest('#nav') && !ev.target.closest('#abrir-barra')) barra.fechar(); });
+document.getElementById('abrir-barra').onclick = () => (barra.aberta() ? barra.fechar() : barra.abrir());
+addEventListener('hashchange', () => barra.fechar());
 aplicarTema(escolherTema(guardar.ler(), matchMedia('(prefers-color-scheme: dark)').matches));
 aplicarVisual(escolherVisual((() => { try { return localStorage.getItem(CHAVE_VISUAL); } catch { return null; } })()));
 aplicarPaleta(escolherPaleta((() => { try { return localStorage.getItem(CHAVE_PALETA); } catch { return null; } })()));
 addEventListener('hashchange', desenhar);
 desenhar();
+const teclado = iniciarTeclado({ estado: () => sessao?.estado() ?? { disciplinas: [], aulas: [] }, barra, foco: modoFoco });
+
 iniciarSessao({ aoFalhar: (e) => aviso('Não consegui salvar: ' + e.message) })
-  .then((s) => { sessao = s; foco = criarServicoFoco(s, { aviso }); window.ohara = { sessao, foco }; desenhar(); })
+  .then((s) => { sessao = s; foco = criarServicoFoco(s, { aviso }); window.ohara = { sessao, foco, teclado }; desenhar(); })
   .catch((e) => { erroSessao = 'Não foi possível abrir os dados: ' + e.message; desenhar(); });
 
 // Service worker: o app abre sem internet e atualiza sozinho (a página nova aparece ao recarregar).

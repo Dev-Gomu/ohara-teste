@@ -100,3 +100,17 @@ html[data-visual="focus"][data-paleta="hospital"][data-tema="escuro"]{--bg:#0C14
 html[data-visual="focus"][data-paleta="grafite"]{--bg:#F4F5F3;--cx2:#E9ECE8;--tx:#141A17;--tx2:#5F6863;--ln:#D9DED9;--bd:#141A17;--pr:#141A17;--ac:#1FA971;--acf:#DFF3E8;--faixa:#E1EAE3;--nav:#1D2420;--ok:#1FA971;--okf:#DFF3E8}
 html[data-visual="focus"][data-paleta="grafite"][data-tema="escuro"]{--bg:#0E110F;--cx:#161A18;--cx2:#202522;--tx:#ECF0ED;--tx2:#9AA39E;--ln:#2B312D;--bd:#C5CEC8;--pr:#ECF0ED;--prt:#0E110F;--ac:#4FD39A;--acf:#1D3A2D;--faixa:#25312A;--nav:#080B09;--ok:#4FD39A;--okf:#1D3A2D}
 html[data-visual="focus"] .amostra{display:inline-block;width:14px;height:14px;border-radius:50%;border:1.5px solid currentColor;margin-right:8px;vertical-align:-3px}
+html[data-visual="focus"] .so-pastas{display:none}
+/* estudo sugerido na linha do dia */
+html[data-visual="focus"] .eixo .ev.est{display:flex;align-items:center;gap:8px;padding:0 10px;line-height:1.1;font-size:12px;background:var(--cx);border:1.5px dashed var(--bd);box-shadow:inset 5px 0 0 var(--c)}
+html[data-visual="focus"] .eixo .ev.est b{display:inline;font-weight:600}html[data-visual="focus"] .eixo .ev.est small{display:inline}
+html[data-visual="focus"] .eixo .ev.est .go{margin-left:auto;font-size:10px;color:var(--tx2)}
+/* aviso "ontem você não estudou": discreto (cartão claro com contorno, ponto vermelho, só o título em vermelho) */
+html[data-visual="focus"] .ban{background:var(--cx);color:var(--tx);border:1.5px solid var(--bd);border-radius:16px;padding:10px 12px 10px 20px;gap:14px;align-items:center}
+html[data-visual="focus"] .ban::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--ur);flex:none}
+html[data-visual="focus"] .ban b{font-size:14px;font-weight:700;color:var(--ur);display:inline}
+html[data-visual="focus"] .ban span{font-size:13px;color:var(--tx2);opacity:1;margin-left:6px}
+html[data-visual="focus"] .ban .bt{background:var(--pr);color:var(--prt);border-color:var(--bd);padding:8px 18px;font-size:12px;margin-left:auto}
+/* a marcação da aba suave (visual Pastas) fica de fora do Focus */
+html[data-visual="focus"] .aba,html[data-visual="focus"] .til .cod,html[data-visual="focus"] .til .seta{display:none}
+html[data-visual="focus"] .til .pasta,html[data-visual="focus"] .til .corpo,html[data-visual="focus"] .til .info{display:contents}

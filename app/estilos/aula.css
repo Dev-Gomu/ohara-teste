@@ -1,0 +1,38 @@
+/* Tela da Aula: tela cheia, slide | anotações com uma linha vertical no meio e margens mínimas; barra de formatação própria. */
+html[data-visual] main.cheia{padding:0}
+main.cheia .topo{margin:0;padding:7px 14px;gap:10px;border-bottom:1px solid var(--ln)}
+main.cheia .topo .tt{display:flex;align-items:baseline;gap:12px;min-width:0;flex-wrap:nowrap}
+main.cheia .topo .tt b{font-size:15px;display:inline;white-space:nowrap}main.cheia .topo .tt small{display:inline;white-space:nowrap}main.cheia .topo .tt .voltar{margin:0;white-space:nowrap}
+main.cheia .topo #foco-btn{flex:none}
+main.cheia .aula{display:grid;grid-template-columns:var(--fatia,50%) 9px minmax(0,1fr);gap:0;flex:1;min-height:0}
+main.cheia .aula>.painel{background:transparent;border:0;border-radius:0;box-shadow:none}
+.divisoria{position:relative;cursor:col-resize;outline:0;touch-action:none}
+.divisoria::before{content:"";position:absolute;left:4px;top:0;bottom:0;width:1px;background:var(--ln)}
+.divisoria:hover::before,.divisoria:focus-visible::before{left:3px;width:3px;border-radius:2px;background:var(--tx2)}
+main.cheia .painel .cab{padding:6px 12px;gap:8px;border-bottom:1px solid var(--ln)}
+main.cheia #leitor{padding:6px;background:var(--cx2)}#leitor:focus-visible{outline:2px solid var(--tx);outline-offset:-2px}
+main.cheia .marc{padding:6px 12px;border-top:1px solid var(--ln);max-height:22%}
+main.cheia #p-notas>.marc h2{font-size:12px}
+@media(max-width:1000px){main.cheia .aula{grid-template-columns:1fr}.divisoria{display:none}}
+/* barra de formatação */
+.barra-ed{display:flex;flex-wrap:wrap;gap:3px 6px;padding:5px 10px;border-bottom:1px solid var(--ln);flex:none;align-items:center}
+.barra-ed .gr{display:inline-flex;gap:1px;padding-right:7px;margin-right:1px;border-right:1px solid var(--ln)}.barra-ed .gr:last-child{border-right:0;padding-right:0}
+.barra-ed button{width:30px;height:28px;border:0;border-radius:8px;background:transparent;color:var(--tx);cursor:pointer;padding:0;display:grid;place-items:center}
+.barra-ed button svg{width:17px;height:17px}
+.barra-ed button:hover{background:var(--cx2)}
+.barra-ed button.ql-active{background:var(--tx);color:var(--prt)}
+.barra-ed .ql-stroke{stroke:currentColor!important;fill:none}.barra-ed .ql-fill{fill:currentColor!important}.barra-ed .ql-stroke.ql-fill{fill:currentColor!important}
+.barra-ed button:focus-visible{outline:2px solid var(--tx);outline-offset:1px}
+/* texto */
+#p-notas .ql-editor{padding:10px 14px;font-size:16px;line-height:1.62}
+#p-notas .ql-editor.ql-blank::before{left:14px;right:14px;font-style:normal}
+#p-notas .ql-editor h1{font-size:1.75em;font-weight:650;letter-spacing:-.02em;margin:.55em 0 .2em}
+#p-notas .ql-editor h2{font-size:1.38em;font-weight:620;letter-spacing:-.015em;margin:.5em 0 .2em}
+#p-notas .ql-editor h3{font-size:1.16em;font-weight:620;margin:.45em 0 .15em}
+#p-notas .ql-editor blockquote{border-left:3px solid var(--tx2);margin:.55em 0;padding:.1em 0 .1em 14px;color:var(--tx2)}
+#p-notas .ql-editor code{background:var(--cx2);border-radius:5px;padding:.08em .38em;font-size:.88em;font-family:ui-monospace,"DejaVu Sans Mono",Menlo,monospace}
+#p-notas .ql-editor a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+#p-notas .ql-editor ul[data-checked=true]>li{color:var(--tx2)}
+.ql-snow .ql-tooltip{background:var(--cx);color:var(--tx);border:1px solid var(--ln);border-radius:12px;box-shadow:0 12px 30px -10px rgba(0,0,0,.35);z-index:20}
+.ql-snow .ql-tooltip input[type=text]{border:1px solid var(--ln);background:var(--cx2);color:var(--tx);border-radius:8px}
+.ql-snow .ql-tooltip a.ql-action::after,.ql-snow .ql-tooltip a.ql-remove::before{color:var(--tx)}

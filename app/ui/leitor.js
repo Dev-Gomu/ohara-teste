@@ -117,6 +117,7 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
     },
     mais() { return definirZoom(zoom + 0.25); },
     menos() { return definirZoom(zoom - 0.25); },
+    normal() { return definirZoom(1); },
     get pagina() { return pagina; },
     get total() { return pdf ? pdf.numPages : imagem ? 1 : 0; },
     get zoom() { return zoom; },

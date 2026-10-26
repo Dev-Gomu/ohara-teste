@@ -70,3 +70,17 @@ export function descreverHorario(a) {
   const mesmoDia = a.inicio.slice(0, 10) === a.fim.slice(0, 10);
   return `${formatarMomento(a.inicio)} – ${mesmoDia ? a.fim.slice(11) : formatarMomento(a.fim)}`;
 }
+
+/** A próxima aula da matéria a partir de `agoraLocal` (AAAA-MM-DDTHH:MM), ou null. Aula em andamento não conta (já começou). */
+export const proximaAula = (estado, disciplinaId, agoraLocal) =>
+  ativas(estado.aulas).filter((a) => a.disciplina_id === disciplinaId && a.inicio && a.inicio > agoraLocal)
+    .sort((x, y) => x.inicio.localeCompare(y.inicio))[0] ?? null;
+
+/** "hoje 20:00", "amanhã 08:00" ou "qua 04/11 13:00". `hoje` é AAAA-MM-DD; `somarDias` vem de datas.js (sem I/O aqui). */
+export function rotuloDaAula(a, hoje, somarDias, diaDaSemana) {
+  const dia = a.inicio.slice(0, 10), hora = a.inicio.slice(11, 16);
+  if (dia === hoje) return `hoje ${hora}`;
+  if (dia === somarDias(hoje, 1)) return `amanhã ${hora}`;
+  const nomes = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
+  return `${nomes[diaDaSemana(dia)]} ${dia.slice(8, 10)}/${dia.slice(5, 7)} ${hora}`;
+}

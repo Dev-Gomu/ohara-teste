@@ -1,5 +1,8 @@
 // Tela Matérias: listar, criar (com cor), renomear e excluir (vai para a lixeira, com "Desfazer").
 import { escaparHtml } from '../../nucleo/texto.js';
+import { ABA, codigoDaMateria } from '../aba.js';
+import { proximaAula, rotuloDaAula } from '../../nucleo/aulas.js';
+import { somarDias, diaDaSemana } from '../../nucleo/datas.js';
 import { ativas, criarMateria, alterarMateria, excluirMateria, restaurarMateria, PALETA, corCss, proximaCor } from '../../nucleo/materias.js';
 
 export function desenharMaterias(raiz, ctx) {
@@ -26,9 +29,15 @@ export function desenharMaterias(raiz, ctx) {
       return `<form class="til edit" style="--c:${corCss(d.cor)}" data-renomear="${d.id}"><span class="ini">${escaparHtml(d.nome.slice(0, 1).toUpperCase())}</span><input class="in" name="nome" maxlength="80" value="${escaparHtml(d.nome)}" autocomplete="off" required>` +
         (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '') + `<div class="acoes"><button class="btn peq" type="submit">Salvar</button><button class="btn peq sec" type="button" data-a="cancelar">Cancelar</button></div></form>`;
     }
-    const n = contarAulas(d.id);
-    return `<div class="til" style="--c:${corCss(d.cor)}"><span class="ini">${escaparHtml(d.nome.slice(0, 1).toUpperCase())}</span><a href="#materias/${d.id}" class="nome">${escaparHtml(d.nome)}</a><small>${n} ${n === 1 ? 'aula ou livro' : 'aulas e livros'}</small>` +
-      `<div class="acoes"><button class="btn peq sec" type="button" data-a="renomear" data-id="${d.id}">Renomear</button><button class="btn peq sec" type="button" data-a="excluir" data-id="${d.id}">Excluir</button></div></div>`;
+    const n = contarAulas(d.id), ag = new Date(ctx.agora()), p2 = (x) => String(x).padStart(2, '0');
+    const agoraLocal = `${ag.getFullYear()}-${p2(ag.getMonth() + 1)}-${p2(ag.getDate())}T${p2(ag.getHours())}:${p2(ag.getMinutes())}`;
+    const prox = proximaAula(ctx.sessao.estado(), d.id, agoraLocal);
+    const quando = prox ? `próxima: ${rotuloDaAula(prox, agoraLocal.slice(0, 10), somarDias, diaDaSemana)}` : 'sem aula marcada';
+    const inicial = escaparHtml(d.nome.slice(0, 1).toUpperCase());
+    return `<div class="til" style="--c:${corCss(d.cor)}"><a class="pasta" href="#materias/${d.id}" aria-label="Abrir ${escaparHtml(d.nome)}">${ABA}<span class="corpo"><span class="ini">${inicial}</span>` +
+      `<span class="cod">${escaparHtml(codigoDaMateria(d.nome))}</span><span class="seta" aria-hidden="true">↗</span></span></a>` +
+      `<div class="info"><a href="#materias/${d.id}" class="nome">${escaparHtml(d.nome)}</a><small>${n} ${n === 1 ? 'aula ou livro' : 'aulas e livros'} · ${quando}</small>` +
+      `<div class="acoes"><button class="btn peq sec" type="button" data-a="renomear" data-id="${d.id}">Renomear</button><button class="btn peq sec" type="button" data-a="excluir" data-id="${d.id}">Excluir</button></div></div></div>`;
   }
 
   function tentar(acao) {

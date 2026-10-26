@@ -39,3 +39,26 @@ export function diasDaSemana(inicio, hoje, somar) {
   const nomes = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
   return nomes.map((nome, i) => { const dia = somar(inicio, i); return { dia, n: Number(dia.slice(8, 10)), hoje: dia === hoje, nome }; });
 }
+
+/**
+ * Sugere horário para o estudo do plano (que só tem o dia) nas lacunas entre as aulas, da hora atual em diante, com `pausa` de folga
+ * antes e depois de cada aula e entre os blocos. Mantém a ordem recebida. Devolve { colocados: [{ tarefa, ini, fim }], sobram: [tarefa] }
+ * (sobram = o que não coube antes de `fimMin`). É sugestão: nada é gravado.
+ */
+export function encaixarEstudo(aulas, tarefas, { agoraMin, inicioMin = 8 * 60, fimMin = 22 * 60, pausa = 5 } = {}) {
+  const ocupados = aulas.map((a) => [a.ini, a.fim]);
+  const colocados = [], sobram = [];
+  let cursor = Math.max(inicioMin, Math.ceil(agoraMin / 5) * 5);
+  for (const t of tarefas) {
+    const dur = t.minutos;
+    let s = cursor, achou = false;
+    while (s + dur <= fimMin) {
+      const choque = ocupados.find(([a, b]) => s < b + pausa && s + dur + pausa > a);
+      if (!choque) { achou = true; break; }
+      s = Math.max(s + 5, choque[1] + pausa);
+    }
+    if (achou) { colocados.push({ tarefa: t, ini: s, fim: s + dur }); ocupados.push([s, s + dur]); cursor = s + dur + pausa; }
+    else sobram.push(t);
+  }
+  return { colocados, sobram };
+}
