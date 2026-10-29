@@ -1,7 +1,7 @@
 /* Editor de cartões (ui/componentes/editor_cartoes.js): cada linha já aparece como no cartão pronto. Cores e raios vêm das variáveis da identidade. */
 .fc-codigo{flex:1;min-height:160px;border:0;resize:none;padding:16px 18px;background:transparent;color:var(--tx);font:14px/1.7 ui-monospace,"DejaVu Sans Mono",Menlo,monospace}.fc-codigo:focus{outline:0;box-shadow:inset 0 0 0 3px var(--ac)}
 .fc-ed{flex:1;min-height:160px;overflow:auto;padding:16px max(14px,calc((100% - 860px)/2)) 30px;background:var(--cx2);color:var(--tx);font-size:15.5px;line-height:1.65;caret-color:var(--ac);counter-reset:cartao}
-.fc-ed:focus{outline:0;box-shadow:inset 0 0 0 3px var(--ac)}
+.fc-ed:focus{outline:0}
 .fc-ed .l{position:relative;min-height:1.65em;padding:2px 26px;background:var(--cx);border-left:1.5px solid var(--ln);border-right:1.5px solid var(--ln)}
 .fc-ed .l[data-t=frente]{counter-increment:cartao;margin-top:26px;padding:36px 26px 22px;background:color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);border:1.5px solid color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);border-bottom:0;border-radius:var(--raio-cartao,20px) var(--raio-cartao,20px) 0 0;color:#fff;caret-color:#fff;font-size:23px;font-weight:600;line-height:1.3}
 .fc-ed .l[data-t=frente]:first-child{margin-top:0}

@@ -1,4 +1,4 @@
-/* Identidade visual do Ohara (Quadro): painéis claros e macios, azul e roxo, Outfit + DM Sans, halo no bloco com foco.
+/* Identidade visual do Ohara (Quadro): painéis claros e macios, azul e roxo, Outfit + DM Sans, borda de destaque no bloco com foco.
    Primeiro os componentes (herdados do antigo Focus); depois, ao fim, as formas e fontes do Quadro. Variáveis de cor logo abaixo. */
 html:root{--bg:#E9EEF5;--cx:#FFFFFF;--cx2:#DDE5F0;--tx:#142033;--tx2:#4B5A73;--ln:#B7C3D6;--bd:#6B7A93;--pr:#2457D6;--prt:#FFFFFF;--ac:#2457D6;--acf:#DCE6FB;--faixa:#CFE0FF;--nav:#17243A;--navt:#C5D0E3;--ok:#166A3A;--okf:#DDF1E6;--ur:#C62828;
  --m1:#2F5FD0;--m2:#2E8B6A;--m3:#B0306A;--m4:#B7791F;--m5:#7B4BB7;--m6:#0E8A9A;--m7:#5D6D7E;--m8:#C0603E;
@@ -113,8 +113,8 @@ html:root[data-tema="escuro"] nav a.on{background:#E8EDF8;color:#0D1320}
 html:root .btn{text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;border-radius:12px}
 html:root .card,html:root .cd,html:root .painel,html:root .fc-tile{border-color:var(--ln);border-width:1.5px;border-radius:18px}
 html:root .in{border-radius:12px;border-color:var(--bd)}
-/* bloco com foco: halo flutuante */
-html:root .fc-tile:focus-within{box-shadow:0 0 0 4px var(--bg),0 0 0 7px var(--ac)}
+/* bloco com foco: borda na cor de destaque (sutil) */
+html:root .fc-tile:focus-within{border-color:var(--ac);box-shadow:none}
 
 /* formas coesas (abas, botões pequenos, faixas, alertas) */
 html:root .btn.peq,html:root .btn{border-radius:12px}
