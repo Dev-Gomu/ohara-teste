@@ -65,9 +65,14 @@ function aplicarTema(tema) { document.documentElement.dataset.tema = tema; corDa
 function aplicarPaleta(p) { if (p === 'verde') delete document.documentElement.dataset.paleta; else document.documentElement.dataset.paleta = p; corDaBarra(); }
 
 const CHAVE_VISUAL = 'ohara.visual';
-function carregarFonte(v) {                  // a Névoa usa Poppins (vem do Google Fonts; sem internet cai na fonte do sistema)
-  if (v !== 'nevoa' || document.getElementById('fonte-nevoa')) return;
-  document.head.appendChild(Object.assign(document.createElement('link'), { id: 'fonte-nevoa', rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap' }));
+const FONTES = {   // fontes de cada identidade (vêm do Google Fonts; sem internet cai na fonte do sistema)
+  nevoa: 'Poppins:wght@300;400;500;600;700',
+  quadro: 'Outfit:wght@600;700&family=DM+Sans:wght@400;600;700',
+  corplena: 'Archivo:wght@800&family=Inter:wght@400;600;700',
+};
+function carregarFonte(v) {
+  if (!FONTES[v] || document.getElementById('fonte-' + v)) return;
+  document.head.appendChild(Object.assign(document.createElement('link'), { id: 'fonte-' + v, rel: 'stylesheet', href: `https://fonts.googleapis.com/css2?family=${FONTES[v]}&display=swap` }));
 }
 function aplicarVisual(v) { document.documentElement.dataset.visual = v; carregarFonte(v); corDaBarra(); }
 function definirVisual(v) { pref.gravar(CHAVE_VISUAL, v); aplicarVisual(v); desenhar(); }

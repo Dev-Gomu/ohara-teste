@@ -52,5 +52,5 @@ export const PALETAS = [
 export const escolherPaleta = (guardada) => (PALETAS.some((p) => p.chave === guardada) ? guardada : PALETAS[0].chave);
 
 /** Identidades visuais do app: o Focus (verde, contorno) e a Névoa (lavanda, cantos grandes). Cada uma é um arquivo em estilos/identidades/. */
-export const VISUAIS = [{ chave: 'focus', nome: 'Focus' }, { chave: 'nevoa', nome: 'Névoa' }];
+export const VISUAIS = [{ chave: 'focus', nome: 'Focus' }, { chave: 'nevoa', nome: 'Névoa' }, { chave: 'quadro', nome: 'Quadro' }, { chave: 'corplena', nome: 'Cor plena' }];
 export const escolherVisual = (guardado) => (VISUAIS.some((v) => v.chave === guardado) ? guardado : VISUAIS[0].chave);
