@@ -44,6 +44,8 @@ export const MIGRACOES = [
      id INTEGER PRIMARY KEY, aula_id INTEGER NOT NULL REFERENCES aula(id), pagina INTEGER, frente TEXT NOT NULL, verso TEXT NOT NULL,
      etiquetas TEXT NOT NULL DEFAULT '', tem_imagem INTEGER NOT NULL DEFAULT 0, guid TEXT NOT NULL,
      criado_em TEXT NOT NULL, atualizado_em TEXT NOT NULL, exportado_em TEXT, excluido_em TEXT);`,
+  // v5: sigla de até 4 letras da matéria (vazia = as 3 primeiras letras do nome)
+  `ALTER TABLE disciplina ADD COLUMN sigla TEXT;`,
 ];
 
 export function versaoDoBanco(db) {

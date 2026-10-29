@@ -1,0 +1,8 @@
+/* Cartão pronto (ui/componentes/cartao_pronto.js): frente em faixa na cor da matéria (--mc) e verso. */
+.fc-card.fc-faixa{background:color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);border-color:color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);color:#fff}
+.fc-card.fc-faixa>header{background:color-mix(in srgb,var(--mc) var(--faixa-cab,55%),#000);color:#fff}
+.fc-card.fc-faixa .k{background:rgba(255,255,255,.22);color:inherit}
+.fc-card.fc-faixa .corpo.frente{color:#fff;text-transform:none;letter-spacing:0;font-size:22px;padding:26px 22px 30px}
+.fc-card.fc-faixa .vazio{color:#fff;opacity:.85}
+.fc-card.fc-faixa-verso .corpo{padding:16px 22px 20px}
+.fc-card h4:empty{display:none}

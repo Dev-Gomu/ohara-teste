@@ -11,9 +11,10 @@ import { desenharHoje } from './telas/hoje.js';
 import { desenharFoco } from './telas/foco.js';
 import { desenharPainel } from './telas/painel.js';
 import { desenharPlanejar } from './telas/planejar.js';
-import { desenharCartoes } from './telas/cartoes.js';
+import { desenharFlashcards } from './telas/flashcards/index.js';
 import { criarServicoFoco } from './foco_servico.js';
 import { iniciarTeclado } from './teclado.js';
+import * as pref from './preferencias.js';
 
 const ICONES = {
   hoje: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
@@ -33,25 +34,25 @@ const TEXTOS = {
   foco: ['Foco', 'Em construção.'],
   painel: ['Painel', 'Em construção.'],
   planejar: ['Planejar', 'Em construção.'],
-  cartoes: ['Cartões', 'Em construção.'],
+  cartoes: ['Flashcards', 'Em construção.'],
 };
 
 const CHAVE_TEMA = 'ohara.tema';
 const guardar = {
-  ler() { try { return localStorage.getItem(CHAVE_TEMA); } catch { return null; } },
-  gravar(v) { try { localStorage.setItem(CHAVE_TEMA, v); } catch { /* sem armazenamento: o tema vale só nesta sessão */ } },
+  ler() { return pref.ler(CHAVE_TEMA, null); },
+  gravar(v) { pref.gravar(CHAVE_TEMA, v); },
 };
 
 const CHAVE_BARRA = 'ohara.barra';
 const html = document.documentElement;
-const lerBarra = () => { try { return localStorage.getItem(CHAVE_BARRA) === 'solta' ? 'solta' : 'fixa'; } catch { return 'fixa'; } };
+const lerBarra = () => (pref.ler(CHAVE_BARRA) === 'solta' ? 'solta' : 'fixa');
 function aplicarBarra(v) { html.dataset.barra = v; html.removeAttribute('data-barra-aberta'); }
 const barra = {
   fixa: () => html.dataset.barra !== 'solta',
   aberta: () => !!html.dataset.barraAberta,
   abrir() { if (!barra.fixa()) html.dataset.barraAberta = '1'; },
   fechar() { html.removeAttribute('data-barra-aberta'); },
-  alternar() { const v = barra.fixa() ? 'solta' : 'fixa'; try { localStorage.setItem(CHAVE_BARRA, v); } catch { /* vale só nesta sessão */ } aplicarBarra(v); atualizarBotaoBarra(); },
+  alternar() { const v = barra.fixa() ? 'solta' : 'fixa'; pref.gravar(CHAVE_BARRA, v); aplicarBarra(v); atualizarBotaoBarra(); },
 };
 function atualizarBotaoBarra() { const b = document.getElementById('fixar'); if (b) b.textContent = barra.fixa() ? 'Soltar a barra' : 'Fixar a barra'; }
 const modoFoco = { ativo: () => !!html.dataset.foco, sair() { html.removeAttribute('data-foco'); }, alternar() { if (html.dataset.foco) html.removeAttribute('data-foco'); else { html.dataset.foco = '1'; barra.fechar(); } } };
@@ -64,11 +65,15 @@ function aplicarTema(tema) { document.documentElement.dataset.tema = tema; corDa
 function aplicarPaleta(p) { if (p === 'verde') delete document.documentElement.dataset.paleta; else document.documentElement.dataset.paleta = p; corDaBarra(); }
 
 const CHAVE_VISUAL = 'ohara.visual';
-function aplicarVisual(v) { document.documentElement.dataset.visual = v; corDaBarra(); }
-function definirVisual(v) { try { localStorage.setItem(CHAVE_VISUAL, v); } catch { /* vale só nesta sessão */ } aplicarVisual(v); desenhar(); }
+function carregarFonte(v) {                  // a Névoa usa Poppins (vem do Google Fonts; sem internet cai na fonte do sistema)
+  if (v !== 'nevoa' || document.getElementById('fonte-nevoa')) return;
+  document.head.appendChild(Object.assign(document.createElement('link'), { id: 'fonte-nevoa', rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap' }));
+}
+function aplicarVisual(v) { document.documentElement.dataset.visual = v; carregarFonte(v); corDaBarra(); }
+function definirVisual(v) { pref.gravar(CHAVE_VISUAL, v); aplicarVisual(v); desenhar(); }
 
 function definirTema(tema) { guardar.gravar(tema); aplicarTema(tema); desenhar(); }
-function definirPaleta(p) { try { localStorage.setItem(CHAVE_PALETA, p); } catch { /* vale só nesta sessão */ } aplicarPaleta(p); desenhar(); }
+function definirPaleta(p) { pref.gravar(CHAVE_PALETA, p); aplicarPaleta(p); desenhar(); }
 
 function desenhar() {
   if (limpar) { limpar(); limpar = null; }
@@ -95,7 +100,7 @@ function desenhar() {
   else if (rota.tela === 'hoje') limpar = desenharHoje(raiz, ctx);
   else if (rota.tela === 'foco') limpar = desenharFoco(raiz, ctx, rota.id);
   else if (rota.tela === 'planejar') limpar = desenharPlanejar(raiz, ctx);
-  else if (rota.tela === 'cartoes') limpar = desenharCartoes(raiz, ctx);
+  else if (rota.tela === 'cartoes') limpar = desenharFlashcards(raiz, ctx);
   else if (rota.tela === 'painel') limpar = desenharPainel(raiz, ctx);
   else raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(texto)}</p>`;
 }
@@ -114,8 +119,8 @@ document.getElementById('abrir-barra').onclick = () => (barra.aberta() ? barra.f
 document.getElementById('sair-foco').onclick = () => modoFoco.sair();
 addEventListener('hashchange', () => barra.fechar());
 aplicarTema(escolherTema(guardar.ler(), false));   // claro por padrão; o escuro só se a pessoa escolher
-aplicarVisual('focus');   // por enquanto só o Focus (o Pastas fica guardado em estilos/pastas.css)
-aplicarPaleta(escolherPaleta((() => { try { return localStorage.getItem(CHAVE_PALETA); } catch { return null; } })()));
+aplicarVisual(escolherVisual(pref.ler(CHAVE_VISUAL, 'focus')));   // a identidade escolhida em Ajustes (padrão: Focus)
+aplicarPaleta(escolherPaleta(pref.ler(CHAVE_PALETA, null)));
 addEventListener('hashchange', desenhar);
 desenhar();
 const teclado = iniciarTeclado({ estado: () => sessao?.estado() ?? { disciplinas: [], aulas: [] }, barra, foco: modoFoco });

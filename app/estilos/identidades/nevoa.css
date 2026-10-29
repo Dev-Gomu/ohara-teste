@@ -1,0 +1,24 @@
+/* Identidade "Névoa": lavanda e índigo, Poppins, cantos grandes. Reaproveita os componentes do Focus (identidades/focus.css, que vale
+   para as duas) e troca cores, fontes e formas. Carrega depois do Focus. Escolha em Ajustes › Identidade visual. */
+html[data-visual="nevoa"]{--bg:#EEEFFC;--cx:#FFFFFF;--cx2:#E6E8FA;--tx:#2A2C45;--tx2:#54577A;--ln:#CCCFEF;--bd:#8589C8;--pr:#3F4290;--prt:#FFFFFF;--ac:#3F4290;--acf:#E3E4FA;--faixa:#E3E4FA;--nav:#FFFFFF;--navt:#2A2C45;--ok:#2B7A62;--okf:#DDF1EA;--ur:#B3261E;
+ --m1:#4C5399;--m2:#2B7A62;--m3:#B3475E;--m4:#9A6A1F;--m5:#7A4EA8;--m6:#1F7A86;--m7:#B0457F;--m8:#5D6D7E;
+ --fonte-t:"Poppins",system-ui,sans-serif;--raio-cartao:28px;--faixa-tom:72%;--faixa-cab:55%}
+html[data-visual="nevoa"][data-tema="escuro"]{--bg:#14152B;--cx:#1D1F40;--cx2:#2A2D5C;--tx:#EDEEFB;--tx2:#B3B6DD;--ln:#3E4280;--bd:#7075C4;--pr:#A3A6FA;--prt:#14152B;--ac:#A3A6FA;--acf:#2A2D5C;--faixa:#2A2D5C;--nav:#1D1F40;--navt:#EDEEFB;--ok:#6BCBAA;--okf:#1E3A38;--ur:#FF9C9C;
+ --faixa-tom:50%;--faixa-cab:38%;--m1:#A3A6FA;--m2:#6BCBAA;--m3:#F29DB0;--m4:#E3BB6B;--m5:#C9A8F0;--m6:#6FCBD6;--m7:#F29DCB;--m8:#A9B6C4}
+html[data-visual="nevoa"] body{font-family:"Poppins",system-ui,sans-serif}
+html[data-visual="nevoa"] h1{font-weight:300;font-size:34px;text-transform:none;letter-spacing:-.01em}
+html[data-visual="nevoa"] h2{font-weight:600;letter-spacing:.06em}
+/* menu lateral: painel claro com linha fina (no Focus é verde) */
+html[data-visual="nevoa"] nav{background:var(--nav);color:var(--tx);border-right:1.5px solid var(--ln)}
+html[data-visual="nevoa"] nav .logo{font-weight:600;letter-spacing:.1em}
+html[data-visual="nevoa"] nav a{color:var(--tx2);border-radius:18px;font-weight:500}
+html[data-visual="nevoa"] nav a.on,html[data-visual="nevoa"][data-tema="escuro"] nav a.on{background:var(--cx2);color:var(--tx);font-weight:600;box-shadow:inset 0 0 0 1.5px var(--ln)}
+html[data-visual="nevoa"] nav .fim{border-top-color:var(--ln);color:var(--tx2)}
+html[data-visual="nevoa"] nav .fim button{border:1.5px solid var(--bd);color:var(--tx2)}
+/* botões, painéis e campos */
+html[data-visual="nevoa"] .btn{text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;border-color:var(--pr)}
+html[data-visual="nevoa"] .btn.sec,html[data-visual="nevoa"] .btn.peq.sec{border-color:var(--bd)}
+html[data-visual="nevoa"] .card,html[data-visual="nevoa"] .cd,html[data-visual="nevoa"] .painel{border-color:var(--ln);border-radius:24px}
+html[data-visual="nevoa"] .in{border-radius:14px;border-color:var(--bd)}
+html[data-visual="nevoa"] .fc-tile{border-radius:24px;border-color:var(--ln)}
+html[data-visual="nevoa"] .so-paleta{display:none}

@@ -6,7 +6,7 @@ export const TELAS = [
   { chave: 'foco', nome: 'Foco' },
   { chave: 'planejar', nome: 'Planejar' },
   { chave: 'painel', nome: 'Painel' },
-  { chave: 'cartoes', nome: 'Cartões' },
+  { chave: 'cartoes', nome: 'Flashcards' },
   { chave: 'ajustes', nome: 'Ajustes' },
 ];
 
@@ -51,6 +51,6 @@ export const PALETAS = [
 /** Paleta guardada, se for uma das conhecidas; senão a primeira. */
 export const escolherPaleta = (guardada) => (PALETAS.some((p) => p.chave === guardada) ? guardada : PALETAS[0].chave);
 
-/** Visuais do app: o Focus (verde, contorno) e o alternativo Pastas (cinza, sombras e pastas). */
-export const VISUAIS = [{ chave: 'focus', nome: 'Focus' }, { chave: 'pastas', nome: 'Pastas' }];
+/** Identidades visuais do app: o Focus (verde, contorno) e a Névoa (lavanda, cantos grandes). Cada uma é um arquivo em estilos/identidades/. */
+export const VISUAIS = [{ chave: 'focus', nome: 'Focus' }, { chave: 'nevoa', nome: 'Névoa' }];
 export const escolherVisual = (guardado) => (VISUAIS.some((v) => v.chave === guardado) ? guardado : VISUAIS[0].chave);

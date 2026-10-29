@@ -35,8 +35,19 @@ export function validarCor(cor) {
   return cor.toLowerCase();
 }
 
-export function criarMateria(estado, { nome, cor }, agora) {
-  const d = { id: proximoId(estado.disciplinas), nome: validarNomeMateria(estado, nome), cor: validarCor(cor), dificuldade: 2, criado_em: agora, excluido_em: null };
+/** Sigla de 1 a 4 letras ou números (sem acento, em caixa-alta). Vazia vale `null` (usa as 3 primeiras letras do nome). */
+export function validarSigla(sigla) {
+  const limpa = String(sigla ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  if (!limpa) return null;
+  if (limpa.length > 4) throw new Error('A sigla pode ter no máximo 4 letras.');
+  return limpa;
+}
+
+/** O que aparece na capa da matéria: a sigla escolhida ou as 3 primeiras letras do nome ("Microparasitologia" → "MIC"). */
+export const siglaDaMateria = (d) => d.sigla || String(d.nome).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase();
+
+export function criarMateria(estado, { nome, cor, sigla }, agora) {
+  const d = { id: proximoId(estado.disciplinas), nome: validarNomeMateria(estado, nome), cor: validarCor(cor), dificuldade: 2, sigla: validarSigla(sigla), criado_em: agora, excluido_em: null };
   return { estado: { ...estado, disciplinas: [...estado.disciplinas, d] }, materia: d };
 }
 
@@ -51,12 +62,13 @@ export function validarDificuldade(n) {
   return Number(n);
 }
 
-export function alterarMateria(estado, id, { nome, cor, dificuldade }) {
+export function alterarMateria(estado, id, { nome, cor, dificuldade, sigla }) {
   return trocar(estado, id, (d) => ({
     ...d,
     nome: nome === undefined ? d.nome : validarNomeMateria(estado, nome, id),
     cor: cor === undefined ? d.cor : validarCor(cor),
     dificuldade: dificuldade === undefined ? (d.dificuldade ?? 2) : validarDificuldade(dificuldade),
+    sigla: sigla === undefined ? (d.sigla ?? null) : validarSigla(sigla),
   }));
 }
 

@@ -1,8 +1,9 @@
 // Tela Cartões: todos os cartões, filtrar por matéria, editar, excluir (lixeira), importar texto "Frente :: Verso" e
 // exportar para o Anki (.apkg). A revisão é no Anki.
-import { escaparHtml } from '../../nucleo/texto.js';
-import { ativas, corCss } from '../../nucleo/materias.js';
-import { alterarCartao, excluirCartao, restaurarCartao, importarTexto, cartoesParaExportar, pendentesDeEnvio } from '../../nucleo/cartoes.js';
+import { escaparHtml } from '../../../nucleo/texto.js';
+import { ativas, corCss } from '../../../nucleo/materias.js';
+import { resumo } from '../../../nucleo/flashcards_texto.js';
+import { alterarCartao, excluirCartao, restaurarCartao, importarTexto, cartoesParaExportar, pendentesDeEnvio } from '../../../nucleo/cartoes.js';
 
 export function baixarBytes(bytes, nome, tipo) {
   const url = URL.createObjectURL(new Blob([bytes], { type: tipo }));
@@ -45,7 +46,7 @@ export function desenharCartoes(raiz, ctx) {
       (anki.r.falhas.length ? `<ul class="sub">${anki.r.falhas.slice(0, 5).map((f) => `<li>${escaparHtml((sessao.estado().cartoes.find((c) => c.id === f.id)?.frente ?? '').slice(0, 40))}: ${escaparHtml(f.motivo)}</li>`).join('')}</ul>` : '');
   const relatorioHtml = () => !relatorio ? '' : `<p class="sub" style="margin:10px 0 0">${relatorio.criados} ${relatorio.criados === 1 ? 'cartão criado' : 'cartões criados'}${relatorio.ignorados.length ? `; ${relatorio.ignorados.length} ${relatorio.ignorados.length === 1 ? 'linha ignorada' : 'linhas ignoradas'}:` : '.'}</p>` +
     (relatorio.ignorados.length ? `<ul class="sub">${relatorio.ignorados.map((i) => `<li>linha ${i.linha}: ${escaparHtml(i.motivo)}</li>`).join('')}</ul>` : '');
-  const cartaoHtml = (c, aula, d) => `<div class="cartao"><span class="pt" style="background:${corCss(d.cor)};margin-top:6px"></span><div class="t"><b>${escaparHtml(c.frente)}</b>${escaparHtml(c.verso)}${c.tem_imagem ? `<img data-cartao="${c.id}" alt="">` : ''}<small>${escaparHtml(d.nome)} › ${escaparHtml(aula.titulo)}${c.pagina ? ` · slide ${c.pagina}` : ''}${c.etiquetas ? ` · ${escaparHtml(c.etiquetas)}` : ''}${!c.exportado_em ? ' · novo' : c.atualizado_em > c.exportado_em ? ' · alterado' : ''}</small></div>` +
+  const cartaoHtml = (c, aula, d) => `<div class="cartao"><span class="pt" style="background:${corCss(d.cor)};margin-top:6px"></span><div class="t"><b>${escaparHtml(resumo(c.frente, 120))}</b>${escaparHtml(resumo(c.verso, 160))}${c.tem_imagem ? `<img data-cartao="${c.id}" alt="">` : ''}<small>${escaparHtml(d.nome)} › ${escaparHtml(aula.titulo)}${c.pagina ? ` · slide ${c.pagina}` : ''}${c.etiquetas ? ` · ${escaparHtml(c.etiquetas)}` : ''}${!c.exportado_em ? ' · novo' : c.atualizado_em > c.exportado_em ? ' · alterado' : ''}</small></div>` +
     `<button class="btn peq sec" type="button" data-a="editar" data-id="${c.id}">Editar</button><button class="btn peq sec" type="button" data-a="excluir" data-id="${c.id}">Excluir</button></div>`;
   const formEdicao = (c) => `<form class="cartao form" id="editar" data-id="${c.id}" style="flex-direction:column;align-items:stretch"><label class="c">Frente<textarea class="in" name="frente">${escaparHtml(c.frente)}</textarea></label><label class="c">Verso<textarea class="in" name="verso">${escaparHtml(c.verso)}</textarea></label>` +
     `<label class="c">Etiquetas<input class="in" name="etiquetas" value="${escaparHtml(c.etiquetas)}" autocomplete="off"></label><div class="acoes"><button class="btn peq" type="submit">Salvar</button><button class="btn peq sec" type="button" data-a="cancelar">Cancelar</button></div></form>`;

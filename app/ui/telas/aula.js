@@ -7,8 +7,9 @@ import { arquivosDaAula, excluirArquivo, restaurarArquivo, ehPdf } from '../../n
 import { criarMarcador, removerMarcador, marcadoresDaAula, descreverMarcador } from '../../nucleo/marcadores.js';
 import { textoDoDelta } from '../../nucleo/anotacoes.js';
 import { cartoesDaAula, excluirCartao, restaurarCartao, importarTexto } from '../../nucleo/cartoes.js';
-import { criarLeitor } from '../leitor.js';
+import { criarLeitor } from '../componentes/leitor.js';
 import { abrirMenu } from '../menu.js';
+import * as pref from '../preferencias.js';
 
 const carregarScript = (src) => new Promise((ok, erro) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => erro(new Error('Não consegui carregar o editor.')); document.head.appendChild(s); });
 async function carregarQuill() {
@@ -149,8 +150,8 @@ export function desenharAula(raiz, ctx, aulaId) {
       : '<p class="sub">Ainda não há versões anteriores. O histórico guarda um ponto de volta a cada 5 minutos de escrita.</p>';
   }
   // ----- barra do editor: colada embaixo; oculta = modo fantasma (bolha sobre o texto selecionado) -----
-  const lembra = (k, v) => { try { v === undefined ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch { /* vale só agora */ } };
-  const lido = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const lembra = (k, v) => (v === undefined ? pref.remover(k) : pref.gravar(k, v));
+  const lido = (k) => pref.ler(k, null);
   let fantasma = lido('ohara.barraEd') === 'oculta', soNotas = lido('ohara.soNotas') === '1';
   function aplicarFantasma(v) { fantasma = v; $('#p-notas').classList.toggle('fantasma', v); lembra('ohara.barraEd', v ? 'oculta' : 'visivel'); if (!v) $('#bolha-ed').hidden = true; }
   function aplicarSoNotas(v) { soNotas = v; $('.aula').classList.toggle('solo', v); lembra('ohara.soNotas', v ? '1' : '0'); $('#ver-slide').hidden = !v; if (v) quill?.focus(); }
@@ -214,8 +215,8 @@ export function desenharAula(raiz, ctx, aulaId) {
 
   // ----- divisória no meio, com margens mínimas; arrasta, usa as setas ou Alt , e Alt . -----
   const aulaEl = $('.aula'), divisoria = $('#divisoria'), CHAVE_FATIA = 'ohara.fatia';
-  let fatia = 50; try { fatia = Number(localStorage.getItem(CHAVE_FATIA)) || 50; } catch { /* sem armazenamento: começa no meio */ }
-  const aplicarFatia = (v) => { fatia = Math.min(75, Math.max(25, v)); aulaEl.style.setProperty('--fatia', fatia + '%'); divisoria.setAttribute('aria-valuenow', String(Math.round(fatia))); try { localStorage.setItem(CHAVE_FATIA, String(fatia)); } catch { /* vale só agora */ } };
+  let fatia = Number(pref.ler(CHAVE_FATIA)) || 50;
+  const aplicarFatia = (v) => { fatia = Math.min(75, Math.max(25, v)); aulaEl.style.setProperty('--fatia', fatia + '%'); divisoria.setAttribute('aria-valuenow', String(Math.round(fatia))); pref.gravar(CHAVE_FATIA, fatia); };
   aplicarFatia(fatia);
   divisoria.onpointerdown = (e) => {
     divisoria.setPointerCapture(e.pointerId); const r = aulaEl.getBoundingClientRect();

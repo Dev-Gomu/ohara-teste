@@ -25,7 +25,8 @@ export function desenharAjustes(raiz, ctx) {
       `<div class="card bloco"><h2>Tema</h2><div class="acoes">` +
       ['claro', 'escuro'].map((t) => `<button class="btn peq ${document.documentElement.dataset.tema === t ? '' : 'sec'}" type="button" data-a="tema" data-tema="${t}">${t === 'claro' ? 'Claro' : 'Escuro'}</button>`).join('') +
       `</div></div>` +
-      `<div class="card bloco so-focus"><h2>Paleta</h2><p class="sub" style="margin-bottom:10px">Cores do menu e dos destaques (vale para o tema claro e o escuro).</p><div class="acoes">` +
+      `<div class="card bloco"><h2>Identidade visual</h2><p class="sub" style="margin-bottom:10px">O conjunto de cores, fontes e formas do aplicativo.</p><div class="acoes">${VISUAIS.map((v) => `<button class="btn peq ${(document.documentElement.dataset.visual ?? 'focus') === v.chave ? '' : 'sec'}" type="button" data-a="visual" data-visual="${v.chave}">${v.nome}</button>`).join('')}</div></div>` +
+      `<div class="card bloco so-paleta"><h2>Paleta</h2><p class="sub" style="margin-bottom:10px">Cores do menu e dos destaques (vale para o tema claro e o escuro).</p><div class="acoes">` +
       PALETAS.map((p) => `<button class="btn peq ${(document.documentElement.dataset.paleta ?? 'verde') === p.chave ? '' : 'sec'}" type="button" data-a="paleta" data-paleta="${p.chave}"><span class="amostra" style="background:linear-gradient(90deg,${p.amostra[0]} 50%,${p.amostra[1]} 50%)"></span>${escaparHtml(p.nome)}</button>`).join('') + `</div></div>` +
       `<div class="card bloco"><h2>Metas e foco</h2>${blocoMetas()}</div>` +
       `<div class="card bloco"><h2>Lixeira</h2>` +

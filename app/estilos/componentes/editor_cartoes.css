@@ -1,0 +1,23 @@
+/* Editor de cartões (ui/componentes/editor_cartoes.js): cada linha já aparece como no cartão pronto. Cores e raios vêm das variáveis da identidade. */
+.fc-codigo{flex:1;min-height:160px;border:0;resize:none;padding:16px 18px;background:transparent;color:var(--tx);font:14px/1.7 ui-monospace,"DejaVu Sans Mono",Menlo,monospace}.fc-codigo:focus{outline:0;box-shadow:inset 0 0 0 3px var(--ac)}
+.fc-ed{flex:1;min-height:160px;overflow:auto;padding:16px max(14px,calc((100% - 860px)/2)) 30px;background:var(--cx2);color:var(--tx);font-size:15.5px;line-height:1.65;caret-color:var(--ac);counter-reset:cartao}
+.fc-ed:focus{outline:0;box-shadow:inset 0 0 0 3px var(--ac)}
+.fc-ed .l{position:relative;min-height:1.65em;padding:2px 26px;background:var(--cx);border-left:1.5px solid var(--ln);border-right:1.5px solid var(--ln)}
+.fc-ed .l[data-t=frente]{counter-increment:cartao;margin-top:26px;padding:36px 26px 22px;background:color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);border:1.5px solid color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);border-bottom:0;border-radius:var(--raio-cartao,20px) var(--raio-cartao,20px) 0 0;color:#fff;caret-color:#fff;font-size:23px;font-weight:600;line-height:1.3}
+.fc-ed .l[data-t=frente]:first-child{margin-top:0}
+.fc-ed .l[data-t=frente]::before{content:"Frente · cartão " counter(cartao);position:absolute;top:13px;left:26px;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.fc-ed .l[data-t=frente]+.l{padding-top:12px}
+.fc-ed .l[data-t=secao]{padding-top:16px;font-size:11.5px;font-weight:600;line-height:1.5;letter-spacing:.09em;text-transform:uppercase;color:var(--ac)}
+.fc-ed .l[data-t=frente]+.l[data-t=secao]{padding-top:6px}.fc-ed .l[data-t=secao]+.l{padding-top:2px}
+.fc-ed .l:has(+ .l[data-t=frente]),.fc-ed .l:last-child{border-bottom:1.5px solid var(--ln);border-radius:0 0 var(--raio-cartao,20px) var(--raio-cartao,20px);padding-bottom:18px}
+.fc-ed .l[data-t=frente]:has(+ .l[data-t=frente]),.fc-ed .l[data-t=frente]:last-child{border-radius:var(--raio-cartao,20px);border-bottom:1.5px solid color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);padding-bottom:16px}
+.fc-ed .l[data-t=item],.fc-ed .l[data-t=num],.fc-ed .l[data-t=mais],.fc-ed .l[data-t=menos],.fc-ed .l[data-t=duvida]{padding-left:56px}
+.fc-ed .l[data-t=item]::before,.fc-ed .l[data-t=num]::before,.fc-ed .l[data-t=mais]::before,.fc-ed .l[data-t=menos]::before,.fc-ed .l[data-t=duvida]::before{position:absolute;left:28px;width:22px;text-align:center;font-weight:600}
+.fc-ed .l[data-t=item]::before{content:"•";color:var(--tx2)}
+.fc-ed .l[data-t=num]::before{content:attr(data-n) ".";color:var(--tx2);left:20px;width:28px;text-align:right}
+.fc-ed .l[data-t=mais]::before{content:"+";color:var(--ok)}.fc-ed .l[data-t=menos]::before{content:"\2212";color:var(--ur)}.fc-ed .l[data-t=duvida]::before{content:"?";color:var(--tx2)}
+.fc-ed .l:only-child>br:only-child{display:none}
+.fc-ed:has(.l:only-child>br:only-child) .l[data-t=texto]::before{content:"Comece com @ e um espaço para escrever a frente do cartão…";position:absolute;color:var(--tx2);pointer-events:none}
+.fc-ed .l.atual[data-t=texto]:has(>br:only-child)::before{content:"Enter de novo: cartão novo · # seção · - lista…";position:absolute;color:var(--tx2);opacity:.75;pointer-events:none}
+.fc-ed mark{background:rgba(255,196,46,.45);color:inherit;border-radius:4px;padding:0 3px}
+.fc-ed .l[data-t=frente] mark{background:rgba(255,255,255,.28)}

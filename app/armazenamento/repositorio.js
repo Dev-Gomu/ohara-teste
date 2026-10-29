@@ -2,7 +2,7 @@
 // salvarEstado regrava as duas tabelas numa transação (o banco inteiro já é gravado de uma vez, ver ETAPA1.md).
 
 const COLUNAS = {
-  disciplina: ['id', 'nome', 'cor', 'dificuldade', 'criado_em', 'excluido_em'],
+  disciplina: ['id', 'nome', 'cor', 'dificuldade', 'sigla', 'criado_em', 'excluido_em'],
   aula: ['id', 'disciplina_id', 'titulo', 'tipo', 'inicio', 'fim', 'anotacoes', 'ics_uid', 'criado_em', 'excluido_em'],
   arquivo: ['id', 'aula_id', 'nome', 'tipo_mime', 'tamanho', 'criado_em', 'excluido_em'],
   marcador: ['id', 'aula_id', 'arquivo_id', 'pagina', 'trecho', 'criado_em', 'excluido_em'],

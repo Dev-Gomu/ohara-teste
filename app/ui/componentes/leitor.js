@@ -1,17 +1,18 @@
 // Leitor de PDF e imagem (PDF.js): rolagem contínua, zoom por botões e pinça de dois dedos só dentro do leitor,
 // texto selecionável, página atual. Só mexe no próprio DOM; quem usa recebe `aoMudarPagina(n, total)`.
+import * as pref from '../preferencias.js';
 let pdfjs = null;
 async function carregarPdfjs() {
   if (!pdfjs) {
-    pdfjs = await import('../vendor/pdf.min.mjs');
-    pdfjs.GlobalWorkerOptions.workerSrc = new URL('../vendor/pdf.worker.min.mjs', import.meta.url).href;
+    pdfjs = await import('../../vendor/pdf.min.mjs');
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL('../../vendor/pdf.worker.min.mjs', import.meta.url).href;
   }
   return pdfjs;
 }
 
 export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () => {} } = {}) {
   let pdf = null, imagem = null, zoom = 1, baseW = 0, baseH = 0, pagina = 1, obs = null, geracao = 0, modo = 'pagina';
-  try { if (localStorage.getItem('ohara.leitor') === 'continuo') modo = 'continuo'; } catch { /* sem armazenamento */ }
+  if (pref.ler('ohara.leitor') === 'continuo') modo = 'continuo';
   let medido = [0, 0];
   const conteudo = document.createElement('div');
   raiz.appendChild(conteudo);
@@ -142,7 +143,7 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
     proximo() { return api.irPara(pagina + 1); },
     anterior() { return api.irPara(pagina - 1); },
     get modo() { return modo; },
-    async definirModo(m) { modo = m === 'continuo' ? 'continuo' : 'pagina'; try { localStorage.setItem('ohara.leitor', modo); } catch { /* vale só agora */ } const n = pagina; zoom = 1; aoMudarZoom(1); if (pdf) { await montarPdf(); api.irPara(n); } else if (imagem) montarImagem(); },
+    async definirModo(m) { modo = m === 'continuo' ? 'continuo' : 'pagina'; pref.gravar('ohara.leitor', modo); const n = pagina; zoom = 1; aoMudarZoom(1); if (pdf) { await montarPdf(); api.irPara(n); } else if (imagem) montarImagem(); },
     mais() { return definirZoom(zoom + 0.25); },
     menos() { return definirZoom(zoom - 0.25); },
     normal() { return definirZoom(1); },
