@@ -18,3 +18,17 @@ html[data-visual="corplena"] .in{border-radius:4px;border:2px solid var(--bd)}
 html[data-visual="corplena"] .fc-tile:focus-within{box-shadow:0 0 0 4px var(--ac)}
 html[data-visual="corplena"] .fc-tile:focus-within>header{background:var(--ac);color:var(--prt)}
 html[data-visual="corplena"] .so-paleta{display:none}
+
+/* formas coesas (abas, botões pequenos, faixas, alertas) */
+html[data-visual="corplena"] .btn.peq,html[data-visual="corplena"] .btn{border-radius:4px}
+html[data-visual="corplena"] .fc-abas,html[data-visual="corplena"] .fc-modo,html[data-visual="corplena"] .abas{border-radius:4px}
+html[data-visual="corplena"] .fc-abas button,html[data-visual="corplena"] .fc-modo button,html[data-visual="corplena"] .abas button{border-radius:3px}
+html[data-visual="corplena"] .chip,html[data-visual="corplena"] .toast,html[data-visual="corplena"] .fc-card>header .k{border-radius:3px}
+html[data-visual="corplena"] .faixa,html[data-visual="corplena"] .ban,html[data-visual="corplena"] .hero{border-radius:4px}
+html[data-visual="corplena"] .card,html[data-visual="corplena"] .cd,html[data-visual="corplena"] .painel{border-radius:4px}
+/* faixa do Hoje em cor chapada: texto na cor que contrasta com ela */
+html[data-visual="corplena"] .faixa,html[data-visual="corplena"] .faixa *{color:var(--prt)}
+/* capa da matéria: cor chapada e cantos retos */
+html[data-visual="corplena"] .til{--topo:var(--c);--sig:#fff}
+html[data-visual="corplena"][data-tema="escuro"] .til{--topo:var(--c);--sig:#101114}
+html[data-visual="corplena"] .til .capa,html[data-visual="corplena"] .til.edit{border-radius:4px;border-width:2px}

@@ -17,3 +17,13 @@ html[data-visual="quadro"] .in{border-radius:12px;border-color:var(--bd)}
 /* bloco com foco: halo flutuante */
 html[data-visual="quadro"] .fc-tile:focus-within{box-shadow:0 0 0 4px var(--bg),0 0 0 7px var(--ac)}
 html[data-visual="quadro"] .so-paleta{display:none}
+
+/* formas coesas (abas, botões pequenos, faixas, alertas) */
+html[data-visual="quadro"] .btn.peq,html[data-visual="quadro"] .btn{border-radius:12px}
+html[data-visual="quadro"] .fc-abas,html[data-visual="quadro"] .fc-modo,html[data-visual="quadro"] .abas{border-radius:14px}
+html[data-visual="quadro"] .fc-abas button,html[data-visual="quadro"] .fc-modo button,html[data-visual="quadro"] .abas button{border-radius:10px}
+html[data-visual="quadro"] .chip,html[data-visual="quadro"] .toast,html[data-visual="quadro"] .fc-card>header .k{border-radius:10px}
+html[data-visual="quadro"] .faixa,html[data-visual="quadro"] .ban,html[data-visual="quadro"] .hero{border-radius:18px}
+html[data-visual="quadro"] .card,html[data-visual="quadro"] .cd,html[data-visual="quadro"] .painel{border-radius:18px}
+/* capa da matéria: cantos do Quadro */
+html[data-visual="quadro"] .til .capa,html[data-visual="quadro"] .til.edit{border-radius:18px}

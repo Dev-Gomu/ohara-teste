@@ -84,16 +84,16 @@ details.mais-cartoes{margin-top:14px}details.mais-cartoes>summary{list-style:non
 .barra-ed button.ocultar-b,.barra-ed button.ocultar-b:hover{width:auto;height:40px;min-width:0;padding:0 14px;display:inline-flex}@media(pointer:coarse){.barra-ed button.ocultar-b{height:44px}}
 #barra-ed button.ocultar-b{width:auto;min-width:0;height:40px;padding:0 14px}
 /* ===== Capa "Editorial" das matérias (Focus): faixa de cor com a sigla, nome em caixa-alta, card inteiro clicável ===== */
-html[data-visual="focus"] .tiles{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
-html[data-visual="focus"] .til{--topo:color-mix(in srgb,var(--c) 70%,#fff);--sig:var(--bd);position:relative;display:block;padding:0;border:0;background:none;text-align:left}
-html[data-visual="focus"][data-tema="escuro"] .til{--topo:color-mix(in srgb,var(--c) 62%,#000);--sig:#fff}
-html[data-visual="focus"] .til .capa{display:block;position:relative;height:156px;border:1.5px solid var(--bd);border-radius:16px;background:var(--cx);overflow:hidden;color:var(--tx)}
-html[data-visual="focus"] .til .capa:hover{box-shadow:0 0 0 2px var(--c)}
-html[data-visual="focus"] .til .topo{position:absolute;left:0;right:0;top:0;height:84px;background:var(--topo);border-bottom:1.5px solid var(--bd)}
-html[data-visual="focus"] .til .topo::after{content:"";position:absolute;right:18px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--c);border:1.5px solid var(--bd)}
-html[data-visual="focus"] .til .sg{position:absolute;left:18px;top:16px;font:500 26px/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.2em;color:var(--sig)}
-html[data-visual="focus"] .til .nm{position:absolute;left:18px;bottom:15px;right:60px;font-family:var(--fonte-t);font-weight:900;font-size:13px;line-height:1.15;text-transform:uppercase;letter-spacing:.02em}
-html[data-visual="focus"] .til .mais{position:absolute;right:10px;bottom:10px;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--bd);background:var(--cx);color:var(--tx);display:grid;place-items:center;font-size:16px;line-height:1;cursor:pointer;padding:0}
-@media(pointer:coarse){html[data-visual="focus"] .til .mais{width:44px;height:44px}}
-html[data-visual="focus"] .til.edit{border:1.5px solid var(--bd);border-radius:16px;background:var(--cx);padding:16px;display:flex;flex-direction:column;gap:10px}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .tiles{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til{--topo:color-mix(in srgb,var(--c) 70%,#fff);--sig:var(--bd);position:relative;display:block;padding:0;border:0;background:none;text-align:left}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"])[data-tema="escuro"] .til{--topo:color-mix(in srgb,var(--c) 62%,#000);--sig:#fff}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .capa{display:block;position:relative;height:156px;border:1.5px solid var(--bd);border-radius:16px;background:var(--cx);overflow:hidden;color:var(--tx)}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .capa:hover{box-shadow:0 0 0 2px var(--c)}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .topo{position:absolute;left:0;right:0;top:0;height:84px;background:var(--topo);border-bottom:1.5px solid var(--bd)}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .topo::after{content:"";position:absolute;right:18px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--c);border:1.5px solid var(--bd)}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .sg{position:absolute;left:18px;top:16px;font:500 26px/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.2em;color:var(--sig)}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .nm{position:absolute;left:18px;bottom:15px;right:60px;font-family:var(--fonte-t);font-weight:900;font-size:13px;line-height:1.15;text-transform:uppercase;letter-spacing:.02em}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .mais{position:absolute;right:10px;bottom:10px;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--bd);background:var(--cx);color:var(--tx);display:grid;place-items:center;font-size:16px;line-height:1;cursor:pointer;padding:0}
+@media(pointer:coarse){html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .mais{width:44px;height:44px}}
+html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til.edit{border:1.5px solid var(--bd);border-radius:16px;background:var(--cx);padding:16px;display:flex;flex-direction:column;gap:10px}
 .in.curto{max-width:140px}
