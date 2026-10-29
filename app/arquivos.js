@@ -1,6 +1,6 @@
 // Gerado por ferramentas/versao.js — não editar.
 self.OHARA = {
- "versao": "9dfa2f695884",
+ "versao": "bf833574b7dd",
  "arquivos": [
   "armazenamento/ankiconnect.js",
   "armazenamento/apkg.js",
@@ -16,10 +16,7 @@ self.OHARA = {
   "estilos/componentes/cartao_pronto.css",
   "estilos/componentes/editor_cartoes.css",
   "estilos/componentes/slide.css",
-  "estilos/identidades/corplena.css",
-  "estilos/identidades/focus.css",
-  "estilos/identidades/nevoa.css",
-  "estilos/identidades/quadro.css",
+  "estilos/identidade.css",
   "estilos/ohara.css",
   "estilos/teclado.css",
   "estilos/telas/flashcards.css",
@@ -53,7 +50,6 @@ self.OHARA = {
   "nucleo/teclado.js",
   "nucleo/texto.js",
   "nucleo/troca.js",
-  "ui/aba.js",
   "ui/app.js",
   "ui/atalhos.js",
   "ui/atualizar.js",

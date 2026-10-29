@@ -1,6 +1,6 @@
 // Casca do app: navegação por #hoje, #materias e #ajustes, e tema claro/escuro. Sem regra de negócio.
 import { atualizarApp } from './atualizar.js';
-import { TELAS, rotaDoEndereco, escolherTema, outroTema, escolherPaleta, escolherVisual } from '../nucleo/rotas.js';
+import { TELAS, rotaDoEndereco, escolherTema, outroTema } from '../nucleo/rotas.js';
 import { escaparHtml } from '../nucleo/texto.js';
 import { iniciarSessao } from './sessao.js';
 import { desenharMaterias } from './telas/materias.js';
@@ -56,29 +56,14 @@ const barra = {
 };
 function atualizarBotaoBarra() { const b = document.getElementById('fixar'); if (b) b.textContent = barra.fixa() ? 'Soltar a barra' : 'Fixar a barra'; }
 const modoFoco = { ativo: () => !!html.dataset.foco, sair() { html.removeAttribute('data-foco'); }, alternar() { if (html.dataset.foco) html.removeAttribute('data-foco'); else { html.dataset.foco = '1'; barra.fechar(); } } };
-const CHAVE_PALETA = 'ohara.paleta';
 function corDaBarra() {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue('--nav').trim() || '#0B5A44';
 }
 function aplicarTema(tema) { document.documentElement.dataset.tema = tema; corDaBarra(); }
-function aplicarPaleta(p) { if (p === 'verde') delete document.documentElement.dataset.paleta; else document.documentElement.dataset.paleta = p; corDaBarra(); }
 
-const CHAVE_VISUAL = 'ohara.visual';
-const FONTES = {   // fontes de cada identidade (vêm do Google Fonts; sem internet cai na fonte do sistema)
-  nevoa: 'Poppins:wght@300;400;500;600;700',
-  quadro: 'Outfit:wght@600;700&family=DM+Sans:wght@400;600;700',
-  corplena: 'Archivo:wght@800&family=Inter:wght@400;600;700',
-};
-function carregarFonte(v) {
-  if (!FONTES[v] || document.getElementById('fonte-' + v)) return;
-  document.head.appendChild(Object.assign(document.createElement('link'), { id: 'fonte-' + v, rel: 'stylesheet', href: `https://fonts.googleapis.com/css2?family=${FONTES[v]}&display=swap` }));
-}
-function aplicarVisual(v) { document.documentElement.dataset.visual = v; carregarFonte(v); corDaBarra(); }
-function definirVisual(v) { pref.gravar(CHAVE_VISUAL, v); aplicarVisual(v); desenhar(); }
 
 function definirTema(tema) { guardar.gravar(tema); aplicarTema(tema); desenhar(); }
-function definirPaleta(p) { pref.gravar(CHAVE_PALETA, p); aplicarPaleta(p); desenhar(); }
 
 function desenhar() {
   if (limpar) { limpar(); limpar = null; }
@@ -97,7 +82,7 @@ function desenhar() {
   raiz.onclick = raiz.onsubmit = raiz.onchange = null; raiz.className = '';
   document.title = `${titulo} · Ohara`;
   if (!sessao) { raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(erroSessao || 'Abrindo seus dados…')}</p>`; return; }
-  const ctx = { sessao, foco, aviso, atualizarApp: () => atualizarApp(aviso), definirTema, definirPaleta, definirVisual, agora: () => window.ohara?.agoraFalsoMs ?? Date.now() };
+  const ctx = { sessao, foco, aviso, atualizarApp: () => atualizarApp(aviso), definirTema, agora: () => window.ohara?.agoraFalsoMs ?? Date.now() };
   if (rota.tela === 'materias') desenharMaterias(raiz, ctx);
   else if (rota.tela === 'materia') desenharMateria(raiz, ctx, rota.id);
   else if (rota.tela === 'aula') limpar = desenharAula(raiz, ctx, rota.id);
@@ -124,8 +109,6 @@ document.getElementById('abrir-barra').onclick = () => (barra.aberta() ? barra.f
 document.getElementById('sair-foco').onclick = () => modoFoco.sair();
 addEventListener('hashchange', () => barra.fechar());
 aplicarTema(escolherTema(guardar.ler(), false));   // claro por padrão; o escuro só se a pessoa escolher
-aplicarVisual(escolherVisual(pref.ler(CHAVE_VISUAL, 'focus')));   // a identidade escolhida em Ajustes (padrão: Focus)
-aplicarPaleta(escolherPaleta(pref.ler(CHAVE_PALETA, null)));
 addEventListener('hashchange', desenhar);
 desenhar();
 const teclado = iniciarTeclado({ estado: () => sessao?.estado() ?? { disciplinas: [], aulas: [] }, barra, foco: modoFoco });

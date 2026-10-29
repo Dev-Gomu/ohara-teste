@@ -6,7 +6,6 @@ import { restaurarCartao } from '../../nucleo/cartoes.js';
 import { restaurarProva } from '../../nucleo/planejador.js';
 import { CONFIG_PADRAO, ROTULOS_CONFIG, lerConfigFoco, validarConfig } from '../../nucleo/foco.js';
 import { restaurarAula } from '../../nucleo/aulas.js';
-import { PALETAS, escolherPaleta, VISUAIS, escolherVisual } from '../../nucleo/rotas.js';
 
 export function desenharAjustes(raiz, ctx) {
   let confirmando = false, armaz = null, pendente = null, erroBackup = '', erroMetas = '', troca = null, erroTroca = '', ocupado = false;
@@ -25,9 +24,6 @@ export function desenharAjustes(raiz, ctx) {
       `<div class="card bloco"><h2>Tema</h2><div class="acoes">` +
       ['claro', 'escuro'].map((t) => `<button class="btn peq ${document.documentElement.dataset.tema === t ? '' : 'sec'}" type="button" data-a="tema" data-tema="${t}">${t === 'claro' ? 'Claro' : 'Escuro'}</button>`).join('') +
       `</div></div>` +
-      `<div class="card bloco"><h2>Identidade visual</h2><p class="sub" style="margin-bottom:10px">O conjunto de cores, fontes e formas do aplicativo.</p><div class="acoes">${VISUAIS.map((v) => `<button class="btn peq ${(document.documentElement.dataset.visual ?? 'focus') === v.chave ? '' : 'sec'}" type="button" data-a="visual" data-visual="${v.chave}">${v.nome}</button>`).join('')}</div></div>` +
-      `<div class="card bloco so-paleta"><h2>Paleta</h2><p class="sub" style="margin-bottom:10px">Cores do menu e dos destaques (vale para o tema claro e o escuro).</p><div class="acoes">` +
-      PALETAS.map((p) => `<button class="btn peq ${(document.documentElement.dataset.paleta ?? 'verde') === p.chave ? '' : 'sec'}" type="button" data-a="paleta" data-paleta="${p.chave}"><span class="amostra" style="background:linear-gradient(90deg,${p.amostra[0]} 50%,${p.amostra[1]} 50%)"></span>${escaparHtml(p.nome)}</button>`).join('') + `</div></div>` +
       `<div class="card bloco"><h2>Metas e foco</h2>${blocoMetas()}</div>` +
       `<div class="card bloco"><h2>Lixeira</h2>` +
       (vazia ? '<p class="sub">A lixeira está vazia.</p>'
@@ -137,8 +133,6 @@ export function desenharAjustes(raiz, ctx) {
     switch (b.dataset.a) {
       case 'atualizar-app': ctx.atualizarApp(); break;
       case 'tema': ctx.definirTema(b.dataset.tema); desenhar(); break;
-      case 'visual': ctx.definirVisual(escolherVisual(b.dataset.visual)); break;
-      case 'paleta': ctx.definirPaleta(escolherPaleta(b.dataset.paleta)); break;
       case 'rest-m': restaurar(estado.disciplinas.find((d) => d.id === id)?.nome, (e) => restaurarMateria(e, id)); break;
       case 'rest-a': restaurar(estado.aulas.find((a) => a.id === id)?.titulo, (e) => restaurarAula(e, id)); break;
       case 'rest-f': restaurar(estado.arquivos.find((f) => f.id === id)?.nome, (e) => restaurarArquivo(e, id)); break;

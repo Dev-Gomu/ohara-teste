@@ -40,17 +40,3 @@ export function escolherTema(guardado, sistemaEscuro) {
 }
 
 export const outroTema = (tema) => (tema === 'claro' ? 'escuro' : 'claro');
-
-/** Paletas do visual Focus: chave, nome e as duas cores que aparecem na amostra (menu e destaque). */
-export const PALETAS = [
-  { chave: 'verde', nome: 'Verde clínico', amostra: ['#0B5A44', '#0E8F6A'] },
-  { chave: 'floresta', nome: 'Floresta', amostra: ['#1F4D3A', '#2E7D52'] },
-  { chave: 'hospital', nome: 'Hospital', amostra: ['#0F6B6B', '#12877F'] },
-  { chave: 'grafite', nome: 'Grafite', amostra: ['#1D2420', '#1FA971'] },
-];
-/** Paleta guardada, se for uma das conhecidas; senão a primeira. */
-export const escolherPaleta = (guardada) => (PALETAS.some((p) => p.chave === guardada) ? guardada : PALETAS[0].chave);
-
-/** Identidades visuais do app: o Focus (verde, contorno) e a Névoa (lavanda, cantos grandes). Cada uma é um arquivo em estilos/identidades/. */
-export const VISUAIS = [{ chave: 'focus', nome: 'Focus' }, { chave: 'nevoa', nome: 'Névoa' }, { chave: 'quadro', nome: 'Quadro' }, { chave: 'corplena', nome: 'Cor plena' }];
-export const escolherVisual = (guardado) => (VISUAIS.some((v) => v.chave === guardado) ? guardado : VISUAIS[0].chave);

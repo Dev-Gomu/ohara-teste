@@ -25,13 +25,13 @@ main.cheia .topo a.voltar{margin:0;min-height:40px}
 @media(pointer:coarse){.btn.peq,.painel .cab button:not(.btn),.abas button{min-height:44px}.barra-ed button{width:44px;height:44px}}
 /* ===== Sistema de botões: primário (escuro, um por tela), secundário (claro), ⋯ (mais), perigoso (só dentro de menu) ===== */
 /* ".sec" também é título de seção em caixa alta; aqui o botão secundário volta a ser texto normal */
-:is(html[data-visual],html) .btn{text-transform:none;letter-spacing:0;font-weight:600;display:inline-flex;align-items:center;justify-content:center;min-height:48px}
-:is(html[data-visual],html) .btn.peq{min-height:40px;font-size:14px;padding:0 16px}
-:is(html[data-visual],html) .btn.sec{font-size:15px;color:var(--tx);margin:0;opacity:1}
-:is(html[data-visual],html) .btn.peq.sec{font-size:14px}
-:is(html[data-visual],html) .btn.mais{min-width:44px;padding:0 12px;font-size:20px;line-height:1;letter-spacing:.05em}
-:is(html[data-visual],html) .til .acoes .btn.mais{padding:0 12px;font-size:20px}
-@media(pointer:coarse){:is(html[data-visual],html) .btn.peq{min-height:44px}}
+html:root .btn{text-transform:none;letter-spacing:0;font-weight:600;display:inline-flex;align-items:center;justify-content:center;min-height:48px}
+html:root .btn.peq{min-height:40px;font-size:14px;padding:0 16px}
+html:root .btn.sec{font-size:15px;color:var(--tx);margin:0;opacity:1}
+html:root .btn.peq.sec{font-size:14px}
+html:root .btn.mais{min-width:44px;padding:0 12px;font-size:20px;line-height:1;letter-spacing:.05em}
+html:root .til .acoes .btn.mais{padding:0 12px;font-size:20px}
+@media(pointer:coarse){html:root .btn.peq{min-height:44px}}
 /* foco do teclado sempre visível, no mesmo estilo */
 :is(a,button,select,input,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--tx);outline-offset:2px;border-radius:10px}
 /* lista de aulas da matéria: linha inteira é o botão de abrir */
@@ -46,10 +46,10 @@ main.cheia .topo a.voltar{margin:0;min-height:40px}
 details.dadas{margin-top:18px}details.dadas>summary{list-style:none;cursor:pointer;margin-bottom:8px}details.dadas>summary::-webkit-details-marker{display:none}
 details.dadas[open]>summary{margin-bottom:8px}
 /* Hoje: botão "Novo bloco" em pílula (não cobre conteúdo: a tela ganha folga embaixo), semana legível */
-:is(html[data-visual],html) .fab{width:auto!important;height:52px!important;border-radius:16px!important;padding:0 22px 0 18px;display:inline-flex!important;align-items:center;gap:8px;font-size:15px!important;font-weight:600}
-:is(html[data-visual],html) .fab span{font-size:24px;line-height:1}
+html:root .fab{width:auto!important;height:52px!important;border-radius:16px!important;padding:0 22px 0 18px;display:inline-flex!important;align-items:center;gap:8px;font-size:15px!important;font-weight:600}
+html:root .fab span{font-size:24px;line-height:1}
 .hoje2{padding-bottom:84px}
-:is(html[data-visual],html) .semana b{width:40px;height:40px;font-size:14px}
+html:root .semana b{width:40px;height:40px;font-size:14px}
 /* Planejar: círculo de concluir com área de 44 px; hoje em destaque; dias seguintes recolhidos */
 .ck{position:relative;width:28px;height:28px}.ck::after{content:"";position:absolute;inset:-8px}
 .dia-t{font-size:14px;font-weight:600;margin:6px 0 4px;text-transform:none;letter-spacing:0;color:var(--tx)}
@@ -62,7 +62,7 @@ details.dia-plano>summary::after{content:"+";margin-left:auto;font-size:20px;col
 /* Painel */
 .card.estado{display:flex;align-items:center;gap:16px;justify-content:space-between;margin-bottom:12px}.card.estado .frase{margin:0;font-size:17px;font-weight:600}
 .cal-card{max-width:none}
-:is(html[data-visual],html) .cal span{max-width:52px;font-size:15px}
+html:root .cal span{max-width:52px;font-size:15px}
 .card.sugestao{display:flex;flex-direction:column;gap:6px;padding:22px}.card.sugestao .ov{font-size:12px;color:var(--tx2);font-weight:600}.card.sugestao h2.st{font-size:24px;text-transform:none;letter-spacing:0;margin:0}
 .card.sugestao .acoes{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
 /* Ajustes: números com − e +, metas em grade, seções recolhíveis */
@@ -79,21 +79,21 @@ details.mais-cartoes{margin-top:14px}details.mais-cartoes>summary{list-style:non
 .barra-ed button.txt.ql-active{font-weight:600}
 /* Planejar: o "começar" das tarefas que não são a próxima é só uma seta discreta */
 .ir-linha{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;color:var(--tx2);font-size:13px}.ir-linha:hover{background:var(--cx2);color:var(--tx)}
-:is(html[data-visual],html) .btn[hidden],.btn[hidden],button[hidden]{display:none!important}
+html:root .btn[hidden],.btn[hidden],button[hidden]{display:none!important}
 @media(pointer:fine){.barra-ed button{width:36px;height:38px}.barra-ed button.txt{min-width:34px;width:auto}.ocultar-b{padding:0 12px}}
 .barra-ed button.ocultar-b,.barra-ed button.ocultar-b:hover{width:auto;height:40px;min-width:0;padding:0 14px;display:inline-flex}@media(pointer:coarse){.barra-ed button.ocultar-b{height:44px}}
 #barra-ed button.ocultar-b{width:auto;min-width:0;height:40px;padding:0 14px}
 /* ===== Capa "Editorial" das matérias (Focus): faixa de cor com a sigla, nome em caixa-alta, card inteiro clicável ===== */
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .tiles{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til{--topo:color-mix(in srgb,var(--c) 70%,#fff);--sig:var(--bd);position:relative;display:block;padding:0;border:0;background:none;text-align:left}
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"])[data-tema="escuro"] .til{--topo:color-mix(in srgb,var(--c) 62%,#000);--sig:#fff}
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .capa{display:block;position:relative;height:156px;border:1.5px solid var(--bd);border-radius:16px;background:var(--cx);overflow:hidden;color:var(--tx)}
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .capa:hover{box-shadow:0 0 0 2px var(--c)}
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .topo{position:absolute;left:0;right:0;top:0;height:84px;background:var(--topo);border-bottom:1.5px solid var(--bd)}
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .topo::after{content:"";position:absolute;right:18px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--c);border:1.5px solid var(--bd)}
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .sg{position:absolute;left:18px;top:16px;font:500 26px/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.2em;color:var(--sig)}
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .nm{position:absolute;left:18px;bottom:15px;right:60px;font-family:var(--fonte-t);font-weight:900;font-size:13px;line-height:1.15;text-transform:uppercase;letter-spacing:.02em}
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .mais{position:absolute;right:10px;bottom:10px;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--bd);background:var(--cx);color:var(--tx);display:grid;place-items:center;font-size:16px;line-height:1;cursor:pointer;padding:0}
-@media(pointer:coarse){html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til .mais{width:44px;height:44px}}
-html:is([data-visual="focus"],[data-visual="quadro"],[data-visual="corplena"]) .til.edit{border:1.5px solid var(--bd);border-radius:16px;background:var(--cx);padding:16px;display:flex;flex-direction:column;gap:10px}
+html:root .tiles{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
+html:root .til{--topo:color-mix(in srgb,var(--c) 70%,#fff);--sig:var(--bd);position:relative;display:block;padding:0;border:0;background:none;text-align:left}
+html:root[data-tema="escuro"] .til{--topo:color-mix(in srgb,var(--c) 62%,#000);--sig:#fff}
+html:root .til .capa{display:block;position:relative;height:156px;border:1.5px solid var(--bd);border-radius:16px;background:var(--cx);overflow:hidden;color:var(--tx)}
+html:root .til .capa:hover{box-shadow:0 0 0 2px var(--c)}
+html:root .til .topo{position:absolute;left:0;right:0;top:0;height:84px;background:var(--topo);border-bottom:1.5px solid var(--bd)}
+html:root .til .topo::after{content:"";position:absolute;right:18px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--c);border:1.5px solid var(--bd)}
+html:root .til .sg{position:absolute;left:18px;top:16px;font:500 26px/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.2em;color:var(--sig)}
+html:root .til .nm{position:absolute;left:18px;bottom:15px;right:60px;font-family:var(--fonte-t);font-weight:900;font-size:13px;line-height:1.15;text-transform:uppercase;letter-spacing:.02em}
+html:root .til .mais{position:absolute;right:10px;bottom:10px;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--bd);background:var(--cx);color:var(--tx);display:grid;place-items:center;font-size:16px;line-height:1;cursor:pointer;padding:0}
+@media(pointer:coarse){html:root .til .mais{width:44px;height:44px}}
+html:root .til.edit{border:1.5px solid var(--bd);border-radius:16px;background:var(--cx);padding:16px;display:flex;flex-direction:column;gap:10px}
 .in.curto{max-width:140px}

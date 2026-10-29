@@ -4,7 +4,7 @@ html[data-barra="solta"] #abrir-barra{display:grid}
 html[data-foco] #abrir-barra{display:none!important}
 html[data-barra="solta"] body{grid-template-columns:1fr!important}
 html[data-barra="solta"] nav{position:fixed;left:0;top:0;bottom:0;width:216px;z-index:40;transform:translateX(-104%);visibility:hidden;transition:transform .18s ease,visibility 0s .18s}
-html[data-visual="pastas"][data-barra="solta"] nav{width:104px}
+
 html[data-barra="solta"][data-barra-aberta] nav{transform:none;visibility:visible;transition:transform .18s ease,visibility 0s;box-shadow:0 0 44px rgba(0,0,0,.38)}
 html[data-foco] body{grid-template-columns:1fr!important}
 html[data-foco] nav,html[data-foco] main:not(.cheia) .topo,html[data-foco] .fab{display:none!important}

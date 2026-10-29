@@ -1,5 +1,5 @@
 /* Tela da Aula: tela cheia, slide | anotações com uma linha vertical no meio e margens mínimas; barra de formatação própria. */
-html[data-visual] main.cheia{padding:0}
+html:root main.cheia{padding:0}
 main.cheia .topo{margin:0;padding:7px 14px;gap:10px;border-bottom:1px solid var(--ln)}
 main.cheia .topo .tt{display:flex;align-items:baseline;gap:12px;min-width:0;flex-wrap:nowrap}
 main.cheia .topo .tt b{font-size:15px;display:inline;white-space:nowrap}main.cheia .topo .tt small{display:inline;white-space:nowrap}main.cheia .topo .tt .voltar{margin:0;white-space:nowrap}
