@@ -20,3 +20,7 @@
 .fc-ed .l.atual[data-t=texto]:has(>br:only-child)::before{content:"Enter de novo: cartão novo · # seção · - lista…";position:absolute;left:26px;right:26px;top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--tx2);pointer-events:none;opacity:.75}
 .fc-ed mark{background:rgba(255,196,46,.45);color:inherit;border-radius:4px;padding:0 3px}
 .fc-ed .l[data-t=frente] mark{background:rgba(255,255,255,.28)}
+
+/* editor em branco: sem caixa nem borda, só a dica */
+.fc-ed:has(.l[data-t=texto]:only-child>br:only-child) .l{background:transparent;border:0;border-radius:0;padding:2px 0;min-height:2em}
+.fc-ed:has(.l[data-t=texto]:only-child>br:only-child) .l::before{left:0;right:0}

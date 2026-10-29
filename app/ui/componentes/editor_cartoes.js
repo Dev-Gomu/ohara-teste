@@ -103,7 +103,7 @@ export function criarEditorCartoes(ed, { aoMudar = () => {}, aoCartao = () => {}
   function irParaCartao(i) { const f = [...ed.children].filter((x) => x.dataset.t === 'frente')[i]; if (!f) return; ed.focus(); caretEm(f); f.scrollIntoView({ block: 'center' }); cartaoVisto = i; aoCartao(i); }
 
   // ---- eventos
-  const aoInput = () => { normaliza(); const d = atual(); if (d && !gatilho(d)) inlineAuto(); mudou(); };
+  const aoInput = (e) => { normaliza(); /* apagou tudo: volta ao editor em branco */ if (/^delete/.test(e?.inputType) && ed.children.length === 1 && vazia(ed.firstChild)) ed.firstChild.dataset.t = 'texto'; const d = atual(); if (d && !gatilho(d)) inlineAuto(); mudou(); };
   function aoTeclar(e) {
     const ctrl = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
     if (e.key === 'Tab' && !ctrl && !e.altKey && !e.shiftKey) { e.preventDefault(); aoTab(); return; }
