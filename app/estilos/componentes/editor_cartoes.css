@@ -16,8 +16,7 @@
 .fc-ed .l[data-t=item]::before{content:"•";color:var(--tx2)}
 .fc-ed .l[data-t=num]::before{content:attr(data-n) ".";color:var(--tx2);left:20px;width:28px;text-align:right}
 .fc-ed .l[data-t=mais]::before{content:"+";color:var(--ok)}.fc-ed .l[data-t=menos]::before{content:"\2212";color:var(--ur)}.fc-ed .l[data-t=duvida]::before{content:"?";color:var(--tx2)}
-.fc-ed .l:only-child>br:only-child{display:none}
-.fc-ed:has(.l:only-child>br:only-child) .l[data-t=texto]::before{content:"Comece com @ e um espaço para escrever a frente do cartão…";position:absolute;color:var(--tx2);pointer-events:none}
-.fc-ed .l.atual[data-t=texto]:has(>br:only-child)::before{content:"Enter de novo: cartão novo · # seção · - lista…";position:absolute;color:var(--tx2);opacity:.75;pointer-events:none}
+.fc-ed:has(.l:only-child>br:only-child) .l[data-t=texto]::before{content:"Comece com @ e um espaço para escrever a frente do cartão…";position:absolute;left:26px;right:26px;top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--tx2);pointer-events:none}
+.fc-ed .l.atual[data-t=texto]:has(>br:only-child)::before{content:"Enter de novo: cartão novo · # seção · - lista…";position:absolute;left:26px;right:26px;top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--tx2);pointer-events:none;opacity:.75}
 .fc-ed mark{background:rgba(255,196,46,.45);color:inherit;border-radius:4px;padding:0 3px}
 .fc-ed .l[data-t=frente] mark{background:rgba(255,255,255,.28)}
