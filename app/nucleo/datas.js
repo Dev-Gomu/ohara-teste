@@ -17,6 +17,7 @@ export const diaLocalDeMs = (ms, deslocamentoMin) => deUtc(ms + deslocamentoMin 
 export const horaLocalDeMs = (ms, deslocamentoMin) => new Date(ms + deslocamentoMin * 60000).toISOString().slice(0, 16);
 
 export const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+export const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 export const DIAS_SEMANA = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
 
 /** "2026-10-26" → "26 de outubro". */

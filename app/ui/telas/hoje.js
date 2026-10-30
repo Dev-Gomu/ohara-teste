@@ -1,82 +1,91 @@
-// Tela Hoje: responde "o que faço agora?" (aula em andamento, bloco de foco ou começar um bloco), mostra o que vem
-// depois hoje, os minutos e a sequência do dia, o calendário e o lembrete de backup. Vermelho só na cobrança.
+// Tela Hoje (layout "calendário grande"): calendário de seis semanas com as provas, as próximas provas por data e a agenda compacta do dia
+// (cada aula é um bloco; a duração só no horário). No topo: o que fazer agora (bloco de foco ou próximo estudo), minutos e sequência.
+// Vermelho só na cobrança. O desenho é estático: sem animação e sem blocos que mudam de lugar.
 import { escaparHtml } from '../../nucleo/texto.js';
 import { situacaoBackup } from '../../nucleo/backup.js';
-import { ativas, corCss } from '../../nucleo/materias.js';
-import { emAulaAgora, descreverHorario } from '../../nucleo/aulas.js';
-import { diaComSemana, diasEntre, dataPorExtenso, inicioDaSemana, somarDias } from '../../nucleo/datas.js';
-import { aulasDoDia, faixaDeHoras, situacaoDaAula, posicao, diasDaSemana } from '../../nucleo/linhadia.js';
-import { tarefasDoDia, provasFuturas } from '../../nucleo/planejador.js';
-import { sequencia, cobrancaDeOntem, horasMinutos, minutosPorDia } from '../../nucleo/estudo.js';
+import { ativas, corCss, siglaDaMateria } from '../../nucleo/materias.js';
+import { diaComSemana, MESES_CURTOS } from '../../nucleo/datas.js';
+import { tarefasDoDia } from '../../nucleo/planejador.js';
+import { sequencia, cobrancaDeOntem, horasMinutos } from '../../nucleo/estudo.js';
 import { formatarRelogio, restanteMs } from '../../nucleo/foco.js';
+import { janelaDeSemanas, proximasProvasPorData, agendaCompacta, posicaoDoMarcador } from '../../nucleo/hoje.js';
 import { diaDe } from '../foco_servico.js';
-import { htmlCalendario, mudarMes } from '../calendario.js';
 
 const dois = (n) => String(n).padStart(2, '0');
 const horaLocal = (ms) => { const d = new Date(ms); return `${dois(d.getHours())}:${dois(d.getMinutes())}`; };
 const agoraLocal = (ms) => { const d = new Date(ms); return `${diaDe(ms)}T${dois(d.getHours())}:${dois(d.getMinutes())}`; };
+const hhmm = (m) => `${dois(Math.floor(m / 60))}:${dois(m % 60)}`;
+const cap = (t) => t[0].toUpperCase() + t.slice(1);
 
 /** `ctx.agora()` devolve o instante atual em ms (nos testes dá para simular outro). */
 export function desenharHoje(raiz, ctx) {
   const { sessao, foco } = ctx;
-  let { ano, mes } = (() => { const [a, m] = diaDe(ctx.agora()).split('-'); return { ano: Number(a), mes: Number(m) }; })();
+  let deslocamento = 0;   // semanas que o calendário andou para a frente (ou para trás) em relação à semana de hoje
 
   function desenhar() {
     const agora = ctx.agora(), hoje = diaDe(agora);
     sessao.sincronizarPlano(hoje, new Date(agora).toISOString());
-    const estado = sessao.estado(), cfg = foco.config(), plano = tarefasDoDia(estado, hoje), proxima = provasFuturas(estado, hoje)[0];
+    const estado = sessao.estado(), cfg = foco.config(), plano = tarefasDoDia(estado, hoje);
     const inicioUso = sessao.lerConfig('inicio_uso'), mats = ativas(estado.disciplinas), porId = new Map(mats.map((m) => [m.id, m]));
     const sq = sequencia(estado.blocos, hoje, cfg.meta_diaria_min), cobr = cobrancaDeOntem(estado.blocos, hoje, cfg.meta_diaria_min, inicioUso);
     const bk = situacaoBackup(sessao.lerConfig('ultimo_backup'), new Date(agora).toISOString(), mats.length > 0);
-    const aulasAgora = emAulaAgora(estado, agoraLocal(agora)), sessaoFoco = foco.ativa();
-    const aulasHoje = ativas(estado.aulas).filter((a) => a.inicio && a.inicio.slice(0, 10) === hoje && porId.has(a.disciplina_id));
-    const depois = aulasHoje.filter((a) => a.inicio > agoraLocal(agora) && !aulasAgora.includes(a)).sort((x, y) => x.inicio.localeCompare(y.inicio));
-
-    let hero;
-    if (sessaoFoco) {
-      const m = porId.get(sessaoFoco.disciplina_id), pausa = sessaoFoco.fase === 'pausa';
-      hero = { cor: m ? corCss(m.cor) : null, rotulo: pausa ? 'Pausa' : 'Bloco em andamento', titulo: `<span id="rel-hoje">${formatarRelogio(restanteMs(sessaoFoco, agora))}</span>`, sub: pausa ? 'Respire. O próximo bloco espera por você.' : escaparHtml(sessaoFoco.tarefa || m?.nome || 'Foco'), href: '#foco', botao: 'Abrir Sala de Foco' };
-    } else if (aulasAgora.length) {
-      const a = aulasAgora[0], m = porId.get(a.disciplina_id), ini = Date.parse(a.inicio), fim = Date.parse(a.fim), pct = Math.round(Math.min(1, Math.max(0, (Date.parse(agoraLocal(agora)) - ini) / (fim - ini))) * 100);
-      hero = { cor: m ? corCss(m.cor) : null, rotulo: `Em aula · ${descreverHorario(a).split(' ').slice(1).join(' ')}`, titulo: escaparHtml(m?.nome ?? a.titulo), sub: `${escaparHtml(a.titulo)} · faltam ${Math.max(0, Math.round((fim - Date.parse(agoraLocal(agora))) / 60000))} min`, pct, href: `#aula/${a.id}`, botao: 'Abrir aula' };
-    } else if (plano.pendentes.length) {
-      const t = plano.pendentes[0], m = porId.get(t.disciplina_id), atrasada = t.dia_original < hoje;
-      hero = { cor: m ? corCss(m.cor) : null, rotulo: `Próximo estudo${atrasada ? ' · atrasado' : ''}`, titulo: escaparHtml(t.titulo), sub: `${escaparHtml(m?.nome ?? '')} · bloco de ${t.minutos} min`, href: `#foco/${t.id}`, botao: 'Começar bloco' };
-    } else {
-      hero = { cor: null, rotulo: sq.minutosHoje ? 'Continue' : 'Hora de estudar', titulo: 'Começar um bloco', sub: `Hoje: ${horasMinutos(sq.minutosHoje)} de ${horasMinutos(cfg.meta_diaria_min)}`, href: '#foco', botao: 'Ir para a Sala de Foco' };
-    }
-
+    const sessaoFoco = foco.ativa();
     const agoraMin = Number(agoraLocal(agora).slice(11, 13)) * 60 + Number(agoraLocal(agora).slice(14, 16));
-    const aulasDia = aulasDoDia(estado, hoje);
-    const faixa = faixaDeHoras(aulasDia, [9, 17]), PX = 52, altura = (faixa.ate - faixa.de) * PX;
-    const hhmm = (m) => `${dois(Math.floor(m / 60))}:${dois(m % 60)}`, topo = (m) => (m - faixa.de * 60) / 60 * PX;
-    const minDia = minutosPorDia(estado.blocos), semana = diasDaSemana(inicioDaSemana(hoje), hoje, somarDias);
-    const horas = []; for (let h = faixa.de; h <= faixa.ate; h += 2) horas.push(h);
-    const linhaDoDia = aulasDia.length
-      ? `<div class="eixo" style="height:${altura}px">${horas.map((h) => `<span class="hr" style="top:${(h - faixa.de) * PX}px">${dois(h)}h</span>`).join('')}` +
-        aulasDia.map((a) => { const m = porId.get(a.disciplina_id), sit = situacaoDaAula(a, agoraMin); return `<a class="ev ${sit}" href="#aula/${a.id}" style="--c:${corCss(m.cor)};top:${topo(a.ini)}px;height:${Math.max(26, (a.fim - a.ini) / 60 * PX - 3)}px"><b>${escaparHtml(m.nome)}</b><small>${hhmm(a.ini)} a ${hhmm(a.fim)} · ${escaparHtml(a.titulo)}</small></a>`; }).join('') +
-        (posicao(agoraMin, faixa) != null ? `<div class="agora" style="top:${topo(agoraMin)}px"><span>${hhmm(agoraMin)}</span></div>` : '') + '</div>'
-      : '<p class="vazio" style="margin:6px 0 0">Nada marcado para hoje.</p>';
-    const pendentes = plano.pendentes;
 
-    raiz.innerHTML = `<div class="hoje2">` +
+    // o que fazer agora: bloco em andamento, próximo estudo do plano ou começar um bloco
+    let acao;
+    if (sessaoFoco) {
+      const pausa = sessaoFoco.fase === 'pausa';
+      acao = { texto: `${pausa ? 'Pausa' : 'Bloco em andamento'} · <span id="rel-hoje">${formatarRelogio(restanteMs(sessaoFoco, agora))}</span>`, href: '#foco' };
+    } else if (plano.pendentes.length) {
+      const t = plano.pendentes[0]; acao = { texto: `Próximo estudo · ${escaparHtml(t.titulo)}`, href: `#foco/${t.id}` };
+    } else acao = { texto: 'Começar um bloco', href: '#foco' };
+
+    // calendário: seis semanas, número no meio da linha, uma pílula colorida por prova
+    const janela = janelaDeSemanas(estado, hoje, { deslocamento }), primeiro = janela[0].dias[0], ultimo = janela[janela.length - 1].dias[6];
+    const tituloCal = primeiro.mes === ultimo.mes ? `${cap(MESES_CURTOS[primeiro.mes - 1])} ${primeiro.dia.slice(0, 4)}`
+      : primeiro.dia.slice(0, 4) === ultimo.dia.slice(0, 4) ? `${cap(MESES_CURTOS[primeiro.mes - 1])} – ${cap(MESES_CURTOS[ultimo.mes - 1])} ${ultimo.dia.slice(0, 4)}`
+      : `${cap(MESES_CURTOS[primeiro.mes - 1])} ${primeiro.dia.slice(0, 4)} – ${cap(MESES_CURTOS[ultimo.mes - 1])} ${ultimo.dia.slice(0, 4)}`;
+    const corpoCal = janela.map((s) => `<div class="hsem${s.atual ? ' at' : ''}">` + s.dias.map((d) => {
+      const pils = d.provas.map((id) => `<i style="background:${porId.get(id) ? corCss(porId.get(id).cor) : 'var(--tx2)'}"></i>`).join('');
+      const nomes = d.provas.map((id) => porId.get(id)?.nome).filter(Boolean).join(', ');
+      return `<div class="hdia${d.hoje ? ' h' : ''}${d.provas.length ? ' p' : ''}"${nomes ? ` title="${escaparHtml(`${d.n} de ${MESES_CURTOS[d.mes - 1]}: ${nomes}`)}"` : ''}>${d.primeiroDoMes ? `<small class="mm">${MESES_CURTOS[d.mes - 1]}</small>` : ''}<span class="n">${d.n}</span>${pils ? `<span class="pils">${pils}</span>` : ''}</div>`;
+    }).join('') + '</div>').join('');
+    const calendario = `<div class="card hcal" id="cal"><div class="hcab"><h2>Calendário</h2><b class="mes">${escaparHtml(tituloCal)}</b><span class="esp"></span>${deslocamento ? '<button type="button" class="btn peq sec" data-sem="0">Hoje</button>' : ''}<button type="button" class="seta" data-sem="-1" aria-label="Semana anterior">‹</button><button type="button" class="seta" data-sem="1" aria-label="Próxima semana">›</button></div>` +
+      `<div class="hds">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map((x) => `<span>${x}</span>`).join('')}</div>${corpoCal}</div>`;
+
+    // próximas provas por data: dia e mês, siglas com a pílula da cor e o tempo que falta
+    const { datas, total } = proximasProvasPorData(estado, hoje, 5);
+    const provas = `<div class="card hprov"><h2>Próximas provas${total ? ` <span class="cont">${total}</span>` : ''}</h2>` + (datas.length
+      ? datas.map((d, k) => `<div class="hlin${k === 0 ? ' px' : ''}" aria-label="${d.n} de ${MESES_CURTOS[d.mes - 1]}"><span class="hd"><b>${dois(d.n)}</b><small>${MESES_CURTOS[d.mes - 1]}</small></span><span class="hsg">${d.disciplinas.map((id) => { const m = porId.get(id); return `<span class="sg"><i style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></i>${escaparHtml(m ? siglaDaMateria(m) : '?')}</span>`; }).join('')}</span><span class="hr">${d.texto}</span></div>`).join('')
+        + (total > datas.length ? `<a class="mais" href="#planejar">Ver todas · ${total} dias</a>` : '')
+      : '<p class="vazio">Nenhuma prova marcada. Cadastre em <a href="#planejar"><b>Planejar</b></a>.</p>') + '</div>';
+
+    // agenda compacta
+    const ag = agendaCompacta(estado, hoje, agoraMin), nAulas = ag.itens.filter((x) => x.tipo === 'aula').length;
+    const itens = ag.itens.map((it) => {
+      if (it.tipo === 'livre') return `<div class="hlivre">${hhmm(it.ini)} – ${hhmm(it.fim)} · livre</div>`;
+      const m = porId.get(it.disciplina_id);
+      return `<a class="hev ${it.situacao}" href="#aula/${it.id}" style="--c:${m ? corCss(m.cor) : 'var(--tx2)'}" title="${escaparHtml(it.titulo)}"><span class="eh">${it.situacao === 'agora' ? '' : `${dois(Math.floor(it.ini / 60))}h`}</span><span class="evb"><b>${escaparHtml(m?.nome ?? it.titulo)}</b><span>${hhmm(it.ini)} – ${hhmm(it.fim)}</span></span></a>`;
+    }).join('');
+    const agenda = `<div class="card hag"><div class="hcab"><h2>Agenda</h2><span class="esp"></span><span class="sub">${nAulas ? `${diaComSemana(hoje).split(',')[0].toLowerCase()} · ${nAulas} ${nAulas === 1 ? 'aula' : 'aulas'}` : ''}</span></div>` +
+      (ag.itens.length ? `<div class="hlista">${itens}<div class="hagora" style="top:${posicaoDoMarcador(ag, agoraMin).toFixed(1)}px"><span>${hhmm(agoraMin)}</span></div></div>`
+        : `<p class="vazio">${mats.length ? 'Nada marcado para hoje.' : 'Crie sua primeira matéria em <a href="#materias"><b>Matérias</b></a>.'}</p>`) + '</div>';
+
+    raiz.innerHTML = `<div class="hoje2 hj">` +
       (cobr ? `<div class="ban"><div><b>${cobr.tipo === 'nao' ? 'Ontem você não estudou.' : `Ontem você estudou só ${horasMinutos(cobr.minutos)}.`}</b><span>${cobr.tipo === 'nao' ? 'A sequência zerou. Recomece com um bloco curto.' : `A meta é ${horasMinutos(cfg.meta_diaria_min)} por dia. A sequência recomeça hoje.`}</span></div><a class="bt" href="#foco">Começar agora</a></div>` : '') +
-      `<div class="faixa"><div><h1>Hoje</h1><div class="dt"><span class="dia">${escaparHtml(diaComSemana(hoje))}</span><span class="sep"> · </span><span class="hora">${horaLocal(agora)}</span></div></div><div class="semana">${semana.map((d) => `<div class="${d.hoje ? 'h' : ''}">${d.nome}<b>${d.n}</b>${(minDia.get(d.dia) ?? 0) > 0 ? '<i></i>' : ''}</div>`).join('')}</div></div>` +
-      `<div class="h2g"><div class="card dia">${linhaDoDia}</div><div class="col">` +
-      `<div class="hero ${hero.cor ? '' : 'ne'}" style="${hero.cor ? '--c:' + hero.cor : ''}"><div><div class="ov">${escaparHtml(hero.rotulo)}</div><h1>${hero.titulo}</h1><div class="sb">${hero.sub}</div>${hero.pct != null ? `<div class="pr"><span style="width:${hero.pct}%"></span></div>` : ''}</div><div class="ac"><a class="bt" href="${hero.href}">${hero.botao}</a></div></div>` +
-      `<div class="dois"><div class="cd"><div class="sec">Hoje</div><div class="big">${sq.minutosHoje}<small>min de ${horasMinutos(cfg.meta_diaria_min)}</small></div><div class="bar"><span style="width:${Math.min(100, Math.round(sq.minutosHoje / cfg.meta_diaria_min * 100))}%"></span></div></div>` +
-      `<div class="cd"><div class="sec">Sequência</div><div class="big" style="${sq.emRisco || sq.dias === 0 && cobr ? 'color:var(--ur)' : ''}">${sq.dias}<small>${sq.dias === 1 ? 'dia' : 'dias'}</small></div>${sq.emRisco ? '<div class="sub" style="margin:8px 0 0;color:var(--ur)">em risco</div>' : ''}</div></div>` +
-      (mats.length ? `<div class="out">Abrir aula de outra matéria: ${mats.map((m) => `<a href="#materias/${m.id}"><b style="--c:${corCss(m.cor)}"><i></i>${escaparHtml(m.nome)}</b></a>`).join('')}</div>` : '<div class="out">Crie sua primeira matéria em <a href="#materias"><b>Matérias</b></a>.</div>') +
-      (pendentes.length ? `<div class="card"><h2>Estudo de hoje</h2><div class="lst">${pendentes.map((t) => { const m = porId.get(t.disciplina_id); return `<a class="r" href="#foco/${t.id}" style="--c:${m ? corCss(m.cor) : 'var(--tx2)'}"><span class="h">${t.minutos} min</span><i class="d"></i><div class="t">${escaparHtml(t.titulo)}<small>${escaparHtml(m?.nome ?? '')}${t.dia_original < hoje ? ' · <span class="tag-ur">atrasada</span>' : ''}</small></div></a>`; }).join('')}</div>${plano.feitas.length ? `<div class="feito">Feito hoje: ${plano.feitas.map((t) => escaparHtml(t.titulo)).join('; ')}</div>` : ''}</div>` : (plano.feitas.length ? `<div class="feito">Feito hoje do plano: ${plano.feitas.map((t) => escaparHtml(t.titulo)).join('; ')}</div>` : '')) +
-      `<div class="card" id="cal">${htmlCalendario({ ano, mes, estado, hoje, metaMin: cfg.meta_diaria_min, inicioUso })}${proxima ? `<div class="prova-linha"><i style="background:${porId.get(proxima.disciplina_id) ? corCss(porId.get(proxima.disciplina_id).cor) : 'var(--ur)'}"></i>${escaparHtml(proxima.titulo)} · ${escaparHtml(porId.get(proxima.disciplina_id)?.nome ?? '')}<span>${escaparHtml(dataPorExtenso(proxima.data))} · ${diasEntre(hoje, proxima.data) === 0 ? 'hoje' : `em ${diasEntre(hoje, proxima.data)} dias`}</span></div>` : ''}</div>` +
-      (bk.estado === 'nada' ? '' : `<div class="bk${bk.estado === 'ok' ? '' : ' ur'}" id="aviso-backup">${escaparHtml(bk.texto)} <a href="#ajustes">Fazer backup</a></div>`) + `</div></div>` +
+      `<div class="faixa"><div><h1>Hoje</h1><div class="dt"><span class="dia">${escaparHtml(diaComSemana(hoje))}</span><span class="sep"> · </span><span class="hora">${horaLocal(agora)}</span></div></div>` +
+      `<div class="hchips"><span class="chip"><b>${sq.minutosHoje}</b>/${cfg.meta_diaria_min} min</span><span class="chip${sq.emRisco ? ' risco' : ''}"><b>${sq.dias}</b> ${sq.dias === 1 ? 'dia' : 'dias'}${sq.emRisco ? ' · em risco' : ''}</span>` +
+      `<a class="bt hacao" href="${acao.href}">${acao.texto}</a></div></div>` +
+      `<div class="hgrade">${calendario}<div class="hdir">${provas}${agenda}</div></div>` +
+      (bk.estado === 'nada' ? '' : `<div class="bk${bk.estado === 'ok' ? '' : ' ur'}" id="aviso-backup">${escaparHtml(bk.texto)} <a href="#ajustes">Fazer backup</a></div>`) +
       `</div>`;
     document.title = 'Hoje · Ohara';
   }
 
   raiz.onclick = (ev) => {
-    const b = ev.target.closest('[data-mes]'); if (!b) return;
-    ({ ano, mes } = mudarMes({ ano, mes }, Number(b.dataset.mes))); desenhar();
+    const b = ev.target.closest('[data-sem]'); if (!b) return;
+    const d = Number(b.dataset.sem); deslocamento = d === 0 ? 0 : deslocamento + d; desenhar();
   };
   desenhar();
   let ultima = foco.ativa()?.fase + '|' + foco.ativa()?.inicio_ms;

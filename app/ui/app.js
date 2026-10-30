@@ -71,7 +71,7 @@ function desenhar() {
   const tela = rota.menu;
   const tema = document.documentElement.dataset.tema;
   document.getElementById('nav').innerHTML = '<div class="logo">Ohara</div>' +
-    TELAS.map((t) => `<a href="#${t.chave}" class="${t.chave === tela ? 'on' : ''}" ${t.chave === tela ? 'aria-current="page"' : ''}>` +
+    TELAS.map((t) => `<a href="#${t.chave}" title="${escaparHtml(t.nome)}" class="${t.chave === tela ? 'on' : ''}" ${t.chave === tela ? 'aria-current="page"' : ''}>` +
       `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[t.chave]}</svg>${escaparHtml(t.nome)}</a>`).join('') +
     `<div class="fim"><button id="fixar" type="button" title="Alt B">${barra.fixa() ? 'Soltar a barra' : 'Fixar a barra'}</button><button id="ver-atalhos" type="button" title="?">Atalhos (?)</button></div>`;
   document.getElementById('fixar').onclick = () => barra.alternar();

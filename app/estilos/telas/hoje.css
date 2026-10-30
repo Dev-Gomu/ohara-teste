@@ -1,0 +1,55 @@
+/* Tela Hoje (layout "calendário grande"): calendário de seis semanas, próximas provas por data e agenda compacta. Cores das matérias vêm de --c / style inline. */
+html:root .hj .hchips{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+html:root .hj .chip{background:var(--cx);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--tx2);white-space:nowrap}
+html:root .hj .chip b{display:inline;color:var(--tx);font-weight:600}html:root .hj .chip.risco,html:root .hj .chip.risco b{color:var(--ur)}
+html:root .hj .hacao{max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html:root .hj .hgrade{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:start}
+html:root .hj .hdir{display:flex;flex-direction:column;gap:14px;min-width:0}
+html:root .hj .hcab{display:flex;align-items:center;gap:10px;margin:0 0 6px;min-height:36px}
+html:root .hj .hcab h2,html:root .hj .hprov h2{margin:0;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--tx2);font-weight:600}
+html:root .hj .hcab .mes{font-size:20px;font-weight:300;color:var(--tx);letter-spacing:-.01em}
+html:root .hj .hcab .esp{flex:1}html:root .hj .hcab .sub{font-size:12px;color:var(--ac);font-weight:600;margin:0}
+html:root .hj .seta{width:36px;height:36px;border:0;border-radius:50%;background:var(--cx2);color:var(--tx2);font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+html:root .hj .seta:hover,html:root .hj .seta:focus-visible{background:var(--acf);color:var(--ac)}
+/* calendário: número no meio vertical da linha; pílulas logo abaixo; hoje em círculo preto; semana de hoje com fundo suave */
+html:root .hj .hcal{padding:16px 18px 14px}
+html:root .hj .hds{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;letter-spacing:.08em;color:var(--tx2);margin:0 0 2px}
+html:root .hj .hsem{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:76px;border-radius:14px}
+html:root .hj .hsem.at{background:color-mix(in srgb,var(--ac) 6%,var(--cx))}
+html:root .hj .hdia{position:relative;min-width:0}
+html:root .hj .hdia .n{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:20px;font-weight:500;line-height:1.1;z-index:2;color:var(--tx)}
+html:root .hj .hdia.p .n{font-weight:700}
+html:root .hj .hdia.h .n{color:var(--cx);font-weight:700}
+html:root .hj .hdia.h::before{content:"";position:absolute;left:50%;top:50%;width:38px;height:38px;transform:translate(-50%,-50%);border-radius:50%;background:var(--tx)}
+html:root .hj .hdia .mm{position:absolute;top:calc(50% - 28px);left:0;right:0;text-align:center;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);font-weight:600;z-index:2;margin:0}
+html:root .hj .hdia .pils{position:absolute;left:3px;right:3px;top:calc(50% + 17px);display:flex;flex-wrap:wrap;justify-content:center;gap:4px;z-index:2}
+html:root .hj .hdia .pils i{width:22px;height:8px;border-radius:999px;display:block}
+/* próximas provas: uma linha por data, sem divisórias */
+html:root .hj .hprov{padding:16px 20px 14px}
+html:root .hj .hprov .cont{font-weight:500;letter-spacing:0}
+html:root .hj .hprov h2{display:flex;justify-content:space-between;margin-bottom:10px}
+html:root .hj .hlin{display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center;padding:9px 0}
+html:root .hj .hlin .hd{display:flex;align-items:baseline;gap:5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+html:root .hj .hlin .hd b{font-size:17px;font-weight:600;line-height:1.2}html:root .hj .hlin .hd small{font-size:17px;font-weight:400;color:var(--tx2);line-height:1.2;text-transform:none;letter-spacing:0}
+html:root .hj .hsg{display:flex;flex-wrap:wrap;gap:3px 16px;align-items:center;min-width:0}
+html:root .hj .sg{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;letter-spacing:.04em;white-space:nowrap}html:root .hj .sg i{width:22px;height:9px;border-radius:5px;flex:none}
+html:root .hj .hlin .hr{font-size:13px;color:var(--tx2);white-space:nowrap}html:root .hj .hlin.px .hr{color:var(--tx);font-weight:600}
+html:root .hj .mais{display:inline-block;margin-top:6px;font-size:13px;font-weight:600;color:var(--ac);text-decoration:none}
+html:root .hj .vazio{margin:6px 0 0;color:var(--tx2)}
+/* agenda compacta: cada aula é um bloco de 46 px; livre = 28 px; vão de 6 px (hoje.js usa as mesmas medidas para o marcador de agora) */
+html:root .hj .hag{padding:14px 14px 14px;border:1.5px solid var(--ac)}
+html:root .hj .hag .hcab{padding:0 4px}
+html:root .hj .hlista{position:relative;display:flex;flex-direction:column;gap:6px}
+html:root .hj .hev{display:grid;grid-template-columns:50px 1fr;align-items:center;height:46px;flex:none;color:var(--tx);text-decoration:none}
+html:root .hj .hev .eh{font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums;padding-left:6px}
+html:root .hj .hev .evb{height:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;border-radius:14px;background:color-mix(in srgb,var(--c) 34%,var(--cx));font-size:14px;min-width:0}
+html:root .hj .hev .evb b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .hj .hev .evb span{font-size:12.5px;color:color-mix(in srgb,var(--c) 60%,var(--tx));white-space:nowrap;font-variant-numeric:tabular-nums}
+html:root .hj .hev.passou{opacity:.5}
+html:root .hj .hev.agora .evb{background:var(--c);color:var(--cx);box-shadow:0 0 0 2px var(--cx),0 0 0 4px var(--c)}
+html:root .hj .hev.agora .evb span{color:color-mix(in srgb,var(--cx) 90%,transparent)}html:root .hj .hev.agora .evb::after{content:"›";font-size:20px;margin-left:2px}
+html:root .hj .hev:focus-visible .evb{outline:2px solid var(--ac);outline-offset:2px}
+html:root .hj .hlivre{height:28px;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--tx2);letter-spacing:.06em}
+html:root .hj .hagora{position:absolute;left:-2px;right:-4px;border-top:2px solid var(--tx);box-shadow:0 0 0 1px color-mix(in srgb,var(--cx) 85%,transparent);z-index:3;pointer-events:none}
+html:root .hj .hagora span{position:absolute;left:0;top:-13px;width:46px;height:26px;display:grid;place-items:center;border-radius:999px;background:var(--tx);color:var(--cx);font-size:13px;font-weight:600;box-shadow:0 0 0 3px var(--cx)}
+@media(max-width:1000px){html:root .hj .hgrade{grid-template-columns:1fr}}

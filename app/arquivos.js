@@ -1,6 +1,6 @@
 // Gerado por ferramentas/versao.js — não editar.
 self.OHARA = {
- "versao": "c367d606d498",
+ "versao": "2da515b5ee5e",
  "arquivos": [
   "armazenamento/ankiconnect.js",
   "armazenamento/apkg.js",
@@ -20,6 +20,7 @@ self.OHARA = {
   "estilos/ohara.css",
   "estilos/teclado.css",
   "estilos/telas/flashcards.css",
+  "estilos/telas/hoje.css",
   "estilos/toque.css",
   "icones/icone-192.png",
   "icones/icone-512.png",
@@ -40,6 +41,7 @@ self.OHARA = {
   "nucleo/flashcards_editor.js",
   "nucleo/flashcards_texto.js",
   "nucleo/foco.js",
+  "nucleo/hoje.js",
   "nucleo/ics.js",
   "nucleo/lancador.js",
   "nucleo/linhadia.js",

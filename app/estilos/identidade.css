@@ -125,3 +125,82 @@ html:root .faixa,html:root .ban,html:root .hero{border-radius:18px}
 html:root .card,html:root .cd,html:root .painel{border-radius:18px}
 /* capa da matéria: cantos do Quadro */
 html:root .til .capa,html:root .til.edit{border-radius:18px}
+
+/* ===== Identidade "Névoa enxuta" (2026-10-29): lavanda e índigo, Poppins, contornos só onde há foco, atalhos em Fira Code sem moldura =====
+   Vem da 5ª versão "Enxuta" do protótipo de Flashcards (rótulo da seção em cima). Sobrepõe o Quadro; para voltar, apague este bloco. */
+html:root{--bg:#EEEFFC;--cx:#FFFFFF;--cx2:#E6E8FA;--tx:#2A2C45;--tx2:#54577A;--ln:#B8BCE2;--bd:#B8BCE2;--pr:#3F4290;--prt:#FFFFFF;--ac:#3F4290;--acf:#E3E4FA;--faixa:#E3E4FA;--nav:#2A2C45;--navt:#C9CBEA;--ok:#2B7A62;--okf:#DDF1EA;--ur:#B3261E;
+ --m1:#4C5399;--m2:#2B7A62;--m3:#B3475E;--m4:#9A6A1F;--m5:#7A4EA8;--m6:#1F7A86;--m7:#B0457F;--m8:#5D6D7E;--fonte-t:"Poppins",system-ui,sans-serif;--raio-cartao:20px}
+html:root[data-tema="escuro"]{--bg:#14152B;--cx:#1D1F40;--cx2:#2A2D5C;--tx:#EDEEFB;--tx2:#B3B6DD;--ln:#4A4F96;--bd:#4A4F96;--pr:#A3A6FA;--prt:#14152B;--ac:#A3A6FA;--acf:#2A2D5C;--faixa:#2A2D5C;--nav:#0E0F20;--navt:#B3B6DD;--ok:#6BCBAA;--okf:#16301F;--ur:#FF9C9C;
+ --m1:#A3A6FA;--m2:#6BCBAA;--m3:#F29DB0;--m4:#E3BB6B;--m5:#C9A8F0;--m6:#6FCBD6;--m7:#F29DCB;--m8:#A9B6C4}
+html:root body{font-family:"Poppins",system-ui,sans-serif}
+html:root h1{font-weight:300;font-size:30px;letter-spacing:-.01em}
+html:root h2,html:root .sec{font-weight:600;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2)}
+html:root .big{font-weight:500}
+/* menu */
+html:root nav a{border-radius:14px;font-weight:500}
+html:root nav a.on{background:var(--bg);color:var(--tx);box-shadow:none}
+html:root[data-tema="escuro"] nav a.on{background:var(--cx2);color:var(--tx)}
+html:root nav .fim button{border:0;background:rgba(255,255,255,.1)}
+/* superfícies: separadas por tom; borda só no bloco em foco */
+html:root .card,html:root .cd,html:root .painel,html:root .fc-tile,html:root .hero,html:root .ban,html:root .til,html:root main.cheia .aula>.painel{border:1.5px solid transparent;border-radius:24px;box-shadow:none}
+html:root .hero{box-shadow:inset 4px 0 0 var(--c,var(--bd))}html:root .hero.ne{box-shadow:none}
+html:root .faixa{border-radius:24px}
+html:root .fc-tile:focus-within,html:root .painel:focus-within{border-color:var(--ac)}
+html:root .dois{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--cx);border-radius:24px}
+html:root .dois .cd{background:none;border-radius:0}html:root .dois .cd+.cd{border-left:1.5px solid var(--ln)}
+html:root .eixo .ev{border:0;border-radius:12px}
+html:root .card h2,html:root .cd .sec{margin-bottom:6px}
+/* botões, abas e campos sem contorno */
+html:root .btn,html:root .btn.peq,html:root .bt,html:root .hero .bt,html:root .ban .bt{border:0;border-radius:99px;font-weight:600;text-transform:none;letter-spacing:0}
+html:root .btn.sec,html:root .btn.peq.sec{background:var(--cx2);color:var(--tx)}
+html:root .abas,html:root .fc-abas,html:root .fc-modo{border:0;background:var(--cx2);border-radius:99px}
+html:root .abas button,html:root .fc-abas button,html:root .fc-modo button{border-radius:99px;color:var(--tx2)}
+html:root .abas button.on,html:root .fc-abas button.on,html:root .fc-modo button.on{background:var(--cx);color:var(--tx)}
+html:root .in,html:root select.in{border:0;background:var(--cx2);border-radius:14px}
+html:root .painel .cab select,html:root .painel .cab button:not(.btn){border:0;background:var(--cx2)}
+html:root .bar,html:root .fino,html:root .hero .pr{border:0;background:var(--cx2);height:6px;border-radius:6px}
+html:root .bar>span,html:root .fino>span,html:root .hero .pr>span{border-radius:6px}
+html:root .semana div.h{border-color:transparent}
+html:root .calh button{border:0;background:var(--cx2)}
+html:root .painel .cab,html:root .marc,html:root #hist-lista,html:root #p-notas .ql-toolbar{border-color:var(--ln)}
+/* atalhos: texto em Fira Code, sem moldura (continuam visíveis) */
+html:root kbd{font:400 11.5px "Fira Code",ui-monospace,monospace;border:0;background:none;padding:0 4px;opacity:.75}
+html:root .fc-ed .l[data-t=secao]{letter-spacing:.08em}
+
+/* ===== Barra única no topo (B35): telas numeradas em pílulas no lugar do menu lateral (só a partir de 821 px; abaixo disso vale o menu de baixo) ===== */
+@media(min-width:821px){
+ html:root body{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+ html:root nav{flex-direction:row;align-items:center;gap:8px;padding:12px 18px 0;background:transparent;color:var(--tx);border:0;counter-reset:tela;min-height:52px}
+ html:root nav .logo{display:none}
+ html:root nav a{height:40px;min-width:40px;padding:0;justify-content:center;border-radius:99px;background:var(--cx);color:var(--tx2);font-size:0;gap:0;font-weight:500}
+ html:root nav a svg{display:none}
+ html:root nav a::before{counter-increment:tela;content:counter(tela);font-size:14px}
+ html:root nav a.on{background:var(--ac);color:var(--prt);padding:0 18px;font-size:14px;gap:8px;font-weight:600;box-shadow:none;border-radius:99px}
+ html:root[data-tema="escuro"] nav a.on{background:var(--ac);color:var(--prt)}
+ html:root nav .fim{margin:0 0 0 auto;flex-direction:row;border:0;padding:0;gap:8px;align-items:center;color:var(--tx2)}
+ html:root nav .fim #fixar{display:none}
+ html:root nav .fim button{height:40px;padding:0 16px;border-radius:99px;background:var(--cx);color:var(--tx);border:0;font-size:13px}
+ html:root main:not(.cheia){padding:14px 18px 24px}
+ html:root .fc-topo h1{display:none}
+ html:root .fc-topo{position:fixed;top:12px;right:138px;margin:0;z-index:5}
+ html:root[data-foco] .fc-topo{display:none}
+}
+
+/* Aula: o cabeçalho (voltar, título, slide, Foco) sobe para a barra do topo, ao lado das pílulas; fora do modo foco e a partir de 821 px */
+@media(min-width:821px){
+ html:root:not([data-foco]) main.cheia .topo{position:fixed;top:12px;left:456px;right:140px;height:40px;min-height:0;margin:0;padding:0;border:0;background:transparent;z-index:5;flex-wrap:nowrap;overflow:hidden;gap:8px}
+ html:root:not([data-foco]) main.cheia{padding-top:8px}
+ html:root main.cheia .topo .btn.peq,html:root main.cheia .topo .gp button{height:40px;padding:0 14px}
+ html:root main.cheia .topo .gp,html:root main.cheia .topo .gp button,html:root main.cheia .topo #pag{color:var(--tx)}
+ html:root main.cheia .topo .tt small{display:none}
+}
+@media(min-width:1001px){html:root main.cheia .topo .abas{display:none}}
+
+/* ===== Kit · Etapa 0 · Base "A · Leve" (2026-10-29): tokens que as próximas peças do kit usam (ver docs/PLANO_KIT.md) =====
+   Tamanhos f1 rótulo · f2 secundário · f3 texto · f4 título de bloco · f5 título de tela · f6 número grande; e1–e6 espaços;
+   3 raios (r1 peças · r2 blocos · rp botões); uma borda (b, só no foco); nenhuma sombra; alvo de toque 44 px. */
+html:root{--f1:12px;--f2:13.5px;--f3:15.5px;--f4:19px;--f5:28px;--f6:36px;--peso-tit:300;--lh:1.6;
+ --e1:4px;--e2:8px;--e3:12px;--e4:16px;--e5:24px;--e6:32px;--g:16px;--pad:22px;
+ --r1:12px;--r2:24px;--rp:999px;--b:1.5px;--alvo:44px;
+ --texto:"Poppins",system-ui,sans-serif;--mono:"Fira Code",ui-monospace,monospace}
+html:root h1{font-size:var(--f5);font-weight:var(--peso-tit)}
