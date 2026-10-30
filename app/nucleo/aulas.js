@@ -84,3 +84,16 @@ export function rotuloDaAula(a, hoje, somarDias, diaDaSemana) {
   const nomes = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
   return `${nomes[diaDaSemana(dia)]} ${dia.slice(8, 10)}/${dia.slice(5, 7)} ${hora}`;
 }
+
+const DIAS_ABREV = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+/**
+ * Rodapé do card da matéria: só o dia da semana e o horário ("Qui · 13:00").
+ * Se há aula em andamento, é o início dela (e `agora` vem verdadeiro, para o card ganhar o anel); senão, o da próxima aula; sem nenhuma, texto vazio.
+ * `diaDaSemana` vem de datas.js (0 = segunda), para este arquivo continuar sem depender dele.
+ */
+export function rotuloDoCard(estado, disciplinaId, agoraLocal, diaDaSemana) {
+  const atual = emAulaAgora(estado, agoraLocal).find((a) => a.disciplina_id === disciplinaId);
+  const a = atual ?? proximaAula(estado, disciplinaId, agoraLocal);
+  if (!a) return { texto: '', agora: false };
+  return { texto: `${DIAS_ABREV[diaDaSemana(a.inicio.slice(0, 10))]} · ${a.inicio.slice(11, 16)}`, agora: !!atual };
+}

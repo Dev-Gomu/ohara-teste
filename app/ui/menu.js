@@ -19,7 +19,13 @@ export function abrirMenu(ancora, itens) {
   m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.right - w)) + 'px';
   m.style.top = (r.bottom + 6 + h > innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
   const fora = (e) => { if (!m.contains(e.target) && !ancora.contains(e.target)) fecharMenu(); };
-  const tecla = (e) => { if (e.key === 'Escape') { e.stopPropagation(); fecharMenu(); ancora.focus(); } };
+  const tecla = (e) => {
+    if (e.key === 'Escape') { e.stopPropagation(); fecharMenu(); ancora.focus(); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {                     // setas andam entre os itens do menu
+      const its = [...m.querySelectorAll('.mi')], i = its.indexOf(document.activeElement);
+      if (its.length) { e.preventDefault(); e.stopPropagation(); its[(i + (e.key === 'ArrowDown' ? 1 : its.length - 1)) % its.length].focus(); }
+    }
+  };
   setTimeout(() => document.addEventListener('pointerdown', fora, true));
   document.addEventListener('keydown', tecla, true);
   ancora.setAttribute('aria-expanded', 'true'); m.querySelector('.mi')?.focus();

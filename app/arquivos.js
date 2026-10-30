@@ -1,6 +1,6 @@
 // Gerado por ferramentas/versao.js — não editar.
 self.OHARA = {
- "versao": "2da515b5ee5e",
+ "versao": "eb3a8f48622d",
  "arquivos": [
   "armazenamento/ankiconnect.js",
   "armazenamento/apkg.js",
@@ -21,6 +21,7 @@ self.OHARA = {
   "estilos/teclado.css",
   "estilos/telas/flashcards.css",
   "estilos/telas/hoje.css",
+  "estilos/telas/materias.css",
   "estilos/toque.css",
   "icones/icone-192.png",
   "icones/icone-512.png",

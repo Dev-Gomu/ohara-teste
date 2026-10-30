@@ -79,11 +79,11 @@ function desenhar() {
   document.getElementById('nav').onclick = (ev) => { if (ev.target.closest('a') && !barra.fixa()) barra.fechar(); };
   const [titulo, texto] = TEXTOS[tela];
   const raiz = document.getElementById('app');
-  raiz.onclick = raiz.onsubmit = raiz.onchange = null; raiz.className = '';
+  raiz.onclick = raiz.onsubmit = raiz.onchange = raiz.onkeydown = raiz.oncontextmenu = raiz.onfocusout = null; raiz.className = '';
   document.title = `${titulo} · Ohara`;
   if (!sessao) { raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(erroSessao || 'Abrindo seus dados…')}</p>`; return; }
   const ctx = { sessao, foco, aviso, atualizarApp: () => atualizarApp(aviso), definirTema, agora: () => window.ohara?.agoraFalsoMs ?? Date.now() };
-  if (rota.tela === 'materias') desenharMaterias(raiz, ctx);
+  if (rota.tela === 'materias') limpar = desenharMaterias(raiz, ctx);
   else if (rota.tela === 'materia') desenharMateria(raiz, ctx, rota.id);
   else if (rota.tela === 'aula') limpar = desenharAula(raiz, ctx, rota.id);
   else if (rota.tela === 'ajustes') desenharAjustes(raiz, ctx);
