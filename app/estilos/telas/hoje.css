@@ -12,7 +12,7 @@ html:root .hj .hacao{height:40px;display:inline-flex;align-items:center;max-widt
 html:root .hj .hgrade{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:stretch}
 html:root .hj .hdir{display:flex;flex-direction:column;gap:14px;min-width:0;min-height:0}
 html:root .hj .hcab{display:flex;align-items:center;gap:10px;margin:0 0 6px;min-height:36px;flex:none}
-html:root .hj .hcab h2,html:root .hj .hprov h2{margin:0;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--tx2);font-weight:600}
+html:root .hj .hcab h2,html:root .hj .hprov h2{margin:0;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);font-weight:600}
 html:root .hj .hcab .mes{font-size:20px;font-weight:300;color:var(--tx);letter-spacing:-.01em}
 html:root .hj .hcab .esp{flex:1}html:root .hj .hcab .sub{font-size:12px;color:var(--ac);font-weight:600;margin:0}
 html:root .hj .seta{width:36px;height:36px;border:0;border-radius:50%;background:var(--cx2);color:var(--tx2);font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
@@ -33,16 +33,17 @@ html:root .hj .hdia .pils{position:absolute;left:3px;right:3px;top:calc(50% + va
 html:root .hj .hdia .pils i{width:var(--pw);height:var(--ph);border-radius:999px;display:block}
 /* próximas provas: uma linha por data, sem divisórias; o cartão estica e as linhas se distribuem pelo espaço */
 html:root .hj .hprov{flex:1 1 0;min-height:250px;padding:16px 20px 14px;display:flex;flex-direction:column;overflow:hidden}
-html:root .hj .hprov h2{display:flex;justify-content:space-between;margin-bottom:10px;flex:none}
-html:root .hj .hprov .cont{font-weight:500;letter-spacing:0}
+/* cabeçalho: título cinza; contagem e "Ver todas ›" em roxo, tudo na mesma fonte (caixa-alta, 11,5 px, 600) */
+html:root .hj .hprov .hph{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;flex:none}
+html:root .hj .hprov .cont{color:var(--ac);letter-spacing:.08em}
+html:root .hj .hprov .mais{margin-left:auto;font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ac);text-decoration:none;white-space:nowrap}
 html:root .hj .hlinhas{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between}
-html:root .hj .hlin{display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center;flex:none}
+html:root .hj .hlin{display:grid;grid-template-columns:60px 1fr auto;gap:14px;align-items:center;flex:none}
 html:root .hj .hlin .hd{display:flex;align-items:baseline;gap:5px;white-space:nowrap;font-variant-numeric:tabular-nums}
-html:root .hj .hlin .hd b{font-size:17px;font-weight:600;line-height:1.2}html:root .hj .hlin .hd small{font-size:17px;font-weight:400;color:var(--tx2);line-height:1.2;text-transform:none;letter-spacing:0}
+html:root .hj .hlin .hd b,html:root .hj .hlin .hd small{font-size:14px;font-weight:600;line-height:1.3;color:var(--tx);text-transform:none;letter-spacing:.04em}
 html:root .hj .hsg{display:flex;flex-wrap:wrap;gap:3px 16px;align-items:center;min-width:0}
 html:root .hj .sg{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;letter-spacing:.04em;white-space:nowrap}html:root .hj .sg i{width:22px;height:9px;border-radius:5px;flex:none}
-html:root .hj .hlin .hr{font-size:13px;color:var(--tx2);white-space:nowrap}html:root .hj .hlin.px .hr{color:var(--tx);font-weight:600}
-html:root .hj .mais{flex:none;display:inline-block;margin-top:6px;font-size:13px;font-weight:600;color:var(--ac);text-decoration:none}
+html:root .hj .hlin .hr{min-width:40px;box-sizing:border-box;text-align:center;font-size:13px;font-weight:600;color:var(--ac);background:var(--acf);border-radius:8px;padding:3px 10px;white-space:nowrap}html:root .hj .hlin.px .hr{background:var(--ac);color:var(--cx)}
 html:root .hj .vazio{margin:6px 0 0;color:var(--tx2)}
 /* agenda compacta: cada aula é um bloco de 46 px; livre = 28 px; vão de 6 px (nucleo/hoje.js usa as mesmas medidas para o marcador de agora) */
 html:root .hj .hag{flex:0 1 auto;min-height:190px;display:flex;flex-direction:column;padding:14px 14px 14px;border:1.5px solid var(--ac)}

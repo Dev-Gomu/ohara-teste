@@ -57,8 +57,8 @@ export function desenharHoje(raiz, ctx) {
 
     // próximas provas por data: dia e mês, siglas com a pílula da cor e o tempo que falta
     const { datas, total } = proximasProvasPorData(estado, hoje, 8);
-    const provas = `<div class="card hprov"><h2>Próximas provas${total ? ` <span class="cont">${total}</span>` : ''}</h2>` + (datas.length
-      ? '<div class="hlinhas">' + datas.map((d, k) => `<div class="hlin${k === 0 ? ' px' : ''}" aria-label="${d.n} de ${MESES_CURTOS[d.mes - 1]}"><span class="hd"><b>${dois(d.n)}</b><small>${MESES_CURTOS[d.mes - 1]}</small></span><span class="hsg">${d.disciplinas.map((id) => { const m = porId.get(id); return `<span class="sg"><i style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></i>${escaparHtml(m ? siglaDaMateria(m) : '?')}</span>`; }).join('')}</span><span class="hr">${d.texto}</span></div>`).join('') + '</div>' + (total > 0 ? `<a class="mais" href="#planejar" data-total="${total}" hidden>Ver todas · ${total} dias</a>` : '')
+    const provas = `<div class="card hprov"><div class="hph"><h2>Próximas provas${total ? ` <span class="cont">${total}</span>` : ''}</h2>${total > 0 ? `<a class="mais" href="#planejar" data-total="${total}" hidden>Ver todas · ${total} dias ›</a>` : ''}</div>` + (datas.length
+      ? '<div class="hlinhas">' + datas.map((d, k) => `<div class="hlin${k === 0 ? ' px' : ''}" aria-label="${d.n} de ${MESES_CURTOS[d.mes - 1]}"><span class="hd"><b>${dois(d.n)}</b><small>${MESES_CURTOS[d.mes - 1]}</small></span><span class="hsg">${d.disciplinas.map((id) => { const m = porId.get(id); return `<span class="sg"><i style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></i>${escaparHtml(m ? siglaDaMateria(m) : '?')}</span>`; }).join('')}</span><span class="hr" title="${d.texto}">${d.em === 0 ? 'hoje' : `${d.em}d`}</span></div>`).join('') + '</div>'
       : '<p class="vazio">Nenhuma prova marcada. Cadastre em <a href="#planejar"><b>Planejar</b></a>.</p>') + '</div>';
 
     // agenda compacta
@@ -103,10 +103,10 @@ export function desenharHoje(raiz, ctx) {
 
 /** Mostra tantas datas quantas cabem no cartão (no mínimo 2); o "Ver todas" aparece se alguma ficou de fora. */
 function ajustarProvas(cartao) {
-  const linhas = [...cartao.querySelectorAll('.hlin')], mais = cartao.querySelector('.mais'), cab = cartao.querySelector('h2'); if (!linhas.length) return;
+  const linhas = [...cartao.querySelectorAll('.hlin')], mais = cartao.querySelector('.mais'), cab = cartao.querySelector('.hph'); if (!linhas.length) return;
   linhas.forEach((l) => { l.hidden = false; }); if (mais) mais.hidden = false;
   if (getComputedStyle(cartao).flexGrow === '0') { if (mais) mais.hidden = true; return; }   // layout empilhado (altura livre): mostra todas
-  const cs = getComputedStyle(cartao), uteis = cartao.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - cab.offsetHeight - (mais ? mais.offsetHeight + 6 : 0) - 10;
+  const cs = getComputedStyle(cartao), uteis = cartao.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - cab.offsetHeight - 10;
   const n = Math.max(2, Math.min(linhas.length, Math.floor(uteis / 40)));
   linhas.forEach((l, i) => { l.hidden = i >= n; });
   if (mais) mais.hidden = n >= Number(mais.dataset.total);
