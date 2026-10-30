@@ -1,15 +1,17 @@
 // Gerado por ferramentas/versao.js — não editar.
 self.OHARA = {
- "versao": "22c8dbfc6fef",
+ "versao": "b2d0f8ed25b9",
  "arquivos": [
   "armazenamento/ankiconnect.js",
   "armazenamento/apkg.js",
   "armazenamento/backup.js",
   "armazenamento/banco.js",
+  "armazenamento/drive.js",
   "armazenamento/gravador.js",
   "armazenamento/indexeddb.js",
   "armazenamento/memoria.js",
   "armazenamento/repositorio.js",
+  "armazenamento/sincronia.js",
   "armazenamento/troca.js",
   "estilos/aula.css",
   "estilos/componentes/blocos.css",
@@ -66,6 +68,7 @@ self.OHARA = {
   "ui/menu.js",
   "ui/preferencias.js",
   "ui/sessao.js",
+  "ui/sincronia.js",
   "ui/teclado.js",
   "ui/telas/ajustes.js",
   "ui/telas/aula.js",

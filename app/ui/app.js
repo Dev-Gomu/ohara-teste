@@ -13,6 +13,7 @@ import { desenharPainel } from './telas/painel.js';
 import { desenharPlanejar } from './telas/planejar.js';
 import { desenharFlashcards } from './telas/flashcards/index.js';
 import { criarServicoFoco } from './foco_servico.js';
+import { criarServicoSincronia } from './sincronia.js';
 import { iniciarTeclado } from './teclado.js';
 import * as pref from './preferencias.js';
 
@@ -82,7 +83,7 @@ function desenhar() {
   raiz.onclick = raiz.onsubmit = raiz.onchange = raiz.onkeydown = raiz.oncontextmenu = raiz.onfocusout = null; raiz.className = '';
   document.title = `${titulo} · Ohara`;
   if (!sessao) { raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(erroSessao || 'Abrindo seus dados…')}</p>`; return; }
-  const ctx = { sessao, foco, aviso, atualizarApp: () => atualizarApp(aviso), definirTema, agora: () => window.ohara?.agoraFalsoMs ?? Date.now() };
+  const ctx = { sessao, foco, sincronia, aviso, atualizarApp: () => atualizarApp(aviso), definirTema, agora: () => window.ohara?.agoraFalsoMs ?? Date.now() };
   if (rota.tela === 'materias') limpar = desenharMaterias(raiz, ctx);
   else if (rota.tela === 'materia') desenharMateria(raiz, ctx, rota.id);
   else if (rota.tela === 'aula') limpar = desenharAula(raiz, ctx, rota.id);
@@ -95,7 +96,7 @@ function desenhar() {
   else raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(texto)}</p>`;
 }
 
-let sessao = null, foco = null, erroSessao = '', limpar = null;
+let sessao = null, foco = null, sincronia = null, erroSessao = '', limpar = null;
 function aviso(texto, acao) {
   const t = document.getElementById('aviso');
   t.innerHTML = `<span>${escaparHtml(texto)}</span>` + (acao ? `<button type="button">${escaparHtml(acao.texto)}</button>` : '');
@@ -114,7 +115,11 @@ desenhar();
 const teclado = iniciarTeclado({ estado: () => sessao?.estado() ?? { disciplinas: [], aulas: [] }, barra, foco: modoFoco });
 
 iniciarSessao({ aoFalhar: (e) => aviso('Não consegui salvar: ' + e.message) })
-  .then((s) => { sessao = s; foco = criarServicoFoco(s, { aviso }); window.ohara = { sessao, foco, teclado }; desenhar(); })
+  .then((s) => {
+    sessao = s; foco = criarServicoFoco(s, { aviso });
+    sincronia = criarServicoSincronia({ sessao, foco, aviso, aoReceber: () => desenhar(), irParaAjustes: () => { location.hash = '#ajustes'; } });
+    window.ohara = { sessao, foco, teclado, sincronia }; desenhar(); sincronia.iniciar();
+  })
   .catch((e) => { erroSessao = 'Não foi possível abrir os dados: ' + e.message; desenhar(); });
 
 // Service worker: o app abre sem internet e atualiza sozinho (a página nova aparece ao recarregar).

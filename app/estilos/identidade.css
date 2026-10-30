@@ -175,7 +175,7 @@ html:root .fc-ed .l[data-t=secao]{letter-spacing:.08em}
  html:root nav a{height:40px;min-width:40px;padding:0;justify-content:center;border-radius:99px;background:var(--cx);color:var(--tx2);font-size:0;gap:0;font-weight:500}
  html:root nav a svg{display:none}
  html:root nav a::before{counter-increment:tela;content:counter(tela);font-size:14px}
- html:root nav a.on{background:var(--ac);color:var(--prt);padding:0 18px;font-size:14px;gap:8px;font-weight:600;box-shadow:none;border-radius:99px}
+ html:root nav a.on{background:var(--ac);color:var(--prt);padding:0;font-size:0;gap:0;font-weight:600;box-shadow:none;border-radius:99px}   /* só o número; o nome da tela fica no title (dica ao passar o mouse) */
  html:root[data-tema="escuro"] nav a.on{background:var(--ac);color:var(--prt)}
  html:root nav .fim{margin:0 0 0 auto;flex-direction:row;border:0;padding:0;gap:8px;align-items:center;color:var(--tx2)}
  html:root nav .fim #fixar{display:none}

@@ -28,7 +28,8 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
   const guardado = await armazenamento.lerBanco();
   let db = abrirBanco(SQL, guardado?.bytes);
   let estado = carregarEstado(db);
-  const gravador = criarGravador(armazenamento, () => exportarBanco(db), { aoFalhar });
+  const ouvintesGravou = new Set();
+  const gravador = criarGravador(armazenamento, () => exportarBanco(db), { aoFalhar, aoGravar: () => ouvintesGravou.forEach((f) => { try { f(); } catch { /* quem ouve não pode atrapalhar a gravação */ } }) });
 
   const dia = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   addEventListener('pagehide', () => gravador.descarregar());
@@ -112,6 +113,8 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
       gravador.agendar();
     },
     descarregar: () => gravador.descarregar(),
+    /** Chama `f` toda vez que os dados forem gravados no aparelho. Devolve a função que para de ouvir. */
+    aoGravar(f) { ouvintesGravou.add(f); return () => ouvintesGravou.delete(f); },
     lerConfig: lerCfg,
     gravarConfig: gravarCfg,
     /** Gera o .zip e anota a data do último backup. Devolve { bytes, nome }. */

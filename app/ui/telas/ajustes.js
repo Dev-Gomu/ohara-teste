@@ -38,6 +38,7 @@ export function desenharAjustes(raiz, ctx) {
             : `<p><button class="btn peq sec" type="button" data-a="esvaziar">Esvaziar lixeira</button></p>`)) +
       `</div>` +
       `<div class="card bloco"><h2>Backup</h2>${blocoBackup()}</div>` +
+      `<div class="card bloco"><h2>Sincronização</h2>${blocoSincronia()}</div>` +
       `<div class="card bloco"><h2>Trocar dados entre aparelhos</h2>${blocoTroca()}</div>` +
       `<div class="card bloco"><h2>Armazenamento</h2>${armazenamento()}</div>` +
       `<div class="card bloco"><h2>Dica do teclado</h2><p class="sub">Se a tecla Alt virar Cmd no teclado bluetooth, aperte Fn+P por 3 segundos para voltar ao modo Android.</p></div>`;
@@ -45,7 +46,7 @@ export function desenharAjustes(raiz, ctx) {
   }
 
   // Seções em ordem de uso: Aparência e Metas abertas; o resto recolhido. Números ganham − e +.
-  const RECOLHIVEIS = ['Lixeira', 'Backup', 'Trocar dados entre aparelhos', 'Armazenamento', 'Dica do teclado'];
+  const RECOLHIVEIS = ['Lixeira', 'Backup', 'Sincronização', 'Trocar dados entre aparelhos', 'Armazenamento', 'Dica do teclado'];
   function refinar() {
     raiz.querySelectorAll(':scope > .card.bloco').forEach((card) => {
       const h = card.querySelector(':scope > h2'), nome = h?.textContent;
@@ -79,6 +80,24 @@ export function desenharAjustes(raiz, ctx) {
       (pendente ? `<div class="confirma"><p>Substituir TODOS os dados atuais pelo backup de ${pendente.resumo.criado_em ? new Date(pendente.resumo.criado_em).toLocaleDateString('pt-BR') : 'data desconhecida'} ` +
         `(${plural(pendente.resumo.materias, 'matéria', 'matérias')}, ${plural(pendente.resumo.aulas, 'aula ou livro', 'aulas e livros')}${pendente.resumo.arquivos ? `, ${plural(pendente.resumo.arquivos, 'arquivo', 'arquivos')}` : ''})? ` +
         `Uma cópia dos dados de agora fica guardada no aparelho.</p><div class="acoes"><button class="btn peq ur" type="button" data-a="restaurar-sim">Substituir meus dados</button><button class="btn peq sec" type="button" data-a="restaurar-nao">Cancelar</button></div></div>` : '');
+  }
+
+  /** Sincronização automática pelo Google Drive (pasta própria do app). Os dois aparelhos ficam iguais sozinhos; sem internet o app segue normal. */
+  function blocoSincronia() {
+    const sn = ctx.sincronia?.estado(); if (!sn) return '<p class="sub">Abrindo…</p>';
+    const quando = sn.ultima ? new Date(sn.ultima).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : null;
+    const linha = { desligada: 'Desligada. Cada aparelho tem a sua cópia.', ok: `Ligada.${quando ? ` Última sincronização: ${quando}.` : ''}`, sincronizando: 'Sincronizando…', offline: 'Ligada. Sem internet agora; sincroniza quando voltar.', toque: 'Ligada. Falta entrar de novo com o Google (acontece no próximo toque).', conflito: '', erro: 'Ligada, mas deu erro.' }[sn.status] ?? '';
+    let h = `<p class="sub">Deixa o tablet e o PC com os mesmos dados, sozinho. Os dados vão para uma pasta só do Ohara no seu Google Drive (o app não vê mais nada do seu Drive). Sem internet o app funciona normal e sincroniza depois.</p><p class="sub"><b>${escaparHtml(linha)}</b></p>`;
+    if (sn.mensagem && sn.status !== 'conflito') h += `<p class="${sn.status === 'erro' ? 'erro' : 'sub'}">${escaparHtml(sn.mensagem)}</p>`;
+    if (sn.conflito) {
+      const c = sn.conflito, de = c.origem ? `de ${escaparHtml(c.origem)}, ` : '', cq = c.geradoEm ? new Date(c.geradoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'data desconhecida';
+      h += `<div class="confirma"><p><b>Os dois aparelhos mudaram.</b> A versão da nuvem é ${de}${escaparHtml(cq)} (${plural(c.resumo.materias, 'matéria', 'matérias')}, ${plural(c.resumo.aulas, 'aula ou livro', 'aulas e livros')}). Nada se perde: a versão que você não escolher fica guardada num arquivo.</p>` +
+        `<div class="acoes"><button class="btn peq" type="button" data-a="sinc-nuvem">Ficar com a da nuvem (baixo a minha num arquivo)</button><button class="btn peq sec" type="button" data-a="sinc-meu">Ficar com a minha (a da nuvem fica pronta para ser trocada)</button></div></div>`;
+    }
+    h += '<div class="acoes">' + (sn.ligada
+      ? `<button class="btn peq" type="button" data-a="sinc-agora" ${sn.status === 'sincronizando' ? 'disabled' : ''}>Sincronizar agora</button><button class="btn peq sec" type="button" data-a="sinc-desligar">Desligar</button>`
+      : '<button class="btn peq" type="button" data-a="sinc-ligar">Ligar a sincronização</button>') + '</div>';
+    return h;
   }
 
   function blocoTroca() {
@@ -156,6 +175,17 @@ export function desenharAjustes(raiz, ctx) {
         try { await ctx.sessao.restaurar(pendente.zip); pendente = null; erroBackup = ''; ctx.aviso('Dados restaurados.'); } catch (e) { erroBackup = e.message; }
         desenhar(); break;
       }
+      case 'sinc-ligar': ctx.sincronia.ligar(); break;           // direto do clique: o Google só abre a janela se for um toque do usuário
+      case 'sinc-agora': ctx.sincronia.agora(); break;
+      case 'sinc-desligar': ctx.sincronia.desligar(); ctx.aviso('Sincronização desligada. Seus dados continuam aqui.'); break;
+      case 'sinc-nuvem': case 'sinc-meu': {
+        try {
+          const r = await ctx.sincronia.resolverConflito(b.dataset.a === 'sinc-meu' ? 'meu' : 'pacote');
+          if (r.copiaLocal) baixar(r.copiaLocal);
+          ctx.aviso(r.trocou ? (r.copiaLocal ? 'Dados da nuvem recebidos. A sua versão de antes foi baixada num arquivo.' : 'Dados recebidos.') : 'Certo: ficou o que você tem aqui.');
+        } catch (e) { erroTroca = e.message; }
+        desenhar(); break;
+      }
       case 'troca-enviar': {
         ocupado = true; erroTroca = ''; desenhar();
         try { baixar(await ctx.sessao.gerarPacoteTroca(b.dataset.completo === '1')); ctx.aviso('Pacote gerado. Leve o arquivo para o outro aparelho e receba lá.'); } catch (e) { erroTroca = e.message; }
@@ -211,4 +241,8 @@ export function desenharAjustes(raiz, ctx) {
   };
   desenhar();
   medir();
+  if (ctx.sincronia) {
+    ctx.sincronia.preparar();
+    const parar = ctx.sincronia.ouvir(() => { if (raiz.isConnected && raiz.querySelector('h1')?.textContent === 'Ajustes') desenhar(); else parar(); });
+  }
 }
