@@ -129,9 +129,9 @@ html:root .til .capa,html:root .til.edit{border-radius:18px}
 /* ===== Identidade "Névoa enxuta" (2026-10-29): lavanda e índigo, Poppins, contornos só onde há foco, atalhos em Fira Code sem moldura =====
    Vem da 5ª versão "Enxuta" do protótipo de Flashcards (rótulo da seção em cima). Sobrepõe o Quadro; para voltar, apague este bloco. */
 html:root{--bg:#EEEFFC;--cx:#FFFFFF;--cx2:#E6E8FA;--tx:#2A2C45;--tx2:#54577A;--ln:#B8BCE2;--bd:#B8BCE2;--pr:#3F4290;--prt:#FFFFFF;--ac:#3F4290;--acf:#E3E4FA;--faixa:#E3E4FA;--nav:#2A2C45;--navt:#C9CBEA;--ok:#2B7A62;--okf:#DDF1EA;--ur:#B3261E;
- --m1:#4C5399;--m2:#2B7A62;--m3:#B3475E;--m4:#9A6A1F;--m5:#7A4EA8;--m6:#1F7A86;--m7:#B0457F;--m8:#5D6D7E;--fonte-t:"Poppins",system-ui,sans-serif;--raio-cartao:20px}
+ --m1:#4C5399;--m2:#2B7A62;--m3:#B3475E;--m4:#C4623D;--m5:#7A4EA8;--m6:#1F7A86;--m7:#B0457F;--m8:#5D6D7E;--fonte-t:"Poppins",system-ui,sans-serif;--raio-cartao:20px}
 html:root[data-tema="escuro"]{--bg:#14152B;--cx:#1D1F40;--cx2:#2A2D5C;--tx:#EDEEFB;--tx2:#B3B6DD;--ln:#4A4F96;--bd:#4A4F96;--pr:#A3A6FA;--prt:#14152B;--ac:#A3A6FA;--acf:#2A2D5C;--faixa:#2A2D5C;--nav:#0E0F20;--navt:#B3B6DD;--ok:#6BCBAA;--okf:#16301F;--ur:#FF9C9C;
- --m1:#A3A6FA;--m2:#6BCBAA;--m3:#F29DB0;--m4:#E3BB6B;--m5:#C9A8F0;--m6:#6FCBD6;--m7:#F29DCB;--m8:#A9B6C4}
+ --m1:#A3A6FA;--m2:#6BCBAA;--m3:#F29DB0;--m4:#EE9A7C;--m5:#C9A8F0;--m6:#6FCBD6;--m7:#F29DCB;--m8:#A9B6C4}
 html:root body{font-family:"Poppins",system-ui,sans-serif}
 html:root h1{font-weight:300;font-size:30px;letter-spacing:-.01em}
 html:root h2,html:root .sec{font-weight:600;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2)}

@@ -20,6 +20,7 @@ const cap = (t) => t[0].toUpperCase() + t.slice(1);
 /** `ctx.agora()` devolve o instante atual em ms (nos testes dá para simular outro). */
 export function desenharHoje(raiz, ctx) {
   const { sessao, foco } = ctx;
+  let observador = null;
   let deslocamento = 0;   // semanas que o calendário andou para a frente (ou para trás) em relação à semana de hoje
 
   function desenhar() {
@@ -52,13 +53,12 @@ export function desenharHoje(raiz, ctx) {
       return `<div class="hdia${d.hoje ? ' h' : ''}${d.provas.length ? ' p' : ''}"${nomes ? ` title="${escaparHtml(`${d.n} de ${MESES_CURTOS[d.mes - 1]}: ${nomes}`)}"` : ''}>${d.primeiroDoMes ? `<small class="mm">${MESES_CURTOS[d.mes - 1]}</small>` : ''}<span class="n">${d.n}</span>${pils ? `<span class="pils">${pils}</span>` : ''}</div>`;
     }).join('') + '</div>').join('');
     const calendario = `<div class="card hcal" id="cal"><div class="hcab"><h2>Calendário</h2><b class="mes">${escaparHtml(tituloCal)}</b><span class="esp"></span>${deslocamento ? '<button type="button" class="btn peq sec" data-sem="0">Hoje</button>' : ''}<button type="button" class="seta" data-sem="-1" aria-label="Semana anterior">‹</button><button type="button" class="seta" data-sem="1" aria-label="Próxima semana">›</button></div>` +
-      `<div class="hds">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map((x) => `<span>${x}</span>`).join('')}</div>${corpoCal}</div>`;
+      `<div class="hds">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map((x) => `<span>${x}</span>`).join('')}</div><div class="hsems" style="--sem:${janela.length}">${corpoCal}</div></div>`;
 
     // próximas provas por data: dia e mês, siglas com a pílula da cor e o tempo que falta
-    const { datas, total } = proximasProvasPorData(estado, hoje, 5);
+    const { datas, total } = proximasProvasPorData(estado, hoje, 8);
     const provas = `<div class="card hprov"><h2>Próximas provas${total ? ` <span class="cont">${total}</span>` : ''}</h2>` + (datas.length
-      ? datas.map((d, k) => `<div class="hlin${k === 0 ? ' px' : ''}" aria-label="${d.n} de ${MESES_CURTOS[d.mes - 1]}"><span class="hd"><b>${dois(d.n)}</b><small>${MESES_CURTOS[d.mes - 1]}</small></span><span class="hsg">${d.disciplinas.map((id) => { const m = porId.get(id); return `<span class="sg"><i style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></i>${escaparHtml(m ? siglaDaMateria(m) : '?')}</span>`; }).join('')}</span><span class="hr">${d.texto}</span></div>`).join('')
-        + (total > datas.length ? `<a class="mais" href="#planejar">Ver todas · ${total} dias</a>` : '')
+      ? '<div class="hlinhas">' + datas.map((d, k) => `<div class="hlin${k === 0 ? ' px' : ''}" aria-label="${d.n} de ${MESES_CURTOS[d.mes - 1]}"><span class="hd"><b>${dois(d.n)}</b><small>${MESES_CURTOS[d.mes - 1]}</small></span><span class="hsg">${d.disciplinas.map((id) => { const m = porId.get(id); return `<span class="sg"><i style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></i>${escaparHtml(m ? siglaDaMateria(m) : '?')}</span>`; }).join('')}</span><span class="hr">${d.texto}</span></div>`).join('') + '</div>' + (total > 0 ? `<a class="mais" href="#planejar" data-total="${total}" hidden>Ver todas · ${total} dias</a>` : '')
       : '<p class="vazio">Nenhuma prova marcada. Cadastre em <a href="#planejar"><b>Planejar</b></a>.</p>') + '</div>';
 
     // agenda compacta
@@ -69,18 +69,22 @@ export function desenharHoje(raiz, ctx) {
       return `<a class="hev ${it.situacao}" href="#aula/${it.id}" style="--c:${m ? corCss(m.cor) : 'var(--tx2)'}" title="${escaparHtml(it.titulo)}"><span class="eh">${it.situacao === 'agora' ? '' : `${dois(Math.floor(it.ini / 60))}h`}</span><span class="evb"><b>${escaparHtml(m?.nome ?? it.titulo)}</b><span>${hhmm(it.ini)} – ${hhmm(it.fim)}</span></span></a>`;
     }).join('');
     const agenda = `<div class="card hag"><div class="hcab"><h2>Agenda</h2><span class="esp"></span><span class="sub">${nAulas ? `${diaComSemana(hoje).split(',')[0].toLowerCase()} · ${nAulas} ${nAulas === 1 ? 'aula' : 'aulas'}` : ''}</span></div>` +
-      (ag.itens.length ? `<div class="hlista">${itens}<div class="hagora" style="top:${posicaoDoMarcador(ag, agoraMin).toFixed(1)}px"><span>${hhmm(agoraMin)}</span></div></div>`
+      (ag.itens.length ? `<div class="hscroll"><div class="hlista">${itens}<div class="hagora" style="top:${posicaoDoMarcador(ag, agoraMin).toFixed(1)}px"><span>${hhmm(agoraMin)}</span></div></div></div>`
         : `<p class="vazio">${mats.length ? 'Nada marcado para hoje.' : 'Crie sua primeira matéria em <a href="#materias"><b>Matérias</b></a>.'}</p>`) + '</div>';
 
+    raiz.className = 'tcheia'; observador?.disconnect();
     raiz.innerHTML = `<div class="hoje2 hj">` +
       (cobr ? `<div class="ban"><div><b>${cobr.tipo === 'nao' ? 'Ontem você não estudou.' : `Ontem você estudou só ${horasMinutos(cobr.minutos)}.`}</b><span>${cobr.tipo === 'nao' ? 'A sequência zerou. Recomece com um bloco curto.' : `A meta é ${horasMinutos(cfg.meta_diaria_min)} por dia. A sequência recomeça hoje.`}</span></div><a class="bt" href="#foco">Começar agora</a></div>` : '') +
-      `<div class="faixa"><div><h1>Hoje</h1><div class="dt"><span class="dia">${escaparHtml(diaComSemana(hoje))}</span><span class="sep"> · </span><span class="hora">${horaLocal(agora)}</span></div></div>` +
-      `<div class="hchips"><span class="chip"><b>${sq.minutosHoje}</b>/${cfg.meta_diaria_min} min</span><span class="chip${sq.emRisco ? ' risco' : ''}"><b>${sq.dias}</b> ${sq.dias === 1 ? 'dia' : 'dias'}${sq.emRisco ? ' · em risco' : ''}</span>` +
-      `<a class="bt hacao" href="${acao.href}">${acao.texto}</a></div></div>` +
+      `<div class="hchips"><span class="chip"><b>${sq.minutosHoje}</b>/${cfg.meta_diaria_min} min</span><span class="chip${sq.emRisco ? ' risco' : ''}"><b>${sq.dias}</b>&nbsp;${sq.dias === 1 ? 'dia' : 'dias'}${sq.emRisco ? '&nbsp;· em risco' : ''}</span>` +
+      `<a class="bt hacao" href="${acao.href}">${acao.texto}</a></div>` +
       `<div class="hgrade">${calendario}<div class="hdir">${provas}${agenda}</div></div>` +
       (bk.estado === 'nada' ? '' : `<div class="bk${bk.estado === 'ok' ? '' : ' ur'}" id="aviso-backup">${escaparHtml(bk.texto)} <a href="#ajustes">Fazer backup</a></div>`) +
       `</div>`;
     document.title = 'Hoje · Ohara';
+    const rolo = raiz.querySelector('.hscroll'), marc = raiz.querySelector('.hagora');
+    if (rolo && marc && rolo.scrollHeight > rolo.clientHeight) rolo.scrollTop = Math.max(0, marc.offsetTop - rolo.clientHeight / 3);   // agenda mais alta que o espaço: mostra o agora
+    const cartao = raiz.querySelector('.hprov');
+    if (cartao && typeof ResizeObserver !== 'undefined') { observador = new ResizeObserver(() => ajustarProvas(cartao)); observador.observe(cartao); }
   }
 
   raiz.onclick = (ev) => {
@@ -89,9 +93,21 @@ export function desenharHoje(raiz, ctx) {
   };
   desenhar();
   let ultima = foco.ativa()?.fase + '|' + foco.ativa()?.inicio_ms;
-  return foco.ouvir(() => {
+  const parar = foco.ouvir(() => {
     const s = foco.ativa(), chave = s?.fase + '|' + s?.inicio_ms;
     if (chave !== ultima) { ultima = chave; desenhar(); return; }
     const r = document.getElementById('rel-hoje'); if (r && s) r.textContent = formatarRelogio(restanteMs(s, ctx.agora()));
   });
+  return () => { observador?.disconnect(); parar?.(); };
+}
+
+/** Mostra tantas datas quantas cabem no cartão (no mínimo 2); o "Ver todas" aparece se alguma ficou de fora. */
+function ajustarProvas(cartao) {
+  const linhas = [...cartao.querySelectorAll('.hlin')], mais = cartao.querySelector('.mais'), cab = cartao.querySelector('h2'); if (!linhas.length) return;
+  linhas.forEach((l) => { l.hidden = false; }); if (mais) mais.hidden = false;
+  if (getComputedStyle(cartao).flexGrow === '0') { if (mais) mais.hidden = true; return; }   // layout empilhado (altura livre): mostra todas
+  const cs = getComputedStyle(cartao), uteis = cartao.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - cab.offsetHeight - (mais ? mais.offsetHeight + 6 : 0) - 10;
+  const n = Math.max(2, Math.min(linhas.length, Math.floor(uteis / 40)));
+  linhas.forEach((l, i) => { l.hidden = i >= n; });
+  if (mais) mais.hidden = n >= Number(mais.dataset.total);
 }
