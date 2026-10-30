@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teste da sincronia com o Google Drive</title>
+<!-- Página de TESTE (não faz parte do app): confirma que o login com o Google funciona, que dá para gravar e ler um arquivo na pasta
+     própria do app no Drive (drive.appdata) e se o acesso volta sem pedir de novo (renovar sem clicar). Não mexe nos dados do Ohara. -->
+<style>
+  body{font:16px/1.5 system-ui,sans-serif;background:#EEEFFC;color:#2A2C45;margin:0;padding:24px}
+  main{max-width:720px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}p.s{margin:0 0 20px;color:#54577A}
+  .passo{background:#fff;border-radius:18px;padding:16px 20px;margin:0 0 12px}
+  .passo h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#54577A;margin:0 0 10px}
+  button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:10px 20px;background:#3F4290;color:#fff;cursor:pointer;margin:0 8px 8px 0}
+  button.sec{background:#E3E4FA;color:#3F4290}
+  #log{background:#fff;border-radius:18px;padding:16px 20px;white-space:pre-wrap;font:14px/1.6 ui-monospace,monospace;min-height:120px}
+  .ok{color:#2B7A62}.erro{color:#B3261E}
+</style></head><body><main>
+<h1>Teste da sincronia com o Google Drive</h1>
+<p class="s">Só para conferir se o login e a pasta do app no Drive funcionam. Nada do Ohara é lido ou alterado.</p>
+
+<div class="passo"><h2>1 · Entrar</h2>
+  <button id="entrar">Entrar com o Google</button>
+  <button id="silencioso" class="sec">Renovar sem clicar (teste)</button>
+</div>
+<div class="passo"><h2>2 · Gravar e ler um arquivo de teste na pasta do app</h2>
+  <button id="gravar" class="sec">Gravar arquivo de teste</button>
+  <button id="ler" class="sec">Ler arquivo de teste</button>
+  <button id="listar" class="sec">Listar arquivos do app</button>
+</div>
+<div class="passo"><h2>3 · Resultado</h2><div id="log">Aguardando…</div></div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const CLIENT_ID = '299231084106-j5f03mrrti07jmoh09g2rlkpmst8fdr1.apps.googleusercontent.com';
+const ESCOPO = 'https://www.googleapis.com/auth/drive.appdata';
+const NOME = 'ohara-sync-teste.json';
+let token = null, cliente = null, pedidoSilencioso = false;
+const $ = (id) => document.getElementById(id), logEl = $('log');
+const agora = () => new Date().toLocaleString('pt-BR');
+function log(t, classe = '') { logEl.innerHTML += `\n<span class="${classe}">[${agora()}] ${t}</span>`; }
+function ultimoLogin() { try { return localStorage.getItem('ohara.teste.ultimoLogin'); } catch { return null; } }
+
+function iniciar() {
+  if (!window.google?.accounts?.oauth2) { setTimeout(iniciar, 300); return; }
+  cliente = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID, scope: ESCOPO,
+    callback: (r) => {
+      if (r.error) { log(`${pedidoSilencioso ? 'Renovação sem clicar' : 'Entrada'} NÃO funcionou: ${r.error}${r.error_description ? ' (' + r.error_description + ')' : ''}`, 'erro'); return; }
+      token = r.access_token;
+      try { localStorage.setItem('ohara.teste.ultimoLogin', new Date().toISOString()); } catch {}
+      log(pedidoSilencioso ? 'Renovação sem clicar FUNCIONOU (sem pedir senha nem permissão de novo).' : 'Entrou com o Google. Permissão concedida para a pasta do app.', 'ok');
+    },
+    error_callback: (e) => log(`Falhou: ${e.type || ''} ${e.message || ''}`, 'erro'),
+  });
+  logEl.textContent = '';
+  log('Pronto. Endereço desta página: ' + location.origin);
+  const u = ultimoLogin(); if (u) log(`Último login neste navegador: ${new Date(u).toLocaleString('pt-BR')}. Se já passaram dias, clique em "Renovar sem clicar".`);
+}
+$('entrar').onclick = () => { pedidoSilencioso = false; cliente.requestAccessToken({ prompt: 'consent' }); };
+$('silencioso').onclick = () => { pedidoSilencioso = true; cliente.requestAccessToken({ prompt: '' }); };
+
+async function api(url, opcoes = {}) {
+  if (!token) throw new Error('Entre com o Google primeiro (passo 1).');
+  const r = await fetch(url, { ...opcoes, headers: { Authorization: `Bearer ${token}`, ...(opcoes.headers || {}) } });
+  if (!r.ok) throw new Error(`Drive respondeu ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  return r;
+}
+async function achar() {
+  const r = await api(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${encodeURIComponent(`name='${NOME}'`)}&fields=files(id,name,modifiedTime)`);
+  return (await r.json()).files[0] || null;
+}
+$('gravar').onclick = async () => {
+  try {
+    const conteudo = JSON.stringify({ gravadoEm: new Date().toISOString(), aparelho: navigator.userAgent.slice(0, 80) });
+    const existente = await achar();
+    if (existente) await api(`https://www.googleapis.com/upload/drive/v3/files/${existente.id}?uploadType=media`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: conteudo });
+    else {
+      const limite = 'ohara' + Math.random().toString(36).slice(2);
+      const corpo = `--${limite}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: NOME, parents: ['appDataFolder'] })}\r\n--${limite}\r\nContent-Type: application/json\r\n\r\n${conteudo}\r\n--${limite}--`;
+      await api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${limite}` }, body: corpo });
+    }
+    log(`Arquivo de teste ${existente ? 'atualizado' : 'criado'} na pasta do app no Drive.`, 'ok');
+  } catch (e) { log(e.message, 'erro'); }
+};
+$('ler').onclick = async () => {
+  try {
+    const f = await achar(); if (!f) { log('Ainda não existe arquivo de teste. Clique em "Gravar arquivo de teste".', 'erro'); return; }
+    const texto = await (await api(`https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`)).text();
+    log(`Li o arquivo (modificado em ${new Date(f.modifiedTime).toLocaleString('pt-BR')}): ${texto}`, 'ok');
+  } catch (e) { log(e.message, 'erro'); }
+};
+$('listar').onclick = async () => {
+  try {
+    const r = await (await api('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(name,modifiedTime,size)')).json();
+    log(r.files.length ? 'Arquivos do app: ' + r.files.map((f) => `${f.name} (${f.size ?? '?'} bytes)`).join(', ') : 'A pasta do app está vazia.', 'ok');
+  } catch (e) { log(e.message, 'erro'); }
+};
+iniciar();
+</script></main></body></html>
