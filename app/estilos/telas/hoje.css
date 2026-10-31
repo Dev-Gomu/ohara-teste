@@ -6,7 +6,7 @@ html:root .hj{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;ma
 html:root .hj .hchips{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:none}
 @media(min-width:821px){html:root:not([data-foco]) .hj .hchips{position:fixed;top:12px;right:140px;height:40px;z-index:5;flex-wrap:nowrap}}
 html:root .hj .chip{background:var(--cx);border-radius:999px;padding:0 16px;height:40px;display:inline-flex;align-items:center;font-size:13px;color:var(--tx2);white-space:nowrap}
-html:root .hj .chip b{display:inline;color:var(--tx);font-weight:600}html:root .hj .chip.risco,html:root .hj .chip.risco b{color:var(--ur)}
+html:root .hj .chip b{display:inline;color:var(--tx);font-weight:600}
 html:root .hj .hacao{height:40px;display:inline-flex;align-items:center;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* ESCALA PROPORCIONAL (versão E): o desenho é o do tablet (1280×800, 16:10) e a tela inteira cresce junto (textos, pílulas, recuos) conforme o espaço:
    --z vem do JavaScript (menor entre largura/1280 e altura/800, de 1 a 1,5). Os chips da barra de cima não escalam (seguem do tamanho das pílulas). */

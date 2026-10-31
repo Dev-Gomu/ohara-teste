@@ -53,7 +53,7 @@ export function desenharMateria(raiz, ctx, materiaId) {
   function faixaPastas(pastas, estado) {
     const n = contagemPorPasta(estado, materiaId), u = (x) => `${x} ${x === 1 ? 'aula' : 'aulas'}`;
     const item = (id, nome, qtd) => `<div class="mt-pasta${pastaSel === id ? ' on' : ''}" role="button" tabindex="0" data-pasta="${id ?? 'todas'}">${PASTA}<b>${escaparHtml(nome)}</b><small>${u(qtd)}</small>` +
-      (id != null ? `<button type="button" class="mt-mais" data-a="menu-pasta" data-id="${id}" aria-label="Mais opções de ${escaparHtml(nome)}" aria-haspopup="menu">⋯</button>` : '') + '</div>';
+      (id != null ? `<button type="button" class="mt-mais" data-a="menu-pasta" data-id="${id}" aria-label="Mais opções de ${escaparHtml(nome)}" aria-haspopup="menu"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><circle cx="3.8" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.2" cy="9" r="1.4" fill="currentColor" stroke="none"/></svg></button>` : '') + '</div>';
     const nova = novaPasta ? `<form class="mt-pasta mt-nova-form" id="form-pasta"><input class="in" name="pasta" maxlength="60" autocomplete="off" placeholder="Nome da pasta, ex.: 1º bimestre" aria-label="Nome da pasta"><button class="mt-btn peq" type="submit">Criar</button><button class="mt-btn peq mt-sec" type="button" data-a="cancelar-pasta">Cancelar</button></form>`
       : '<button type="button" class="mt-pasta mt-nova" data-a="nova-pasta"><b>+ Nova pasta</b></button>';
     return `<div class="mt-pastas">${item(null, 'Todas', n.todas)}${pastas.map((p) => item(p.id, p.nome, n[p.id])).join('')}${nova}</div>` + (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '');
@@ -66,7 +66,7 @@ export function desenharMateria(raiz, ctx, materiaId) {
       return `<div class="mt-lin${a.id === selecionada ? ' sel' : ''}" role="button" tabindex="0" data-aula="${a.id}"><span class="mt-dt">${dia ? `<b>${dia.slice(8)}</b>${MESES[Number(dia.slice(5, 7)) - 1]}` : `<b>—</b>${a.tipo === 'livro' ? 'livro' : 's/ data'}`}</span>` +
         `<span class="mt-lt"><b>${escaparHtml(a.titulo)}</b><small>${escaparHtml(a.inicio ? a.inicio.slice(11, 16) + ' · ' : '')}${a.tipo === 'livro' ? 'Livro' : 'Aula'}</small></span>` +
         `<span class="mt-chips">${pdf ? '<span class="mt-ch f">PDF</span>' : ''}${n ? `<span class="mt-ch">${n} ${n === 1 ? 'cartão' : 'cartões'}</span>` : '<span class="mt-ch f">sem cartões</span>'}</span>` +
-        `<button type="button" class="mt-mais" data-a="menu" data-id="${a.id}" aria-label="Mais opções de ${escaparHtml(a.titulo)}" aria-haspopup="menu">⋯</button></div>`;
+        `<button type="button" class="mt-mais" data-a="menu" data-id="${a.id}" aria-label="Mais opções de ${escaparHtml(a.titulo)}" aria-haspopup="menu"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><circle cx="3.8" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.2" cy="9" r="1.4" fill="currentColor" stroke="none"/></svg></button></div>`;
     }).join('');
   }
 

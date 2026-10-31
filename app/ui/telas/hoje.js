@@ -74,7 +74,7 @@ export function desenharHoje(raiz, ctx) {
     }).join('');
     const agenda = `<div class="card hag"><div class="hcab"><h2>Agenda</h2><span class="esp"></span><span class="sub">${nAulas ? `${futuro ? 'próxima · ' : ''}${diaComSemana(diaAg).split(',')[0].toLowerCase()} · ${nAulas} ${nAulas === 1 ? 'aula' : 'aulas'}` : ''}</span></div>` +
       (ag.itens.length ? `<div class="hscroll"><div class="hlista">${itens}${futuro ? '' : `<div class="hagora" style="top:${posicaoDoMarcador(ag, agoraMin).toFixed(1)}px"><span>${hhmm(agoraMin)}</span></div>`}</div></div>`
-        : `<p class="vazio">${mats.length ? 'Nada marcado para hoje.' : 'Crie sua primeira matéria em <a href="#materias"><b>Matérias</b></a>.'}</p>`) + '</div>';
+        : `<p class="vazio">${mats.length ? 'Nada marcado para hoje.' : 'Crie sua primeira matéria em <a href="#materias"><b>Acervo</b></a>.'}</p>`) + '</div>';
 
     raiz.className = 'tcheia';
     raiz.innerHTML = `<div class="hoje2 hj">` +

@@ -19,7 +19,7 @@ export function criarBlocoCartoes({ sessao, ctx, aulaId, slides, slidesAberto = 
   el.className = 'at-bloco at-cartoes'; cabecalho.className = 'at-cab';
   cabecalho.innerHTML = `<b class="mo-tit">Cartão</b><select class="at-selaula" data-k="aula" aria-label="Aula do cartão"></select>` +
     `<span class="at-seg at-abas" role="tablist" aria-label="Novo cartão ou cartões salvos"><button type="button" role="tab" data-aba="novo" aria-selected="true" class="on">Novo</button><button type="button" role="tab" data-aba="salvos" aria-selected="false">Salvos <span class="at-num" data-k="nsalvos">0</span></button></span><span class="mo-esp"></span>` +
-    `<button type="button" class="mo-ib" data-k="opcoes" aria-expanded="false" aria-controls="at-opc-${aulaId}" aria-label="Opções dos cartões (Alt O)" title="Opções: etiquetas, código, importar (Alt O)">⋮</button>`;
+    `<button type="button" class="mo-ib" data-k="opcoes" aria-expanded="false" aria-controls="at-opc-${aulaId}" aria-label="Opções dos cartões (Alt O)" title="Opções: etiquetas, código, importar (Alt O)"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="3.8" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="14.2" r="1.4" fill="currentColor" stroke="none"/></svg></button>`;
   el.append(cabecalho);
   el.insertAdjacentHTML('beforeend',
     `<div class="at-opcoes" id="at-opc-${aulaId}" data-k="painel" hidden>` +
