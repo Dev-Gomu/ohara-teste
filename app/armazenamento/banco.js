@@ -53,6 +53,12 @@ export const MIGRACOES = [
   // v7: anos letivos arquivados ("Encerrar o ano"); `disciplina.ano_id` vazio = ano atual
   `CREATE TABLE ano (id INTEGER PRIMARY KEY, nome TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);
    ALTER TABLE disciplina ADD COLUMN ano_id INTEGER;`,
+  // v8: revisão dos cartões no Treino (agenda por cartão e registro das respostas); sem chave estrangeira: o histórico sobrevive ao cartão
+  `CREATE TABLE revisao (
+     cartao_id INTEGER PRIMARY KEY, facilidade REAL NOT NULL, intervalo INTEGER NOT NULL, repeticoes INTEGER NOT NULL,
+     lapsos INTEGER NOT NULL DEFAULT 0, vence_dia TEXT NOT NULL, ultima_em TEXT NOT NULL);
+   CREATE TABLE revisao_log (
+     id INTEGER PRIMARY KEY, cartao_id INTEGER NOT NULL, dia TEXT NOT NULL, resposta TEXT NOT NULL, novo INTEGER NOT NULL DEFAULT 0, criado_em TEXT NOT NULL);`,
 ];
 
 export function versaoDoBanco(db) {

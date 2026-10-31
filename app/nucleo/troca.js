@@ -15,7 +15,7 @@ export const CONFIG_LOCAL = new Set(['foco_ativo', 'ultimo_backup', 'inicio_uso'
  */
 export function conteudoParaImpressao(estado, configLinhas = []) {
   return JSON.stringify({
-    disciplinas: estado.disciplinas, aulas: estado.aulas, arquivos: estado.arquivos, marcadores: estado.marcadores, blocos: estado.blocos, provas: estado.provas, pastas: estado.pastas ?? [], anos: estado.anos ?? [],
+    disciplinas: estado.disciplinas, aulas: estado.aulas, arquivos: estado.arquivos, marcadores: estado.marcadores, blocos: estado.blocos, provas: estado.provas, pastas: estado.pastas ?? [], anos: estado.anos ?? [], revisoes: estado.revisoes ?? [], revisoes_log: estado.revisoes_log ?? [],
     tarefas: estado.tarefas.filter((t) => t.feita_em).map((t) => [t.chave, t.feita_em]),
     cartoes: estado.cartoes.map(({ exportado_em, ...resto }) => resto),
     config: configLinhas.filter(([k]) => !CONFIG_LOCAL.has(k)).sort((a, b) => (a[0] < b[0] ? -1 : 1)),

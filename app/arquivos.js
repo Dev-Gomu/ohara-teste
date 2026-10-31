@@ -1,6 +1,6 @@
 // Gerado por ferramentas/versao.js — não editar.
 self.OHARA = {
- "versao": "eb62c805928e",
+ "versao": "95278b796a74",
  "arquivos": [
   "armazenamento/ankiconnect.js",
   "armazenamento/apkg.js",
@@ -25,6 +25,7 @@ self.OHARA = {
   "estilos/telas/hoje.css",
   "estilos/telas/materia.css",
   "estilos/telas/materias.css",
+  "estilos/telas/treino.css",
   "estilos/toque.css",
   "icones/icone-192.png",
   "icones/icone-512.png",
@@ -57,6 +58,7 @@ self.OHARA = {
   "nucleo/mosaico.js",
   "nucleo/pastas.js",
   "nucleo/planejador.js",
+  "nucleo/revisao.js",
   "nucleo/rotas.js",
   "nucleo/teclado.js",
   "nucleo/texto.js",
@@ -83,7 +85,6 @@ self.OHARA = {
   "ui/telas/area.js",
   "ui/telas/biblioteca.js",
   "ui/telas/flashcards/gerenciar.js",
-  "ui/telas/flashcards/treinar.js",
   "ui/telas/foco.js",
   "ui/telas/hoje.js",
   "ui/telas/materia.js",

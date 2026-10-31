@@ -4,6 +4,8 @@
 const COLUNAS = {
   disciplina: ['id', 'nome', 'cor', 'dificuldade', 'sigla', 'ano_id', 'criado_em', 'excluido_em'],
   ano: ['id', 'nome', 'criado_em', 'excluido_em'],
+  revisao: ['cartao_id', 'facilidade', 'intervalo', 'repeticoes', 'lapsos', 'vence_dia', 'ultima_em'],
+  revisao_log: ['id', 'cartao_id', 'dia', 'resposta', 'novo', 'criado_em'],
   aula: ['id', 'disciplina_id', 'titulo', 'tipo', 'inicio', 'fim', 'anotacoes', 'ics_uid', 'pasta_id', 'criado_em', 'excluido_em'],
   pasta: ['id', 'disciplina_id', 'nome', 'criado_em', 'excluido_em'],
   arquivo: ['id', 'aula_id', 'nome', 'tipo_mime', 'tamanho', 'criado_em', 'excluido_em'],
@@ -13,10 +15,10 @@ const COLUNAS = {
   tarefa: ['id', 'chave', 'tipo', 'disciplina_id', 'aula_id', 'prova_id', 'titulo', 'minutos', 'dia', 'dia_original', 'sem_vaga', 'feita_em', 'criado_em', 'excluido_em'],
   cartao: ['id', 'aula_id', 'pagina', 'frente', 'verso', 'etiquetas', 'tem_imagem', 'guid', 'criado_em', 'atualizado_em', 'exportado_em', 'excluido_em'],
 };
-const CHAVES = { disciplina: 'disciplinas', aula: 'aulas', arquivo: 'arquivos', marcador: 'marcadores', bloco_foco: 'blocos', prova: 'provas', tarefa: 'tarefas', cartao: 'cartoes', pasta: 'pastas', ano: 'anos' };
+const CHAVES = { disciplina: 'disciplinas', aula: 'aulas', arquivo: 'arquivos', marcador: 'marcadores', bloco_foco: 'blocos', prova: 'provas', tarefa: 'tarefas', cartao: 'cartoes', pasta: 'pastas', ano: 'anos', revisao: 'revisoes', revisao_log: 'revisoes_log' };
 
 function ler(db, tabela) {
-  const r = db.exec(`SELECT ${COLUNAS[tabela].join(',')} FROM ${tabela} ORDER BY id`);
+  const r = db.exec(`SELECT ${COLUNAS[tabela].join(',')} FROM ${tabela} ORDER BY ${COLUNAS[tabela][0]}`);
   if (!r.length) return [];
   return r[0].values.map((linha) => Object.fromEntries(COLUNAS[tabela].map((c, i) => [c, linha[i]])));
 }
@@ -29,7 +31,7 @@ export function salvarEstado(db, estado) {
   db.run('BEGIN');
   try {
     db.run('PRAGMA defer_foreign_keys = ON');
-    for (const t of ['ano', 'pasta', 'cartao', 'tarefa', 'prova', 'bloco_foco', 'marcador', 'arquivo', 'aula', 'disciplina']) db.run(`DELETE FROM ${t}`);
+    for (const t of ['revisao_log', 'revisao', 'ano', 'pasta', 'cartao', 'tarefa', 'prova', 'bloco_foco', 'marcador', 'arquivo', 'aula', 'disciplina']) db.run(`DELETE FROM ${t}`);
     for (const [tabela, chave] of Object.entries(CHAVES)) {
       const linhas = estado[chave] ?? [];
       const cols = COLUNAS[tabela];

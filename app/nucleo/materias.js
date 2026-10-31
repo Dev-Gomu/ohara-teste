@@ -9,7 +9,7 @@ export const LIMITE_NOME = 80;
 const COR = /^#[0-9a-fA-F]{6}$/;
 
 export function estadoVazio() {
-  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], tarefas: [], cartoes: [], pastas: [], anos: [] };
+  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], tarefas: [], cartoes: [], pastas: [], anos: [], revisoes: [], revisoes_log: [] };
 }
 
 export function proximoId(lista) {
@@ -124,6 +124,8 @@ export function esvaziarLixeira(estado) {
       blocos: estado.blocos ?? [],
       pastas: ativas(estado.pastas ?? []).filter((p) => vivasD.has(p.disciplina_id)),
       anos: ativas(estado.anos ?? []),
+      revisoes: (estado.revisoes ?? []).filter((r) => cartoesVivos.has(r.cartao_id)),
+      revisoes_log: estado.revisoes_log ?? [],
       provas: ativas(estado.provas ?? []).filter((p) => vivasD.has(p.disciplina_id)),
       tarefas: (estado.tarefas ?? []).filter((t) => !t.excluido_em && vivasD.has(t.disciplina_id) && (t.aula_id == null || aulasVivas.has(t.aula_id))),
     },
