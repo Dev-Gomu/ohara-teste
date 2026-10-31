@@ -28,18 +28,19 @@ export function desenharCartoes(raiz, ctx, { disciplinaId = null } = {}) {
   let filtro = disciplinaId == null ? '' : String(disciplinaId), busca = '', soNovos = false, selId = null, mais = false, ed = null, base = '', sujo = false,
     erro = '', relatorio = null, urls = [], anki = null, enviando = false, destruido = false;
   const liberar = () => { urls.forEach((x) => URL.revokeObjectURL(x)); urls = []; };
+  const semAcento = (t) => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[*=#@]/g, '').toLowerCase();
   const pendente = (c) => !c.exportado_em || c.atualizado_em > c.exportado_em;
 
-  raiz.innerHTML = `<div class="gc"><div class="gc-bar"><label class="gc-busca">${svg('lupa')}<input type="search" data-k="busca" placeholder="Buscar na frente ou no verso" autocomplete="off" aria-label="Buscar cartões"></label>` +
+  raiz.innerHTML = `<div class="gc"><div class="gc-bar"><label class="gc-busca">${svg('lupa')}<input type="search" data-k="busca" placeholder="Buscar em todos os cartões (frente e verso)" autocomplete="off" aria-label="Buscar cartões"></label>` +
     `<span class="gc-esp"></span><button type="button" class="gc-chip gc-novos" data-novos="1" data-k="novos"></button><button type="button" class="gc-btn gc-sec" data-k="mais-btn">${svg('env')}Anki e importar</button></div>` +
     `<div class="gc-chips" data-k="chips"></div><div class="gc-cols" data-k="cols"><div class="gc-lista" data-k="lista" role="listbox" aria-label="Cartões"></div><div class="gc-pan" data-k="pan"></div></div>` +
     `<div class="gc-mais" data-k="mais" hidden></div></div>`;
   const $ = (k) => raiz.querySelector(`[data-k="${k}"]`);
 
   const visiveis = () => {
-    const q = busca.trim().toLowerCase();
-    return cartoesParaExportar(sessao.estado(), { disciplinaId: filtro ? Number(filtro) : null })
-      .filter(({ cartao: c }) => (!soNovos || pendente(c)) && (!q || `${c.frente}\n${c.verso}\n${c.etiquetas}`.toLowerCase().includes(q)))
+    const q = semAcento(busca.trim());   // com busca, vale todas as matérias (o chip de matéria só filtra sem busca)
+    return cartoesParaExportar(sessao.estado(), { disciplinaId: filtro && (!q || disciplinaId != null) ? Number(filtro) : null })
+      .filter(({ cartao: c }) => (!soNovos || pendente(c)) && (!q || q.split(/\s+/).every((p) => semAcento(`${c.frente}\n${c.verso}\n${c.etiquetas}`).includes(p))))
       .sort((a, b) => b.cartao.id - a.cartao.id);
   };
 
@@ -56,8 +57,8 @@ export function desenharCartoes(raiz, ctx, { disciplinaId = null } = {}) {
     if (selId == null && it.length) selId = it[0].cartao.id;
     $('lista').innerHTML = it.map(({ cartao: c, disciplina: d, aula }) => `<button type="button" class="gc-lin${c.id === selId ? ' sel' : ''}" role="option" aria-selected="${c.id === selId}" data-id="${c.id}" title="${escaparHtml(d.nome)} › ${escaparHtml(aula.titulo)}">` +
       `<i class="gc-pt" style="--c:${corCss(d.cor)}"></i><span class="gc-tx"><b>${escaparHtml(resumo(c.frente, 90))}</b><small>${escaparHtml(resumo(c.verso, 120)) || escaparHtml(aula.titulo)}</small></span>` +
-      (!c.exportado_em ? '<span class="gc-tag n">novo</span>' : c.atualizado_em > c.exportado_em ? '<span class="gc-tag">alterado</span>' : '') + '</button>').join('') ||
-      `<p class="gc-vazio">${sessao.estado().cartoes.length ? 'Nenhum cartão com esse filtro.' : 'Nenhum cartão ainda. Crie na Mesa (botão Criar ›) ou importe um texto em “Anki e importar”.'}</p>`;
+      (busca.trim() && disciplinaId == null ? `<span class="gc-tag">${escaparHtml(siglaDaMateria(d))}</span>` : '') + (!c.exportado_em ? '<span class="gc-tag n">novo</span>' : c.atualizado_em > c.exportado_em ? '<span class="gc-tag">alterado</span>' : '') + '</button>').join('') ||
+      `<p class="gc-vazio">${sessao.estado().cartoes.length ? (busca.trim() ? 'Nenhum cartão encontrado para essa busca.' : 'Nenhum cartão com esse filtro.') : 'Nenhum cartão ainda. Crie na Mesa (botão Criar ›) ou importe um texto em “Anki e importar”.'}</p>`;
   }
 
   function desenharPainel() {

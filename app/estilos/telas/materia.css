@@ -17,7 +17,8 @@ html:root .mt-topo h1{margin:0;font-size:24px;font-weight:600;letter-spacing:-.0
 .mt-btn{min-height:40px;padding:0 18px;border:0;border-radius:99px;background:var(--ac);color:var(--prt);font:inherit;font-size:13px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;text-decoration:none;white-space:nowrap}
 .mt-btn.mt-sec{background:var(--cx2);color:var(--tx)}
 .mt-btn.peq{min-height:34px;padding:0 14px}
-.mt-pastas{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.mt-pastas{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;padding-bottom:4px}   /* pastas e anos: uma linha só; passou da borda, rola para o lado */
+.mt-pastas>*{flex:0 0 190px;scroll-snap-align:start}
 .mt-pasta{position:relative;display:flex;flex-direction:column;gap:2px;padding:12px 40px 12px 14px;border:0;border-radius:18px;background:var(--cx);color:var(--tx);font:inherit;text-align:left;cursor:pointer;min-width:0}
 .mt-pasta b{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mt-pasta small{font-size:12px;color:var(--tx2)}
@@ -26,7 +27,7 @@ html:root .mt-topo h1{margin:0;font-size:24px;font-weight:600;letter-spacing:-.0
 .mt-pasta .mt-mais{position:absolute;right:6px;top:6px}
 .mt-pasta.on .mt-mais{color:var(--prt)}
 .mt-nova{background:transparent;border:1.5px dashed var(--bd);color:var(--tx2);justify-content:center;align-items:center;padding:12px 14px}
-.mt-nova-form{flex-direction:row;align-items:center;gap:8px;padding:8px 12px;grid-column:span 2;cursor:default}
+.mt-nova-form{flex-direction:row;align-items:center;gap:8px;padding:8px 12px;flex:0 0 392px!important;cursor:default}
 .mt-nova-form .in{flex:1;min-width:0}
 .mt-cols{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr);gap:18px;align-items:stretch;flex:1 1 auto;min-height:0}
 .mt-col{display:flex;flex-direction:column;min-width:0;min-height:0}
