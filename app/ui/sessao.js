@@ -8,14 +8,15 @@ import { anexarArquivo } from '../nucleo/arquivos.js';
 import { esvaziarLixeira } from '../nucleo/materias.js';
 import { registrarBloco } from '../nucleo/foco.js';
 import { reconciliarPlano, planoMudou, marcarTarefaFeita, lerDisponibilidade, validarDisponibilidade } from '../nucleo/planejador.js';
-import { criarCartao, cartoesParaExportar, marcarExportados } from '../nucleo/cartoes.js';
-import { LIMITE_IMAGEM_BYTES } from '../nucleo/cartoes.js';
-import { chaveImagemCartao } from '../nucleo/materias.js';
+import { criarCartao, alterarCartao, cartoesParaExportar, marcarExportados } from '../nucleo/cartoes.js';
+import { LIMITE_IMAGEM_BYTES, MAX_IMAGENS_LADO } from '../nucleo/cartoes.js';
+import { chaveImagem, imagensDoCartao } from '../nucleo/materias.js';
 import { gerarApkg } from '../armazenamento/apkg.js';
 import { gerarPacote, analisarPacote, aplicarPacote } from '../armazenamento/troca.js';
 import { criarAnkiConnect, enviarCartoes, situacaoDoAnki } from '../armazenamento/ankiconnect.js';
 import { atualizarAnotacao, deveGuardarVersao, textoDoDelta, versoesParaApagar, VERSOES_MAX } from '../nucleo/anotacoes.js';
 import { criarGravador } from '../armazenamento/gravador.js';
+import { descarregarPendencias } from './pendencias.js';
 
 const carregarScript = (src) => new Promise((ok, erro) => {
   const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => erro(new Error('Não foi possível carregar o SQLite.')); document.head.appendChild(s);
@@ -32,8 +33,13 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
   const gravador = criarGravador(armazenamento, () => exportarBanco(db), { aoFalhar, aoGravar: () => ouvintesGravou.forEach((f) => { try { f(); } catch { /* quem ouve não pode atrapalhar a gravação */ } }) });
 
   const dia = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-  addEventListener('pagehide', () => gravador.descarregar());
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') gravador.descarregar(); });
+  // Ao sair, primeiro as telas gravam o que está pendente (ex.: anotação no atraso de 600 ms); só então o gravador descarrega.
+  const aoSair = () => { descarregarPendencias(); gravador.descarregar(); };
+  addEventListener('pagehide', aoSair);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') aoSair(); });
+  // Criar e atualizar cartão esperam gravar imagens: em fila, para dois salvamentos seguidos não usarem o mesmo id nem pisar no estado um do outro.
+  let fila = Promise.resolve();
+  const emFila = (fn) => { const r = fila.then(fn); fila = r.catch(() => {}); return r; };
 
   const lerCfg = (chave) => { const r = db.exec('SELECT valor FROM config WHERE chave = ?', [chave]); return r.length ? r[0].values[0][0] : null; };
   const gravarCfg = (chave, valor) => { db.run('INSERT OR REPLACE INTO config (chave, valor) VALUES (?, ?)', [chave, String(valor)]); gravador.agendar(); };
@@ -55,27 +61,59 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
     },
     disponibilidade: () => lerDisponibilidade(lerCfg('disponibilidade')),
     gravarDisponibilidade(lista) { gravarCfg('disponibilidade', JSON.stringify(validarDisponibilidade(lista))); },
-    /** Cria o cartão; a imagem (File) é guardada antes, para nunca ficar cartão apontando para imagem que não existe. */
-    async criarCartao(aulaId, dados, imagem = null) {
-      if (imagem && (!/^image\/(png|jpeg|webp|gif)$/.test(imagem.type) || imagem.size > LIMITE_IMAGEM_BYTES)) throw new Error('A imagem do cartão deve ser PNG, JPG, WEBP ou GIF de até 5 MB.');
+    /**
+     * Cria o cartão. `imagem`: um File (vai na frente, como antes) ou { frente: [File], verso: [File] } (até MAX_IMAGENS_LADO por lado).
+     * As imagens são guardadas antes, para nunca ficar cartão apontando para imagem que não existe.
+     */
+    criarCartao: (aulaId, dados, imagem = null) => emFila(async () => {
+      const lista = (x) => [].concat(x ?? []).filter(Boolean);
+      const lados = imagem && typeof imagem.type !== 'string' ? { frente: lista(imagem.frente), verso: lista(imagem.verso) } : { frente: lista(imagem), verso: [] };
+      for (const f of [...lados.frente, ...lados.verso]) if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type) || f.size > LIMITE_IMAGEM_BYTES) throw new Error('A imagem do cartão deve ser PNG, JPG, WEBP ou GIF de até 5 MB.');
+      if (lados.frente.length > MAX_IMAGENS_LADO || lados.verso.length > MAX_IMAGENS_LADO) throw new Error(`Cada lado do cartão aceita até ${MAX_IMAGENS_LADO} imagens.`);
       const id = estado.cartoes.reduce((m, c) => Math.max(m, c.id), 0) + 1;
-      const novo = criarCartao(estado, aulaId, { ...dados, temImagem: !!imagem }, new Date().toISOString(), globalThis.crypto.randomUUID()).estado;
-      if (imagem) await armazenamento.gravarArquivo(chaveImagemCartao(id), imagem);
+      const novo = criarCartao(estado, aulaId, { ...dados, temImagem: lados.frente.length, temImagemVerso: lados.verso.length }, new Date().toISOString(), globalThis.crypto.randomUUID()).estado;
+      for (const lado of ['frente', 'verso']) for (const [j, f] of lados[lado].entries()) await armazenamento.gravarArquivo(chaveImagem(id, lado, j), f);
       salvarEstado(db, novo); estado = novo; gravador.agendar();
-    },
-    async trocarImagemCartao(id, imagem) {
-      if (!/^image\/(png|jpeg|webp|gif)$/.test(imagem.type) || imagem.size > LIMITE_IMAGEM_BYTES) throw new Error('A imagem do cartão deve ser PNG, JPG, WEBP ou GIF de até 5 MB.');
-      await armazenamento.gravarArquivo(chaveImagemCartao(id), imagem);
-    },
-    lerImagemCartao: (id) => armazenamento.lerArquivo(chaveImagemCartao(id)),
-    removerImagemCartao: (id) => armazenamento.apagarArquivo(chaveImagemCartao(id)),
-    /** Imagens dos cartões (Map id → { bytes, extensao }), para o .apkg e para o AnkiConnect. */
+    }),
+    /**
+     * Atualiza o texto de um cartão salvo e, se `imagens` ({ frente: [File], verso: [File] }) vier, troca TODAS as suas imagens por essas.
+     * Ordem de segurança: valida tudo, grava as imagens novas, grava o cartão e só então apaga as que sobraram.
+     */
+    atualizarCartao: (id, dados, imagens = null) => emFila(async () => {
+      const atual = estado.cartoes.find((c) => c.id === id && !c.excluido_em);
+      if (!atual) throw new Error('Cartão não encontrado.');
+      const lados = imagens ? { frente: [].concat(imagens.frente ?? []).filter(Boolean), verso: [].concat(imagens.verso ?? []).filter(Boolean) } : null;
+      if (lados) {
+        for (const f of [...lados.frente, ...lados.verso]) if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type) || f.size > LIMITE_IMAGEM_BYTES) throw new Error('A imagem do cartão deve ser PNG, JPG, WEBP ou GIF de até 5 MB.');
+        if (lados.frente.length > MAX_IMAGENS_LADO || lados.verso.length > MAX_IMAGENS_LADO) throw new Error(`Cada lado do cartão aceita até ${MAX_IMAGENS_LADO} imagens.`);
+      }
+      const novo = alterarCartao(estado, id, { ...dados, ...(lados ? { temImagem: lados.frente.length, temImagemVerso: lados.verso.length } : {}) }, new Date().toISOString());
+      // As imagens novas caem nas mesmas chaves das antigas: guarda as antigas para devolvê-las se algo falhar antes de o cartão ser salvo.
+      const antigas = [];
+      if (lados) { const n = imagensDoCartao(atual); for (const lado of ['frente', 'verso']) for (let j = 0; j < Math.min(n[lado], lados[lado].length); j++) antigas.push([chaveImagem(id, lado, j), await armazenamento.lerArquivo(chaveImagem(id, lado, j))]); }
+      try {
+        if (lados) for (const lado of ['frente', 'verso']) for (const [j, f] of lados[lado].entries()) await armazenamento.gravarArquivo(chaveImagem(id, lado, j), f);
+        salvarEstado(db, novo);
+      } catch (e) {
+        for (const [k, b] of antigas) if (b) { try { await armazenamento.gravarArquivo(k, b); } catch { /* melhor esforço */ } }
+        throw e;
+      }
+      estado = novo; gravador.agendar();
+      if (lados) { const antes = imagensDoCartao(atual); for (const lado of ['frente', 'verso']) for (let j = lados[lado].length; j < antes[lado]; j++) await armazenamento.apagarArquivo(chaveImagem(id, lado, j)); }
+    }),
+    /** Uma imagem do cartão (`lado` 'frente' ou 'verso', posição `j`), ou null. */
+    lerImagemLado: (id, lado, j = 0) => armazenamento.lerArquivo(chaveImagem(id, lado, j)),
+    lerImagemCartao: (id) => armazenamento.lerArquivo(chaveImagem(id, 'frente', 0)),
+    /** Imagens dos cartões (Map id → { frente: [{ bytes, extensao }], verso: [...] }), para o .apkg e para o AnkiConnect. */
     async imagensDosCartoes(itens) {
-      const imagens = new Map();
+      const imagens = new Map(), EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' };
       for (const { cartao } of itens) {
-        if (!cartao.tem_imagem) continue;
-        const b = await armazenamento.lerArquivo(chaveImagemCartao(cartao.id)); if (!b) continue;
-        imagens.set(cartao.id, { bytes: new Uint8Array(await b.arrayBuffer()), extensao: ({ 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' })[b.type] ?? 'png' });
+        const entrada = { frente: [], verso: [] }, n = imagensDoCartao(cartao);
+        for (const lado of ['frente', 'verso']) for (let j = 0; j < n[lado]; j++) {
+          const b = await armazenamento.lerArquivo(chaveImagem(cartao.id, lado, j)); if (!b) continue;
+          entrada[lado].push({ bytes: new Uint8Array(await b.arrayBuffer()), extensao: EXT[b.type] ?? 'png' });
+        }
+        if (entrada.frente.length || entrada.verso.length) imagens.set(cartao.id, entrada);
       }
       return imagens;
     },
@@ -95,9 +133,10 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
     },
     situacaoDoAnki: () => situacaoDoAnki(criarAnkiConnect()),
     /** Troca entre aparelhos: gerar o pacote, ler o pacote do outro (sem alterar nada) e aplicar a decisão. */
-    async gerarPacoteTroca(completo) { await gravador.descarregar(); return gerarPacote({ db, armazenamento, completo }); },
-    async analisarPacoteTroca(zip) { await gravador.descarregar(); return analisarPacote({ SQL, db, armazenamento, zip }); },
+    async gerarPacoteTroca(completo) { descarregarPendencias(); await gravador.descarregar(); return gerarPacote({ db, armazenamento, completo }); },
+    async analisarPacoteTroca(zip) { descarregarPendencias(); await gravador.descarregar(); return analisarPacote({ SQL, db, armazenamento, zip }); },
     async aplicarPacoteTroca(zip, analise, escolha) {
+      descarregarPendencias();
       await gravador.descarregar();
       const r = await aplicarPacote({ SQL, db, armazenamento, zip, analise, escolha });
       if (r.db) { db = r.db; estado = carregarEstado(db); }
@@ -119,6 +158,7 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
     gravarConfig: gravarCfg,
     /** Gera o .zip e anota a data do último backup. Devolve { bytes, nome }. */
     async fazerBackup(completo) {
+      descarregarPendencias();
       const agora = new Date().toISOString();
       const r = await fazerBackup({ db, armazenamento, completo, agora });
       this.gravarConfig('ultimo_backup', agora);
@@ -128,6 +168,7 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
     resumoDoBackup: (zip) => lerBackup(SQL, zip).resumo,
     /** Troca TODOS os dados pelos do backup (guardando uma cópia dos atuais). */
     async restaurar(zip) {
+      descarregarPendencias();
       await gravador.descarregar();
       db = await restaurarBackup({ SQL, armazenamento, dbAtual: db, zip });
       estado = carregarEstado(db);

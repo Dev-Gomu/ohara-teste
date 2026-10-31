@@ -1,7 +1,7 @@
 // Núcleo (regras puras, sem I/O): cartões de estudo (flashcards). Ligados a uma aula (e, por ela, à matéria) e, se quiser, à
 // página do slide. A revisão é no Anki; aqui só se produz e se exporta. O `guid` nunca muda: é o que o Anki usa para saber
 // que reenviar um cartão é atualizar, não duplicar. Exclusão vai para a lixeira.
-import { ativas } from './materias.js';
+import { ativas, imagensDoCartao } from './materias.js';
 
 export const LIMITE_TEXTO = 2000;
 export const LIMITE_IMAGEM_BYTES = 5 * 1048576;
@@ -25,22 +25,30 @@ function validar({ frente, verso }) {
 const proximoId = (lista) => lista.reduce((m, x) => Math.max(m, x.id), 0) + 1;
 
 /** `marcadorId`: o "marcado na aula" que virou cartão; ele sai da lista de marcados. */
-export function criarCartao(estado, aulaId, { frente, verso, pagina = null, etiquetas = '', temImagem = false, marcadorId = null }, agora, guid) {
+/** Máximo de imagens em cada lado do cartão. */
+export const MAX_IMAGENS_LADO = 6;
+/** `tem_imagem` guarda frente + 100 × verso (quantas imagens em cada lado); o antigo 1 = uma imagem na frente. */
+export const contarImagens = imagensDoCartao;
+export const temImagemNoLado = (c, lado) => imagensDoCartao(c)[lado === 'verso' ? 'verso' : 'frente'] > 0;
+const quantas = (v) => (typeof v === 'number' ? Math.min(99, Math.max(0, Math.floor(v))) : v ? 1 : 0);
+const codificarImagens = (frente, verso) => quantas(frente) + 100 * quantas(verso);
+
+export function criarCartao(estado, aulaId, { frente, verso, pagina = null, etiquetas = '', temImagem = false, temImagemVerso = false, marcadorId = null }, agora, guid) {
   if (!ativas(estado.aulas).some((a) => a.id === aulaId)) throw new Error('A aula não existe.');
   const base = validar({ frente, verso });
   const id = proximoId(estado.cartoes);
   const cartao = { id, aula_id: aulaId, pagina: Number.isInteger(pagina) && pagina > 0 ? pagina : null, ...base, etiquetas: normalizarEtiquetas(etiquetas),
-    tem_imagem: temImagem ? 1 : 0, guid: guid ?? `ohara-${id}-${Date.parse(agora) || 0}`, criado_em: agora, atualizado_em: agora, exportado_em: null, excluido_em: null };
+    tem_imagem: codificarImagens(temImagem, temImagemVerso), guid: guid ?? `ohara-${id}-${Date.parse(agora) || 0}`, criado_em: agora, atualizado_em: agora, exportado_em: null, excluido_em: null };
   const marcadores = marcadorId == null ? estado.marcadores : estado.marcadores.map((m) => (m.id === marcadorId && !m.excluido_em ? { ...m, excluido_em: agora } : m));
   return { estado: { ...estado, cartoes: [...estado.cartoes, cartao], marcadores }, cartao };
 }
 
-export function alterarCartao(estado, id, { frente, verso, etiquetas, pagina, temImagem }, agora) {
+export function alterarCartao(estado, id, { frente, verso, etiquetas, pagina, temImagem, temImagemVerso }, agora) {
   const atual = estado.cartoes.find((c) => c.id === id && !c.excluido_em);
   if (!atual) throw new Error('Cartão não encontrado.');
   const base = validar({ frente: frente ?? atual.frente, verso: verso ?? atual.verso });
   const novo = { ...atual, ...base, etiquetas: etiquetas === undefined ? atual.etiquetas : normalizarEtiquetas(etiquetas),
-    pagina: pagina === undefined ? atual.pagina : (Number.isInteger(pagina) && pagina > 0 ? pagina : null), tem_imagem: temImagem === undefined ? atual.tem_imagem : (temImagem ? 1 : 0), atualizado_em: agora };
+    pagina: pagina === undefined ? atual.pagina : (Number.isInteger(pagina) && pagina > 0 ? pagina : null), tem_imagem: codificarImagens(temImagem === undefined ? imagensDoCartao(atual).frente : temImagem, temImagemVerso === undefined ? imagensDoCartao(atual).verso : temImagemVerso), atualizado_em: agora };
   return { ...estado, cartoes: estado.cartoes.map((c) => (c.id === id ? novo : c)) };
 }
 

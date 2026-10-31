@@ -2,7 +2,7 @@
 // o mesmo que o genanki escreve e o Anki 26 importa) dentro de um .zip, mais as imagens. Reenviar o mesmo cartão atualiza em vez de
 // duplicar porque o `guid` e o tipo de nota são estáveis. Estrutura conferida contra os .apkg de teste da Etapa 0.
 import { zipSync, strToU8 } from '../vendor/fflate.mjs';
-import { CAMPOS_NOTA, CSS_NOTA, MODELO_FRENTE, MODELO_VERSO, NOME_TIPO_NOTA, camposDaNota, nomeDoBaralho, nomeImagemAnki } from '../nucleo/anki.js';
+import { CAMPOS_NOTA, CSS_NOTA, MODELO_FRENTE, MODELO_VERSO, NOME_TIPO_NOTA, camposDaNota, listaDeImagens, nomeDoBaralho, nomeImagemAnki } from '../nucleo/anki.js';
 
 export const ID_TIPO_NOTA = 1607392319;           // "Ohara básico" (o mesmo dos .apkg de teste da Etapa 0)
 const SEP = '\x1f';
@@ -55,10 +55,9 @@ export async function gerarApkg(SQL, itens, imagens = new Map(), agoraMs = Date.
   for (const { cartao: c, aula, disciplina } of itens) {
     const nome = nomeDoBaralho(disciplina, aula), did = idDoBaralho(nome);
     baralhos.set(did, nome);
-    let arq = null;
-    const img = imagens.get(c.id);
-    if (c.tem_imagem && img) { arq = nomeImagemAnki(c.id, img.extensao); const i = Object.keys(media).length; media[i] = arq; arquivos[String(i)] = img.bytes; }
-    const { frente, verso, origem } = camposDaNota({ cartao: c, aula, disciplina }, arq);
+    const nomes = { frente: [], verso: [] }, lista = listaDeImagens(imagens.get(c.id));
+    for (const lado of ['frente', 'verso']) lista[lado].forEach((im, j) => { const arq = nomeImagemAnki(c.id, im.extensao, lado, j), i = Object.keys(media).length; media[i] = arq; arquivos[String(i)] = im.bytes; nomes[lado].push(arq); });
+    const { frente, verso, origem } = camposDaNota({ cartao: c, aula, disciplina }, nomes.frente, nomes.verso);
     let nid = Math.floor(Date.parse(c.criado_em) / 1000) * 1000 + (c.id % 500) * 2; while (usados.has(nid)) nid += 2; usados.add(nid);
     const sfld = semHtml(frente);
     stmtN.run([nid, c.guid, ID_TIPO_NOTA, Math.floor(Date.parse(c.atualizado_em) / 1000), -1, c.etiquetas ? ` ${c.etiquetas} ` : '', [frente, verso, origem].join(SEP), sfld, await csum(sfld), 0, '']);

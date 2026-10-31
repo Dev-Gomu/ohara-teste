@@ -19,7 +19,7 @@ export function desenharAjustes(raiz, ctx) {
     const { materias, aulas, arquivos, cartoes, provas } = itensDaLixeira(estado);
     const total = contarLixeira(estado);
     const vazia = !total.disciplinas && !total.aulas && !total.arquivos && !total.cartoes && !total.provas;
-    raiz.innerHTML = '<h1>Ajustes</h1><p class="sub">Tema, lixeira e armazenamento.</p>' +
+    raiz.innerHTML = '<h1>Configs</h1><p class="sub">Tema, lixeira e armazenamento.</p>' +
       `<div class="card bloco"><h2>Aplicativo</h2><p class="sub" style="margin-bottom:10px">Se uma novidade não aparecer, baixe a versão mais recente (precisa de internet). Seus dados não são apagados.</p><div class="acoes"><button class="btn peq" type="button" data-a="atualizar-app">Atualizar o app</button></div></div>` +
       `<div class="card bloco"><h2>Tema</h2><div class="acoes">` +
       ['claro', 'escuro'].map((t) => `<button class="btn peq ${document.documentElement.dataset.tema === t ? '' : 'sec'}" type="button" data-a="tema" data-tema="${t}">${t === 'claro' ? 'Claro' : 'Escuro'}</button>`).join('') +
@@ -138,7 +138,7 @@ export function desenharAjustes(raiz, ctx) {
       const e = s?.estimate ? await s.estimate() : {};
       armaz = { uso: formatarBytes(e.usage), cota: formatarBytes(e.quota), persistente: s?.persisted ? await s.persisted() : false, pode: !!s?.persist };
     } catch { armaz = { uso: '—', cota: '—', persistente: false, pode: false }; }
-    if (raiz.isConnected && raiz.querySelector('h1')?.textContent === 'Ajustes') desenhar();
+    if (raiz.isConnected && raiz.querySelector('h1')?.textContent === 'Configs') desenhar();
   }
 
   const restaurar = (nome, fazer) => {
@@ -243,6 +243,6 @@ export function desenharAjustes(raiz, ctx) {
   medir();
   if (ctx.sincronia) {
     ctx.sincronia.preparar();
-    const parar = ctx.sincronia.ouvir(() => { if (raiz.isConnected && raiz.querySelector('h1')?.textContent === 'Ajustes') desenhar(); else parar(); });
+    const parar = ctx.sincronia.ouvir(() => { if (raiz.isConnected && raiz.querySelector('h1')?.textContent === 'Configs') desenhar(); else parar(); });
   }
 }

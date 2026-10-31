@@ -3,7 +3,7 @@
 import { carregarEstado } from './repositorio.js';
 import { fazerBackup, lerBackup, restaurarBackup } from './backup.js';
 import { conteudoParaImpressao, decidirTroca, estadoVazio, arquivosQueFaltam, marcosDepoisDaTroca, nomeDoAparelho, unirMarcos } from '../nucleo/troca.js';
-import { chaveImagemCartao } from '../nucleo/materias.js';
+import { chaveImagemCartao, chavesImagensCartao } from '../nucleo/materias.js';
 
 export const CHAVE_TROCA = 'troca';
 
@@ -47,7 +47,7 @@ export async function analisarPacote({ SQL, db, armazenamento, zip, userAgent })
   return {
     ...decisao, local, doPacote, lido,
     origem: lido.troca?.aparelho?.nome ?? null, geradoEm: lido.troca?.gerado_em ?? lido.info.criado_em,
-    resumo: lido.resumo, faltam: arquivosQueFaltam(carregarEstado(lido.db), presentes, chaveImagemCartao).length,
+    resumo: lido.resumo, faltam: arquivosQueFaltam(carregarEstado(lido.db), presentes, chaveImagemCartao, chavesImagensCartao).length,
   };
 }
 

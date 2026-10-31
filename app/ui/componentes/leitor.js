@@ -1,6 +1,7 @@
 // Leitor de PDF e imagem (PDF.js): rolagem contínua, zoom por botões e pinça de dois dedos só dentro do leitor,
 // texto selecionável, página atual. Só mexe no próprio DOM; quem usa recebe `aoMudarPagina(n, total)`.
 import * as pref from '../preferencias.js';
+import { ehToqueDuplo, prenderZoom, zoomPelaRoda, alternarZoomDuplo } from '../../nucleo/gestos.js';
 let pdfjs = null;
 async function carregarPdfjs() {
   if (!pdfjs) {
@@ -10,6 +11,24 @@ async function carregarPdfjs() {
   return pdfjs;
 }
 
+/**
+ * A capa de um arquivo: a 1ª página do PDF (ou a própria imagem) como endereço de imagem para `<img>`.
+ * Devolve { url, paginas } ou null se não der para ler; quem chama deve soltar `url` com URL.revokeObjectURL.
+ */
+export async function capaDoArquivo(tipo, blob, largura = 720) {
+  try {
+    if (tipo === 'imagem') return { url: URL.createObjectURL(blob), paginas: 1 };
+    const lib = await carregarPdfjs(), doc = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise;
+    try {
+      const page = await doc.getPage(1), v0 = page.getViewport({ scale: 1 }), dpr = Math.min(2, devicePixelRatio || 1), vp = page.getViewport({ scale: (largura / v0.width) * dpr });
+      const c = document.createElement('canvas'); c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+      await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      const imagem = await new Promise((ok) => c.toBlob(ok, 'image/jpeg', 0.85));
+      return imagem ? { url: URL.createObjectURL(imagem), paginas: doc.numPages } : null;
+    } finally { doc.destroy(); }
+  } catch { return null; }
+}
+
 export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () => {} } = {}) {
   let pdf = null, imagem = null, zoom = 1, baseW = 0, baseH = 0, pagina = 1, obs = null, geracao = 0, modo = 'pagina';
   if (pref.ler('ohara.leitor') === 'continuo') modo = 'continuo';
@@ -17,7 +36,7 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
   const conteudo = document.createElement('div');
   raiz.appendChild(conteudo);
 
-  const limita = (z) => Math.min(3, Math.max(0.5, z));
+  const limita = prenderZoom;
   const larguraBase = () => Math.max(120, raiz.clientWidth - 20);
   const alturaBase = () => Math.max(120, raiz.clientHeight - 20);
   // modo 'pagina': o slide inteiro cabe na tela (largura e altura); 'continuo': ajusta só à largura e rola.
@@ -84,7 +103,7 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
   // Ao mudar o tamanho do painel (divisória, giro do tablet), o slide é redesenhado para continuar inteiro na tela.
   let refaz = null;
   new ResizeObserver(() => {
-    if (!pdf || Math.abs(raiz.clientWidth - medido[0]) < 24 && Math.abs(raiz.clientHeight - medido[1]) < 24) return;
+    if (!pdf || !raiz.clientWidth || Math.abs(raiz.clientWidth - medido[0]) < 24 && Math.abs(raiz.clientHeight - medido[1]) < 24) return;   // bloco escondido (largura 0): não redesenha
     clearTimeout(refaz); refaz = setTimeout(async () => { const n = pagina; await montarPdf(); const d = conteudo.querySelector(`.pg[data-n="${n}"]`); if (d) raiz.scrollTop = d.offsetTop - conteudo.offsetTop - 8; }, 150);
   }).observe(raiz);
   // Deslizar com um dedo para o lado passa de slide (só com o slide inteiro à vista).
@@ -116,6 +135,21 @@ export function criarLeitor(raiz, { aoMudarPagina = () => {}, aoMudarZoom = () =
     if (Math.abs(p.f - 1) > 0.02) definirZoom(p.z0 * p.f, p);
   };
   raiz.addEventListener('touchend', fimPinca); raiz.addEventListener('touchcancel', fimPinca);
+
+  // Dois toques seguidos alternam 100% e 200% no ponto tocado (se não estiver selecionando texto); Ctrl + roda dá zoom no ponto do mouse.
+  let toqueIni = null, ultimoToque = null;
+  raiz.addEventListener('touchstart', (e) => { toqueIni = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; if (e.touches.length > 1) ultimoToque = null; }, { passive: true });
+  raiz.addEventListener('touchend', (e) => {
+    if (!toqueIni || e.touches.length || e.changedTouches.length !== 1 || (!pdf && !imagem)) return;
+    const t = e.changedTouches[0], moveu = Math.hypot(t.clientX - toqueIni.x, t.clientY - toqueIni.y) > 10; toqueIni = null;
+    if (moveu) { ultimoToque = null; return; }
+    const agora = { t: performance.now(), x: t.clientX, y: t.clientY };
+    if (ehToqueDuplo(ultimoToque, agora) && !String(getSelection?.() ?? '')) { ultimoToque = null; definirZoom(alternarZoomDuplo(zoom), { cx: agora.x, cy: agora.y }); } else ultimoToque = agora;
+  });
+  raiz.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey || (!pdf && !imagem)) return;
+    e.preventDefault(); definirZoom(zoomPelaRoda(zoom, e.deltaY), { cx: e.clientX, cy: e.clientY });
+  }, { passive: false });
 
   const api = {
     /** Abre um arquivo anexado. `tipo` é 'pdf' ou 'imagem'; `blob` o conteúdo. Lança Error com mensagem para o usuário. */

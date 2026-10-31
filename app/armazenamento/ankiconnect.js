@@ -2,7 +2,7 @@
 // endereço é 127.0.0.1:8765 e a origem do app precisa estar liberada na configuração do complemento. No tablet o caminho é o .apkg.
 // O mesmo cartão é reconhecido por uma etiqueta `ohara_<guid>`, então enviar de novo atualiza em vez de duplicar. Notas que já
 // entraram por .apkg (sem a etiqueta) são achadas pela frente e passam a ter a etiqueta.
-import { CAMPOS_NOTA, CSS_NOTA, MODELO_FRENTE, MODELO_VERSO, NOME_TIPO_NOTA, camposDaNota, etiquetaDoCartao, nomeDoBaralho, nomeImagemAnki } from '../nucleo/anki.js';
+import { CAMPOS_NOTA, CSS_NOTA, MODELO_FRENTE, MODELO_VERSO, NOME_TIPO_NOTA, camposDaNota, etiquetaDoCartao, nomeDoBaralho, nomeImagemAnki, listaDeImagens } from '../nucleo/anki.js';
 
 export const ENDERECO_PADRAO = 'http://127.0.0.1:8765';
 const SEM_ANKI = 'Não consegui falar com o Anki. Abra o Anki no computador (com o complemento AnkiConnect instalado e este endereço liberado) e tente de novo.';
@@ -61,9 +61,9 @@ export async function enviarCartoes(ac, itens, imagens = new Map()) {
     const c = item.cartao, deck = nomeDoBaralho(item.disciplina, item.aula), marca = etiquetaDoCartao(c.guid);
     const desejadas = [marca, ...(c.etiquetas ? c.etiquetas.split(' ') : [])];
     try {
-      let arquivo = null; const img = imagens.get(c.id);
-      if (c.tem_imagem && img) { arquivo = nomeImagemAnki(c.id, img.extensao); await ac.invocar('storeMediaFile', { filename: arquivo, data: bytesParaBase64(img.bytes) }); }
-      const { frente, verso, origem } = camposDaNota(item, arquivo), campos = { Frente: frente, Verso: verso, Origem: origem };
+      const nomes = { frente: [], verso: [] }, lista = listaDeImagens(imagens.get(c.id));
+      for (const lado of ['frente', 'verso']) for (const [j, im] of lista[lado].entries()) { const arq = nomeImagemAnki(c.id, im.extensao, lado, j); await ac.invocar('storeMediaFile', { filename: arq, data: bytesParaBase64(im.bytes) }); nomes[lado].push(arq); }
+      const { frente, verso, origem } = camposDaNota(item, nomes.frente, nomes.verso), campos = { Frente: frente, Verso: verso, Origem: origem };
       const atual = existentes.get(marca.toLowerCase());
       if (atual) { await atualizarNota(ac, atual, campos, deck, desejadas); r.atualizados++; }
       else {

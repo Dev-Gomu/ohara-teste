@@ -26,7 +26,7 @@ export function desenharPlanejar(raiz, ctx) {
     const dias = Array.from({ length: 7 }, (_, i) => somarDias(h, i)), disp = sessao.disponibilidade();
     const doDia = (d) => estado.tarefas.filter((t) => !t.excluido_em && (t.feita_em ? t.feita_em.slice(0, 10) === d : t.dia === d));
     const semVaga = estado.tarefas.filter((t) => !t.feita_em && t.sem_vaga).length;
-    raiz.innerHTML = `<h1>Planejar</h1><p class="sub">O plano se refaz sozinho: o que atrasa passa para os próximos dias, sempre antes da prova.</p>` +
+    raiz.innerHTML = `<h1>Agenda</h1><p class="sub">O plano se refaz sozinho: o que atrasa passa para os próximos dias, sempre antes da prova.</p>` +
       (semVaga ? `<div class="aviso ur"><span>${semVaga} ${semVaga === 1 ? 'bloco não cabe' : 'blocos não cabem'} nas horas disponíveis. Aumente o tempo livre abaixo ou fale com o professor sobre a data.</span></div>` : '') +
       `<div class="card bloco"><h2>Próximos 7 dias</h2>${(() => { let primeiro = true; return dias.map((d, i) => { const ts = doDia(d), pend = ts.filter((t) => !t.feita_em).length, titulo = `${escaparHtml(diaComSemana(d))}${d === h ? ' · hoje' : ''}`;
         const corpo = ts.length ? ts.map((t) => { const eh = primeiro && !t.feita_em; if (eh) primeiro = false; return linhaTarefa(t, porId, eh); }).join('') : '<p class="sub" style="margin:4px 0 10px">Nada planejado.</p>';
@@ -39,7 +39,7 @@ export function desenharPlanejar(raiz, ctx) {
       `<div class="card bloco"><h2>Agenda (.ics)</h2><p class="sub">Importe as aulas do Google Agenda (Configurações › Importar e exportar › Exportar) ou leve o plano para ele. Importar de novo não duplica.</p>` +
       `<div class="acoes"><label class="btn peq sec arquivo">Importar aulas (.ics)<input type="file" id="ics" accept=".ics,text/calendar" hidden></label><button class="btn peq sec" type="button" data-a="exportar">Exportar plano (.ics)</button></div>` + painelImportacao() + (relatorio ? `<p class="sub" style="margin-top:10px">${escaparHtml(relatorio)}</p>` : '') + '</div>' +
       (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '');
-    document.title = 'Planejar · Ohara';
+    document.title = 'Agenda · Ohara';
   }
 
   function linhaTarefa(t, porId, destaque = false) {

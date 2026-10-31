@@ -46,6 +46,10 @@ export const MIGRACOES = [
      criado_em TEXT NOT NULL, atualizado_em TEXT NOT NULL, exportado_em TEXT, excluido_em TEXT);`,
   // v5: sigla de até 4 letras da matéria (vazia = as 3 primeiras letras do nome)
   `ALTER TABLE disciplina ADD COLUMN sigla TEXT;`,
+  // v6: pastas da matéria (ex.: bimestres); a aula guarda a pasta em `pasta_id` (sem chave estrangeira: excluir a pasta não mexe nas aulas)
+  `CREATE TABLE pasta (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, nome TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);
+   ALTER TABLE aula ADD COLUMN pasta_id INTEGER;`,
 ];
 
 export function versaoDoBanco(db) {

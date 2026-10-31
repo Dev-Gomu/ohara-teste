@@ -9,7 +9,7 @@ export const LIMITE_NOME = 80;
 const COR = /^#[0-9a-fA-F]{6}$/;
 
 export function estadoVazio() {
-  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], tarefas: [], cartoes: [] };
+  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], tarefas: [], cartoes: [], pastas: [] };
 }
 
 export function proximoId(lista) {
@@ -122,18 +122,31 @@ export function esvaziarLixeira(estado) {
       disciplinas, aulas, arquivos, cartoes,
       marcadores: ativas(estado.marcadores ?? []).filter((m) => aulasVivas.has(m.aula_id)),
       blocos: estado.blocos ?? [],
+      pastas: ativas(estado.pastas ?? []).filter((p) => vivasD.has(p.disciplina_id)),
       provas: ativas(estado.provas ?? []).filter((p) => vivasD.has(p.disciplina_id)),
       tarefas: (estado.tarefas ?? []).filter((t) => !t.excluido_em && vivasD.has(t.disciplina_id) && (t.aula_id == null || aulasVivas.has(t.aula_id))),
     },
     apagados,
     // chaves dos conteúdos guardados à parte (arquivos anexados e imagens de cartões) que deixam de existir
     arquivosApagados: [...arquivosAntes.filter((a) => !vivos.has(a.id)).map((a) => a.id),
-      ...cartoesAntes.filter((c) => c.tem_imagem && !cartoesVivos.has(c.id)).map((c) => chaveImagemCartao(c.id))],
+      ...cartoesAntes.filter((c) => !cartoesVivos.has(c.id)).flatMap(chavesImagensCartao)],
   };
 }
 
 /** Chave, no armazenamento de conteúdos, da imagem de um cartão (fica acima da faixa dos ids de arquivos anexados). */
 export const chaveImagemCartao = (cartaoId) => 1000000 + cartaoId;
+/** Chave de uma imagem do cartão: `lado` 'frente' ou 'verso', `j` = posição (0 a 19). A 1ª da frente é a chave antiga, então nada se perde. */
+export function chaveImagem(cartaoId, lado, j = 0) {
+  if (lado === 'frente') return j === 0 ? 1000000 + cartaoId : 3000000 + cartaoId * 20 + j;
+  return j === 0 ? 2000000 + cartaoId : 5000000 + cartaoId * 20 + j;
+}
+/** Quantas imagens o cartão tem em cada lado. `tem_imagem` guarda frente + 100 × verso (o antigo 0/1 continua valendo: 1 imagem na frente). */
+export function imagensDoCartao(c) { const n = Math.max(0, Math.floor(Number(c.tem_imagem) || 0)); return { frente: n % 100, verso: Math.floor(n / 100) }; }
+/** Todas as chaves de imagem de um cartão (para apagar, conferir se faltam e enviar). */
+export function chavesImagensCartao(c) {
+  const { frente, verso } = imagensDoCartao(c);
+  return [...Array.from({ length: frente }, (_, j) => chaveImagem(c.id, 'frente', j)), ...Array.from({ length: verso }, (_, j) => chaveImagem(c.id, 'verso', j))];
+}
 
 // Cores oferecidas ao criar uma matéria. Na tela, cada uma vira a variável do tema (--m1..--m5), que muda no escuro.
 export const PALETA = ['#9a5a5e', '#7a8794', '#8a8f78', '#5e7f78', '#8b7aa0', '#5f7fa6', '#a06a8a', '#a8924a'];

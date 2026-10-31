@@ -7,7 +7,7 @@ import { diaComSemana, MESES_CURTOS } from '../../nucleo/datas.js';
 import { tarefasDoDia } from '../../nucleo/planejador.js';
 import { sequencia } from '../../nucleo/estudo.js';
 import { formatarRelogio, restanteMs } from '../../nucleo/foco.js';
-import { janelaDeSemanas, proximasProvasPorData, agendaCompacta, posicaoDoMarcador } from '../../nucleo/hoje.js';
+import { janelaDeSemanas, proximasProvasPorData, agendaCompacta, posicaoDoMarcador, proximoDiaComAula } from '../../nucleo/hoje.js';
 import { diaDe } from '../foco_servico.js';
 
 const dois = (n) => String(n).padStart(2, '0');
@@ -61,17 +61,19 @@ export function desenharHoje(raiz, ctx) {
     const bloco = (d, k) => `<div class="hbl${k === 0 ? ' px' : ''}" aria-label="${d.n} de ${MESES_CURTOS[d.mes - 1]}, ${d.texto}"><div class="hl1"><span class="hd"><b>${dois(d.n)}</b><small>${MESES_CURTOS[d.mes - 1]}</small></span><span class="hr" title="${d.texto}">${d.em === 0 ? 'hoje' : `${d.em}d`}</span></div><div class="hsg">${d.disciplinas.map((id) => { const m = porId.get(id); return `<span class="sg"><i style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></i>${escaparHtml(m ? siglaDaMateria(m) : '?')}</span>`; }).join('')}</div></div>`;
     const provas = `<div class="card hprov"><div class="hph"><h2>Próximas provas${total ? ` <span class="cont">${total}</span>` : ''}</h2>${total > datas.length ? `<a class="mais" href="#planejar">Ver todas · ${total} dias ›</a>` : ''}</div>` + (datas.length
       ? `<div class="htiles">${datas.map(bloco).join('')}</div>`
-      : '<div class="hvazio">Nenhuma prova marcada. Cadastre em&nbsp;<a href="#planejar"><b>Planejar</b></a>.</div>') + '</div>';
+      : '<div class="hvazio">Nenhuma prova marcada. Cadastre em&nbsp;<a href="#planejar"><b>Agenda</b></a>.</div>') + '</div>';
 
     // agenda compacta
-    const ag = agendaCompacta(estado, hoje, agoraMin), nAulas = ag.itens.filter((x) => x.tipo === 'aula').length;
+    let diaAg = hoje, ag = agendaCompacta(estado, hoje, agoraMin);
+    if (!ag.itens.length) { const prox = proximoDiaComAula(estado, hoje); if (prox) { diaAg = prox; ag = agendaCompacta(estado, prox, -1); } }   // hoje sem aula: mostra o próximo dia com aula (sem marcador de agora)
+    const futuro = diaAg !== hoje, nAulas = ag.itens.filter((x) => x.tipo === 'aula').length;
     const itens = ag.itens.map((it) => {
       if (it.tipo === 'livre') return `<div class="hlivre">${hhmm(it.ini)} – ${hhmm(it.fim)} · livre</div>`;
       const m = porId.get(it.disciplina_id);
       return `<a class="hev ${it.situacao}" href="#aula/${it.id}" style="--c:${m ? corCss(m.cor) : 'var(--tx2)'}" title="${escaparHtml(it.titulo)}"><span class="eh">${it.situacao === 'agora' ? '' : `${dois(Math.floor(it.ini / 60))}h`}</span><span class="evb"><b>${escaparHtml(m?.nome ?? it.titulo)}</b><span>${hhmm(it.ini)} – ${hhmm(it.fim)}</span></span></a>`;
     }).join('');
-    const agenda = `<div class="card hag"><div class="hcab"><h2>Agenda</h2><span class="esp"></span><span class="sub">${nAulas ? `${diaComSemana(hoje).split(',')[0].toLowerCase()} · ${nAulas} ${nAulas === 1 ? 'aula' : 'aulas'}` : ''}</span></div>` +
-      (ag.itens.length ? `<div class="hscroll"><div class="hlista">${itens}<div class="hagora" style="top:${posicaoDoMarcador(ag, agoraMin).toFixed(1)}px"><span>${hhmm(agoraMin)}</span></div></div></div>`
+    const agenda = `<div class="card hag"><div class="hcab"><h2>Agenda</h2><span class="esp"></span><span class="sub">${nAulas ? `${futuro ? 'próxima · ' : ''}${diaComSemana(diaAg).split(',')[0].toLowerCase()} · ${nAulas} ${nAulas === 1 ? 'aula' : 'aulas'}` : ''}</span></div>` +
+      (ag.itens.length ? `<div class="hscroll"><div class="hlista">${itens}${futuro ? '' : `<div class="hagora" style="top:${posicaoDoMarcador(ag, agoraMin).toFixed(1)}px"><span>${hhmm(agoraMin)}</span></div>`}</div></div>`
         : `<p class="vazio">${mats.length ? 'Nada marcado para hoje.' : 'Crie sua primeira matéria em <a href="#materias"><b>Matérias</b></a>.'}</p>`) + '</div>';
 
     raiz.className = 'tcheia';
@@ -80,7 +82,7 @@ export function desenharHoje(raiz, ctx) {
       `<a class="bt hacao" href="${acao.href}">${acao.texto}</a></div>` +
       `<div class="hgrade">${provas}${calendario}<div class="hdir">${agenda}</div></div>` +
       `</div>`;
-    document.title = 'Hoje · Ohara';
+    document.title = 'Hub · Ohara';
     ajustarEscala();
     const rolo = raiz.querySelector('.hscroll'), marc = raiz.querySelector('.hagora');
     if (rolo && marc && rolo.scrollHeight > rolo.clientHeight) rolo.scrollTop = Math.max(0, marc.offsetTop - rolo.clientHeight / 3);   // agenda mais alta que o espaço: mostra o agora

@@ -74,6 +74,12 @@ export function agendaCompacta(estado, hoje, agoraMin, { livreMin = 45 } = {}) {
   return { itens, marcadorEntre };
 }
 
+/** Primeiro dia depois de `hoje` (até `limite` dias à frente) que tem aula; null se não houver. Usado quando hoje não tem aula. */
+export function proximoDiaComAula(estado, hoje, limite = 30) {
+  for (let i = 1; i <= limite; i++) { const d = somarDias(hoje, i); if (aulasDoDia(estado, d).length) return d; }
+  return null;
+}
+
 // Medidas da agenda compacta (px): precisam bater com estilos/telas/hoje.css para o marcador de agora cair no lugar certo.
 export const ALTURA_AULA = 46, ALTURA_LIVRE = 28, VAO = 6;
 

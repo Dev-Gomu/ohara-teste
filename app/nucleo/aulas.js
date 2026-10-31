@@ -25,7 +25,7 @@ function validar({ titulo, tipo = 'aula', inicio, fim }) {
 
 export function criarAula(estado, disciplinaId, dados, agora, icsUid = null) {
   if (!ativas(estado.disciplinas).some((d) => d.id === disciplinaId)) throw new Error('A matéria não existe.');
-  const aula = { id: proximoId(estado.aulas), disciplina_id: disciplinaId, ...validar(dados), anotacoes: '', ics_uid: icsUid, criado_em: agora, excluido_em: null };
+  const aula = { id: proximoId(estado.aulas), disciplina_id: disciplinaId, ...validar(dados), anotacoes: '', ics_uid: icsUid, pasta_id: dados.pastaId ?? null, criado_em: agora, excluido_em: null };
   return { estado: { ...estado, aulas: [...estado.aulas, aula] }, aula };
 }
 
@@ -96,4 +96,29 @@ export function rotuloDoCard(estado, disciplinaId, agoraLocal, diaDaSemana) {
   const a = atual ?? proximaAula(estado, disciplinaId, agoraLocal);
   if (!a) return { texto: '', agora: false };
   return { texto: `${DIAS_ABREV[diaDaSemana(a.inicio.slice(0, 10))]} · ${a.inicio.slice(11, 16)}`, agora: !!atual };
+}
+
+/**
+ * Aula em que a Área de trabalho abre para criar cartões: a guardada (se ainda existir e a matéria estiver ativa); senão a aula mais
+ * recente que já começou; senão a primeira que ainda vai começar; senão null. `agoraLocal`: AAAA-MM-DDTHH:MM.
+ */
+export function aulaParaCriar(estado, guardadaId, agoraLocal) {
+  const mats = new Set(ativas(estado.disciplinas).map((d) => d.id));
+  const aulas = ativas(estado.aulas).filter((a) => mats.has(a.disciplina_id));
+  const g = aulas.find((a) => a.id === Number(guardadaId));
+  if (g) return g;
+  const ini = (a) => a.inicio ?? '';
+  const passadas = aulas.filter((a) => a.inicio && a.inicio <= agoraLocal).sort((x, y) => ini(y).localeCompare(ini(x)));
+  if (passadas.length) return passadas[0];
+  return aulas.filter((a) => a.inicio).sort((x, y) => ini(x).localeCompare(ini(y)))[0] ?? aulas[0] ?? null;
+}
+
+/**
+ * Aula em que o botão "Área de trabalho" do menu abre: a que está acontecendo agora; senão a última em que você mexeu (se ainda existir);
+ * senão a mais recente que já começou; senão a próxima. `null` se não houver nenhuma aula. `agoraLocal`: AAAA-MM-DDTHH:MM.
+ */
+export function aulaParaAbrirAgora(estado, ultimaId, agoraLocal) {
+  const mats = new Set(ativas(estado.disciplinas).map((d) => d.id));
+  const agora = emAulaAgora(estado, agoraLocal).find((a) => mats.has(a.disciplina_id));
+  return agora ?? aulaParaCriar(estado, ultimaId, agoraLocal);
 }

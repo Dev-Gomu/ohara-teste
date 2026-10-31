@@ -15,7 +15,7 @@ export const CONFIG_LOCAL = new Set(['foco_ativo', 'ultimo_backup', 'inicio_uso'
  */
 export function conteudoParaImpressao(estado, configLinhas = []) {
   return JSON.stringify({
-    disciplinas: estado.disciplinas, aulas: estado.aulas, arquivos: estado.arquivos, marcadores: estado.marcadores, blocos: estado.blocos, provas: estado.provas,
+    disciplinas: estado.disciplinas, aulas: estado.aulas, arquivos: estado.arquivos, marcadores: estado.marcadores, blocos: estado.blocos, provas: estado.provas, pastas: estado.pastas ?? [],
     tarefas: estado.tarefas.filter((t) => t.feita_em).map((t) => [t.chave, t.feita_em]),
     cartoes: estado.cartoes.map(({ exportado_em, ...resto }) => resto),
     config: configLinhas.filter(([k]) => !CONFIG_LOCAL.has(k)).sort((a, b) => (a[0] < b[0] ? -1 : 1)),
@@ -63,10 +63,14 @@ export function nomeDoAparelho(userAgent = '') {
 }
 
 /** Conteúdos (PDFs e imagens de cartão) que o estado cita e que não estão nem no pacote nem neste aparelho. */
-export function arquivosQueFaltam(estado, idsPresentes, chaveImagemCartao) {
+export function arquivosQueFaltam(estado, idsPresentes, chaveImagemCartao, chavesDoCartao = null) {
   const tem = new Set(idsPresentes.map(Number));
   const faltam = [];
   for (const a of estado.arquivos) if (!a.excluido_em && !tem.has(a.id)) faltam.push(a.id);
-  for (const c of estado.cartoes) if (!c.excluido_em && c.tem_imagem && !tem.has(chaveImagemCartao(c.id))) faltam.push(chaveImagemCartao(c.id));
+  for (const c of estado.cartoes) {
+    if (c.excluido_em) continue;
+    const chaves = chavesDoCartao ? chavesDoCartao(c) : (c.tem_imagem ? [chaveImagemCartao(c.id)] : []);
+    for (const k of chaves) if (!tem.has(k)) faltam.push(k);
+  }
   return faltam;
 }

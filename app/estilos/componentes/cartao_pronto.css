@@ -1,4 +1,4 @@
-/* Cartão pronto (ui/componentes/cartao_pronto.js): frente em faixa na cor da matéria (--mc) e verso. */
+/* Cartão pronto (usado no Treinar): frente em faixa na cor da matéria (--mc) e verso. */
 .fc-card.fc-faixa{background:color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);border-color:color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);color:#fff}
 .fc-card.fc-faixa>header{background:color-mix(in srgb,var(--mc) var(--faixa-cab,55%),#000);color:#fff}
 .fc-card.fc-faixa .k{background:rgba(255,255,255,.22);color:inherit}

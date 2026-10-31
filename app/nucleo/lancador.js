@@ -18,7 +18,7 @@ export function pontuar(texto, consulta) {
 /** Itens do lançador: telas fixas, matérias, aulas e ações. `hash` leva a uma tela; `acao` pede algo à casca. */
 export function itensDoLancador(estado) {
   const mats = ativas(estado.disciplinas), porId = new Map(mats.map((m) => [m.id, m]));
-  const telas = [['Hoje', '#hoje', 'Alt 1'], ['Matérias', '#materias', 'Alt 2'], ['Sala de Foco', '#foco', 'Alt 3'], ['Planejar', '#planejar', 'Alt 4'], ['Painel', '#painel', 'Alt 5'], ['Cartões', '#cartoes', 'Alt 6'], ['Ajustes', '#ajustes', 'Alt 7']]
+  const telas = [['Hub (hoje)', '#hoje', 'Alt 1'], ['Mesa (área de trabalho)', '#area', 'Alt 2'], ['Acervo (matérias)', '#materias', 'Alt 3'], ['Treino (revisor de flashcards)', '#revisor', 'Alt 4'], ['Agenda (planejar)', '#planejar', 'Alt 5'], ['Configs (ajustes)', '#ajustes', 'Alt 6'], ['Todos os cartões', '#cartoes', 'Acervo'], ['Sala de Foco', '#foco', 'tela'], ['Painel', '#painel', 'tela']]
     .map(([titulo, hash, atalho]) => ({ tipo: 'tela', titulo, detalhe: atalho, hash }));
   const materias = mats.map((m) => ({ tipo: 'matéria', titulo: m.nome, detalhe: 'matéria', hash: `#materias/${m.id}` }));
   const aulas = ativas(estado.aulas).filter((a) => porId.has(a.disciplina_id)).sort((x, y) => (y.inicio ?? '').localeCompare(x.inicio ?? ''))

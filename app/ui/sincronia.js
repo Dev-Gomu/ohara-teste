@@ -69,7 +69,7 @@ export function criarServicoSincronia({ sessao, foco, aoReceber = () => {}, avis
     if (esperandoToque) return; esperandoToque = true;
     const tratar = () => {
       esperandoToque = false; removeEventListener('pointerdown', tratar, true); removeEventListener('keydown', tratar, true);
-      pedirComToque('').then(() => sincronizar('toque'), () => mudarStatus('toque', 'Toque em "Sincronizar agora" em Ajustes para entrar de novo.'));
+      pedirComToque('').then(() => sincronizar('toque'), () => mudarStatus('toque', 'Toque em "Sincronizar agora" em Configs para entrar de novo.'));
     };
     addEventListener('pointerdown', tratar, true); addEventListener('keydown', tratar, true);
   }

@@ -3,7 +3,9 @@
 //
 // Convenção: Alt + algo é "do sistema" e vale até dentro do editor; tecla solta (h j k l, ?, /) só vale fora de campos de texto.
 
-const TELAS_DO_ATALHO = ['hoje', 'materias', 'foco', 'planejar', 'painel', 'cartoes', 'ajustes'];   // Alt+1 … Alt+7 (ordem do menu)
+import { TELAS } from './rotas.js';
+
+const TELAS_DO_ATALHO = TELAS.map((t) => t.chave);   // Alt+1 … Alt+6 (ordem do menu)
 const DIRECOES_LETRA = { KeyH: 'esq', KeyJ: 'baixo', KeyK: 'cima', KeyL: 'dir' };
 const DIRECOES_SETA = { ArrowLeft: 'esq', ArrowDown: 'baixo', ArrowUp: 'cima', ArrowRight: 'dir' };
 
@@ -15,7 +17,7 @@ export function interpretar(e, { digitando = false } = {}) {
   if (e.isComposing || e.metaKey) return null;
   if (e.key === 'Escape') return { acao: 'sair' };
   if (e.altKey && !e.ctrlKey && !e.shiftKey) {
-    const m = /^Digit([1-7])$/.exec(e.code ?? '');
+    const m = new RegExp(`^Digit([1-${TELAS_DO_ATALHO.length}])$`).exec(e.code ?? '');
     if (m) return { acao: 'tela', tela: TELAS_DO_ATALHO[Number(m[1]) - 1] };
     if (e.code === 'KeyB') return { acao: 'barra' };
     if (e.key === 'Enter') return { acao: 'foco' };
@@ -56,9 +58,10 @@ export function vizinho(rects, i, direcao) {
 
 /** Atalhos para a janela de ajuda: [{ grupo, itens: [[teclas, o que faz]] }]. Um só lugar para o texto e para conferir os testes. */
 export const AJUDA = [
-  { grupo: 'Andar pelo sistema', itens: [['Alt 1 … 7', 'Hoje, Matérias, Foco, Planejar, Painel, Cartões, Ajustes'], ['Alt P  ou  Ctrl P  ou  /', 'Ir para… (matéria, aula ou tela, digitando)'], ['Alt B', 'Fixar ou soltar a barra lateral'], ['Alt Enter', 'Tela cheia de foco (esconde barra e topo)'], ['Esc', 'Fecha janelas e sai do foco']] },
-  { grupo: 'Mover entre painéis e itens', itens: [['Alt H J K L  ou  Alt ← ↓ ↑ →', 'Foco para o vizinho (vale até dentro do editor)'], ['H J K L  ou  ← ↓ ↑ →', 'O mesmo, quando você não está digitando'], ['Enter', 'Abre o item em foco'], ['Alt , e Alt .', 'Diminui ou aumenta o espaço do slide na aula']] },
-  { grupo: 'No slide (PDF)', itens: [['J  K', 'Rola para baixo e para cima'], ['Page Down  Page Up', 'Próxima e anterior página'], ['+  −  0', 'Mais zoom, menos zoom, tamanho normal']] },
-  { grupo: 'Flashcards (tela Criar)', itens: [['Alt C  G  T', 'Criar, Gerenciar, Treinar'], ['@  #  ?  (sem espaço)  ·  -  +  --  1. (com espaço)', 'Frente (abre um cartão novo), seção, dúvida · lista, a favor, contra, numerada'], ['Enter duas vezes  ·  Alt N', 'Cartão novo (depois do atual)'], ['Ctrl B  ·  Ctrl E', 'Negrito e destaque (ou **texto** e ==texto==)'], ['Ctrl Enter  ·  Ctrl Z', 'Salvar os cartões; desfazer'], ['Tab  ·  Alt S', 'Ver o cartão pronto; abrir o slide ao lado (metade e metade)'], ['Alt H J K L  ·  Alt F  ·  Alt Q  ·  Alt X', 'Foco entre blocos; ampliar; fechar; trocar o lado'], ['Alt ]  ·  Alt [', 'Próxima e anterior página do slide, sem sair do editor'], ['Espaço  ·  1 2 3 4  ·  Esc', 'No treino: mostrar o verso, responder, sair']] },
-  { grupo: 'No editor de anotações', itens: [['Alt T', 'Ocultar ou mostrar a barra do editor (oculta = bolha ao selecionar)'], ['Alt S', 'Só anotações: esconde o slide e usa a tela toda'], ['Ctrl B  I  U', 'Negrito, itálico, sublinhado'], ['Ctrl Shift X', 'Riscado'], ['Ctrl Shift H', 'Marca-texto'], ['Ctrl E', 'Código'], ['Ctrl Alt 1  2  3', 'Título 1, 2, 3 (de novo volta ao texto)'], ['Ctrl Shift 7  8  9', 'Lista numerada, com marcadores, de tarefas'], ['Ctrl K', 'Link'], ['Ctrl \\', 'Limpar formatação'], ['Tab  Shift Tab', 'Recuar e voltar na lista'], ['Ctrl M  ou  Alt M', 'Marcar a linha com a página do slide'], ['# ⎵  ## ⎵  > ⎵  - ⎵  1. ⎵', 'Digite no começo da linha: vira título, citação, lista']] },
+  { grupo: 'Andar pelo sistema', itens: [['Alt 1 … 6', 'Hub, Mesa, Acervo, Treino, Agenda, Configs'], ['Alt P  ou  Ctrl P  ou  /', 'Ir para… (matéria, aula ou tela, digitando)'], ['Alt B', 'Fixar ou soltar a barra lateral'], ['Alt Enter', 'Tela cheia de foco (esconde barra e topo)'], ['Esc', 'Fecha janelas e sai do foco'], ['Alt H J K L  ou  Alt ← ↓ ↑ →', 'Foco para o vizinho (vale até dentro do editor)'], ['H J K L  ou  ← ↓ ↑ →', 'O mesmo, quando você não está digitando']] },
+  { grupo: 'Mesa (área de trabalho, em blocos)', itens: [['Alt S  ·  Alt A  ·  Alt C', 'Abre ou fecha Slides, Anotações, Cartões'], ['Alt H J K L', 'Foco para o bloco vizinho'], ['Alt Shift H J K L', 'Troca o bloco de lugar com o vizinho'], ['Alt R, depois H J K L', 'Muda o tamanho (Enter ou Esc termina)'], ['Alt ,  e  Alt .', 'Diminui ou aumenta a coluna da esquerda'], ['Alt F  ·  Alt Q', 'Amplia o bloco · fecha o bloco'], ['Alt 0  ·  Alt Shift 0', 'Tamanhos padrão · ordem padrão'], ['Alt O', 'Opções (⋮) do bloco em foco'], ['Enter  ·  Esc', 'Entra no bloco · sai do bloco'], ['Arrastar o cabeçalho  ·  arrastar o vão', 'Troca de lugar · muda o tamanho (dois toques no vão: padrão)']] },
+  { grupo: 'Slides', itens: [['Alt ]  ·  Alt [', 'Próxima e anterior página, de qualquer bloco'], ['← →  ·  Page Down  Page Up', 'Próxima e anterior página (no slide)'], ['J  K', 'Rola para baixo e para cima'], ['+  −  0  ·  Ctrl roda', 'Mais zoom, menos zoom, tamanho que cabe'], ['Dois toques  ·  pinça  ·  deslizar', '100% ↔ 200% · zoom · passa de página']] },
+  { grupo: 'Anotações', itens: [['Alt T', 'Barra de formatação fixa ou escondida (escondida: menu ao selecionar)'], ['Ctrl M  ou  Alt M', 'Marcar a linha com a página do slide'], ['Ctrl B  I  U', 'Negrito, itálico, sublinhado'], ['Ctrl Shift H  ·  Ctrl Shift X', 'Marca-texto · riscado'], ['Ctrl Alt 1  2  3', 'Título 1, 2, 3 (de novo volta ao texto)'], ['Ctrl Shift 7  8  9', 'Lista numerada, com marcadores, de tarefas'], ['Ctrl K  ·  Ctrl E  ·  Ctrl \\', 'Link · código · limpar formatação'], ['Tab  Shift Tab', 'Recuar e voltar na lista'], ['# ⎵  ## ⎵  > ⎵  - ⎵  1. ⎵', 'No começo da linha: título, citação, lista']] },
+  { grupo: 'Cartões', itens: [['@  #  ?  (sem espaço)  ·  -  +  --  1. (com espaço)', 'Frente (abre um cartão novo), seção, dúvida · lista, a favor, contra, numerada'], ['Enter duas vezes  ·  Alt N', 'Cartão novo (depois do atual)'], ['Ctrl B  ·  Ctrl E', 'Negrito e destaque (ou **texto** e ==texto==)'], ['Ctrl Enter  ·  Ctrl Z', 'Salvar os cartões; desfazer']] },
+  { grupo: 'Acervo e Treino', itens: [['Alt C  (no Acervo)', 'Criar cartões: abre a Mesa com o bloco Cartões'], ['Espaço  ·  1 2 3 4  ·  Esc', 'No treino: mostrar o verso, responder, sair']] },
 ];
