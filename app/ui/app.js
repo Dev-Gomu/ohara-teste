@@ -6,6 +6,7 @@ import { iniciarSessao } from './sessao.js';
 import { desenharBiblioteca } from './telas/biblioteca.js';
 import { desenharMateria } from './telas/materia.js';
 import { desenharArea } from './telas/area.js';
+import { aulaArquivada } from '../nucleo/anos.js';
 import { desenharAjustes } from './telas/ajustes.js';
 import { desenharHoje } from './telas/hoje.js';
 import { desenharFoco } from './telas/foco.js';
@@ -101,7 +102,7 @@ function desenhar() {
   else if (rota.tela === 'revisor') limpar = desenharRevisor(raiz, ctx);
   else if (rota.tela === 'area-atalho') abrirAreaDeTrabalho(raiz, ctx);
   else if (rota.tela === 'materia') limpar = desenharMateria(raiz, ctx, rota.id);
-  else if (rota.tela === 'area') limpar = desenharArea(raiz, ctx, rota.id, rota);
+  else if (rota.tela === 'area') limpar = desenharArea(raiz, aulaArquivada(sessao.estadoCompleto(), rota.id) ? { ...ctx, sessao: { ...sessao, estado: sessao.estadoCompleto } } : ctx, rota.id, rota);   // aula de ano arquivado: abre para consulta
   else if (rota.tela === 'ajustes') desenharAjustes(raiz, ctx);
   else if (rota.tela === 'hoje') limpar = desenharHoje(raiz, ctx);
   else if (rota.tela === 'foco') limpar = desenharFoco(raiz, ctx, rota.id);

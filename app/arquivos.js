@@ -1,6 +1,6 @@
 // Gerado por ferramentas/versao.js — não editar.
 self.OHARA = {
- "versao": "308fd47a630a",
+ "versao": "eb62c805928e",
  "arquivos": [
   "armazenamento/ankiconnect.js",
   "armazenamento/apkg.js",
@@ -34,6 +34,7 @@ self.OHARA = {
   "manifest.webmanifest",
   "nucleo/agenda.js",
   "nucleo/anki.js",
+  "nucleo/anos.js",
   "nucleo/anotacoes.js",
   "nucleo/arquivos.js",
   "nucleo/atalhos.js",

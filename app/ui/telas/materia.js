@@ -8,6 +8,7 @@ import { criarPasta, renomearPasta, excluirPasta, restaurarPasta, moverAula, pas
 import { arquivosDaAula, ehPdf } from '../../nucleo/arquivos.js';
 import { cartoesDaAula } from '../../nucleo/cartoes.js';
 import { diaDaSemana } from '../../nucleo/datas.js';
+import { anosEncerrados } from '../../nucleo/anos.js';
 import { capaDoArquivo } from '../componentes/leitor.js';
 import { desenharCartoes } from './flashcards/gerenciar.js';
 import * as pref from '../preferencias.js';
@@ -18,7 +19,7 @@ const FANTASMA = '<svg class="mt-fant" viewBox="0 0 24 24" aria-hidden="true"><r
 
 export function desenharMateria(raiz, ctx, materiaId) {
   const sessao = ctx.sessao, chavePasta = `ohara.mt.pasta.${materiaId}`;
-  const materia = () => ativas(sessao.estado().disciplinas).find((d) => d.id === materiaId);
+  const materia = () => ativas(sessao.estadoCompleto().disciplinas).find((d) => d.id === materiaId);
   let aba = 'aulas', criando = false, novaPasta = false, erro = '', selecionada = Number(pref.ler('ohara.at.ultima')) || null, capas = new Map(), geracaoCapa = 0, limpezaCartoes = null;
   let pastaSel = pref.ler(chavePasta) === 'todas' || pref.ler(chavePasta) == null ? null : Number(pref.ler(chavePasta));
   const agoraLocal = () => { const d = new Date(ctx.agora()), p = (x) => String(x).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
@@ -34,39 +35,41 @@ export function desenharMateria(raiz, ctx, materiaId) {
     const m = materia();
     if (!m) { raiz.innerHTML = '<h1>Matéria não encontrada</h1><p class="sub"><a class="voltar" href="#materias">← Voltar ao Acervo</a></p>'; return; }
     document.title = `${m.nome} · Ohara`;
-    const estado = sessao.estado(), pastas = pastasDaMateria(estado, materiaId);
+    const estado = sessao.estadoCompleto(), pastas = pastasDaMateria(estado, materiaId);
     if (pastaSel != null && !pastas.some((p) => p.id === pastaSel)) pastaSel = null;
     const aulas = aulasDaPasta(estado, materiaId, pastaSel), total = aulasDaPasta(estado, materiaId).length, ncart = ativas(estado.cartoes).filter((c) => aulasDaPasta(estado, materiaId).some((a) => a.id === c.aula_id)).length;
     if (!aulas.some((a) => a.id === selecionada)) selecionada = (aulas.find((a) => a.inicio && a.inicio <= agoraLocal()) ?? aulas[0])?.id ?? null;
     raiz.className = 'mt';
+    const so = m.ano_id != null, ano = so ? anosEncerrados(estado).find((a) => a.id === m.ano_id) : null;
     raiz.innerHTML = `<div class="mt-topo"><a class="mt-volta" href="#materias">‹ Acervo</a><span class="mt-sg" style="--c:${corCss(m.cor)}" title="${escaparHtml(m.nome)}">${escaparHtml(siglaDaMateria(m))}</span>` +
       `<h1>${escaparHtml(m.nome)}</h1><small>${total} ${total === 1 ? 'aula' : 'aulas'}</small><span class="mt-esp"></span>` +
       `<div class="mt-abas" role="tablist" aria-label="${escaparHtml(m.nome)}"><button type="button" role="tab" data-aba="aulas" aria-selected="${aba === 'aulas'}" class="${aba === 'aulas' ? 'on' : ''}">Aulas <em>${total}</em></button>` +
       `<button type="button" role="tab" data-aba="cartoes" aria-selected="${aba === 'cartoes'}" class="${aba === 'cartoes' ? 'on' : ''}">Cartões <em>${ncart}</em></button></div>` +
-      `<button type="button" class="mt-btn" data-a="nova">Nova aula</button></div>` +
-      (aba === 'aulas' ? faixaPastas(pastas, estado) + `<div class="mt-cols"><div class="mt-col"><div class="mt-cap">${escaparHtml(pastaSel == null ? 'Aulas' : 'Aulas · ' + pastas.find((p) => p.id === pastaSel).nome)} <em>${aulas.length}</em></div><div class="mt-card mt-lista">${lista(aulas, estado)}</div></div>${painel(aulas, estado)}</div>` : '<div class="mt-cartoes" id="mt-cartoes"></div>');
-    if (aba === 'cartoes') { limpezaCartoes?.(); limpezaCartoes = desenharCartoes(raiz.querySelector('#mt-cartoes'), ctx, { disciplinaId: materiaId }); }
+      (so ? '' : `<button type="button" class="mt-btn" data-a="nova">Nova aula</button>`) + '</div>' +
+      (so ? `<div class="mt-so"><b>${escaparHtml(ano?.nome ?? 'Ano arquivado')}</b> · só consulta. Para editar, reabra o ano no Acervo.</div>` : '') +
+      (aba === 'aulas' ? faixaPastas(pastas, estado, so) + `<div class="mt-cols"><div class="mt-col"><div class="mt-cap">${escaparHtml(pastaSel == null ? 'Aulas' : 'Aulas · ' + pastas.find((p) => p.id === pastaSel).nome)} <em>${aulas.length}</em></div><div class="mt-card mt-lista">${lista(aulas, estado, so)}</div></div>${painel(aulas, estado)}</div>` : '<div class="mt-cartoes" id="mt-cartoes"></div>');
+    if (aba === 'cartoes') { limpezaCartoes?.(); limpezaCartoes = desenharCartoes(raiz.querySelector('#mt-cartoes'), m.ano_id != null ? { ...ctx, sessao: { ...sessao, estado: sessao.estadoCompleto } } : ctx, { disciplinaId: materiaId }); }
     else { limpezaCartoes?.(); limpezaCartoes = null; carregarCapa(); }
     const campo = raiz.querySelector('input[name="titulo"], input[name="pasta"]'); if (campo) campo.focus();
   }
 
-  function faixaPastas(pastas, estado) {
+  function faixaPastas(pastas, estado, so = false) {
     const n = contagemPorPasta(estado, materiaId), u = (x) => `${x} ${x === 1 ? 'aula' : 'aulas'}`;
     const item = (id, nome, qtd) => `<div class="mt-pasta${pastaSel === id ? ' on' : ''}" role="button" tabindex="0" data-pasta="${id ?? 'todas'}">${PASTA}<b>${escaparHtml(nome)}</b><small>${u(qtd)}</small>` +
-      (id != null ? `<button type="button" class="mt-mais" data-a="menu-pasta" data-id="${id}" aria-label="Mais opções de ${escaparHtml(nome)}" aria-haspopup="menu"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><circle cx="3.8" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.2" cy="9" r="1.4" fill="currentColor" stroke="none"/></svg></button>` : '') + '</div>';
-    const nova = novaPasta ? `<form class="mt-pasta mt-nova-form" id="form-pasta"><input class="in" name="pasta" maxlength="60" autocomplete="off" placeholder="Nome da pasta, ex.: 1º bimestre" aria-label="Nome da pasta"><button class="mt-btn peq" type="submit">Criar</button><button class="mt-btn peq mt-sec" type="button" data-a="cancelar-pasta">Cancelar</button></form>`
+      (id != null && !so ? `<button type="button" class="mt-mais" data-a="menu-pasta" data-id="${id}" aria-label="Mais opções de ${escaparHtml(nome)}" aria-haspopup="menu"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><circle cx="3.8" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.2" cy="9" r="1.4" fill="currentColor" stroke="none"/></svg></button>` : '') + '</div>';
+    const nova = so ? '' : novaPasta ? `<form class="mt-pasta mt-nova-form" id="form-pasta"><input class="in" name="pasta" maxlength="60" autocomplete="off" placeholder="Nome da pasta, ex.: 1º bimestre" aria-label="Nome da pasta"><button class="mt-btn peq" type="submit">Criar</button><button class="mt-btn peq mt-sec" type="button" data-a="cancelar-pasta">Cancelar</button></form>`
       : '<button type="button" class="mt-pasta mt-nova" data-a="nova-pasta"><b>+ Nova pasta</b></button>';
     return `<div class="mt-pastas">${item(null, 'Todas', n.todas)}${pastas.map((p) => item(p.id, p.nome, n[p.id])).join('')}${nova}</div>` + (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '');
   }
 
-  function lista(aulas, estado) {
+  function lista(aulas, estado, so = false) {
     if (!aulas.length) return `<p class="mt-vazio">${pastaSel == null ? 'Nenhuma aula ainda. Toque em "Nova aula" para criar a primeira.' : 'Nenhuma aula nesta pasta. Use o ⋯ de uma aula, "Mover para pasta…", ou crie uma nova aqui.'}</p>`;
     return aulas.map((a) => {
       const n = cartoesDaAula(estado, a.id).length, pdf = arquivosDaAula(estado, a.id).length > 0, dia = a.inicio ? a.inicio.slice(0, 10) : null;
       return `<div class="mt-lin${a.id === selecionada ? ' sel' : ''}" role="button" tabindex="0" data-aula="${a.id}"><span class="mt-dt">${dia ? `<b>${dia.slice(8)}</b>${MESES[Number(dia.slice(5, 7)) - 1]}` : `<b>—</b>${a.tipo === 'livro' ? 'livro' : 's/ data'}`}</span>` +
         `<span class="mt-lt"><b>${escaparHtml(a.titulo)}</b><small>${escaparHtml(a.inicio ? a.inicio.slice(11, 16) + ' · ' : '')}${a.tipo === 'livro' ? 'Livro' : 'Aula'}</small></span>` +
         `<span class="mt-chips">${pdf ? '<span class="mt-ch f">PDF</span>' : ''}${n ? `<span class="mt-ch">${n} ${n === 1 ? 'cartão' : 'cartões'}</span>` : '<span class="mt-ch f">sem cartões</span>'}</span>` +
-        `<button type="button" class="mt-mais" data-a="menu" data-id="${a.id}" aria-label="Mais opções de ${escaparHtml(a.titulo)}" aria-haspopup="menu"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><circle cx="3.8" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.2" cy="9" r="1.4" fill="currentColor" stroke="none"/></svg></button></div>`;
+        (so ? '' : `<button type="button" class="mt-mais" data-a="menu" data-id="${a.id}" aria-label="Mais opções de ${escaparHtml(a.titulo)}" aria-haspopup="menu"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><circle cx="3.8" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.2" cy="9" r="1.4" fill="currentColor" stroke="none"/></svg></button>`) + '</div>';
     }).join('');
   }
 
@@ -95,7 +98,7 @@ export function desenharMateria(raiz, ctx, materiaId) {
   async function carregarCapa() {
     const id = selecionada, g = ++geracaoCapa;
     if (id == null || capas.has(id)) return;
-    const f = arquivosDaAula(sessao.estado(), id)[0]; if (!f) return;
+    const f = arquivosDaAula(sessao.estadoCompleto(), id)[0]; if (!f) return;
     const blob = await sessao.lerArquivo(f.id);
     const c = blob ? await capaDoArquivo(ehPdf(f) ? 'pdf' : 'imagem', blob) : null;
     if (!c) { capas.set(id, { url: null, paginas: null }); if (g === geracaoCapa) atualizarCapa(id); return; }
@@ -104,7 +107,7 @@ export function desenharMateria(raiz, ctx, materiaId) {
   }
   function atualizarCapa(id) {
     const no = raiz.querySelector(`[data-capa="${id}"]`), c = capas.get(id); if (!no || !c) return;
-    const a = sessao.estado().aulas.find((x) => x.id === id);
+    const a = sessao.estadoCompleto().aulas.find((x) => x.id === id);
     no.classList.toggle('sem', !c.url);
     no.innerHTML = (c.url ? `<img src="${c.url}" alt="Primeira página do slide de ${escaparHtml(a?.titulo ?? '')}">` : FANTASMA) + `<em class="mt-pg">${c.paginas ? `Página 1 de ${c.paginas}` : 'Não foi possível ler a capa'}</em>`;
     const n = raiz.querySelector('.mt-nums .mt-mini .n'); if (n && c.paginas) n.textContent = String(c.paginas);
@@ -115,7 +118,7 @@ export function desenharMateria(raiz, ctx, materiaId) {
     desenhar();
   }
   function excluirAulaComDesfazer(id) {
-    const titulo = sessao.estado().aulas.find((a) => a.id === id)?.titulo;
+    const titulo = sessao.estadoCompleto().aulas.find((a) => a.id === id)?.titulo;
     sessao.aplicar((e) => excluirAula(e, id, new Date().toISOString())); desenhar();
     ctx.aviso(`"${titulo}" foi para a lixeira.`, { texto: 'Desfazer', fazer: () => { sessao.aplicar((e) => restaurarAula(e, id)); desenhar(); } });
   }
@@ -134,13 +137,13 @@ export function desenharMateria(raiz, ctx, materiaId) {
       else if (a === 'nova-pasta') { novaPasta = true; erro = ''; desenhar(); }
       else if (a === 'cancelar-pasta') { novaPasta = false; erro = ''; desenhar(); }
       else if (a === 'menu') {
-        const aula = sessao.estado().aulas.find((x) => x.id === id), pastas = pastasDaMateria(sessao.estado(), materiaId);
+        const aula = sessao.estadoCompleto().aulas.find((x) => x.id === id), pastas = pastasDaMateria(sessao.estadoCompleto(), materiaId);
         abrirMenu(b, [{ rotulo: 'Abrir na Mesa', fazer: () => { location.hash = `#aula/${id}`; } }, { sep: true },
           ...pastas.map((p) => ({ rotulo: `Mover para ${p.nome}`, marcado: aula?.pasta_id === p.id, fazer: () => tentar(() => sessao.aplicar((e) => moverAula(e, id, p.id))) })),
           ...(aula?.pasta_id != null ? [{ rotulo: 'Tirar da pasta', fazer: () => tentar(() => sessao.aplicar((e) => moverAula(e, id, null))) }] : []),
           { sep: true }, { rotulo: 'Excluir (vai para a lixeira)', perigo: true, fazer: () => excluirAulaComDesfazer(id) }]);
       } else if (a === 'menu-pasta') {
-        const p = pastasDaMateria(sessao.estado(), materiaId).find((x) => x.id === id);
+        const p = pastasDaMateria(sessao.estadoCompleto(), materiaId).find((x) => x.id === id);
         abrirMenu(b, [{ rotulo: 'Renomear', fazer: () => { const nome = prompt('Novo nome da pasta', p?.nome ?? ''); if (nome != null) tentar(() => sessao.aplicar((e) => renomearPasta(e, id, nome))); } }, { sep: true },
           { rotulo: 'Excluir pasta (as aulas ficam)', perigo: true, fazer: () => {
             sessao.aplicar((e) => excluirPasta(e, id, new Date().toISOString())); if (pastaSel === id) pastaSel = null; desenhar();
@@ -171,12 +174,12 @@ export function desenharMateria(raiz, ctx, materiaId) {
     ev.preventDefault();
     const f = new FormData(ev.target);
     if (ev.target.id === 'form-pasta') {
-      try { const r = criarPasta(sessao.estado(), materiaId, f.get('pasta'), new Date().toISOString()); sessao.aplicar(() => r.estado); novaPasta = false; erro = ''; pastaSel = r.pasta.id; pref.gravar(chavePasta, String(pastaSel)); } catch (e) { erro = e.message; }
+      try { let id; sessao.aplicar((e) => { const r = criarPasta(e, materiaId, f.get('pasta'), new Date().toISOString()); id = r.pasta.id; return r.estado; }); novaPasta = false; erro = ''; pastaSel = id; pref.gravar(chavePasta, String(pastaSel)); } catch (e) { erro = e.message; }
       desenhar(); return;
     }
     try {
-      const r = criarAula(sessao.estado(), materiaId, { titulo: f.get('titulo'), tipo: f.get('tipo'), inicio: f.get('inicio'), fim: f.get('fim'), pastaId: f.get('pasta_id') ? Number(f.get('pasta_id')) : null }, new Date().toISOString());
-      sessao.aplicar(() => r.estado); criando = false; erro = ''; selecionada = r.aula.id;
+      let id; sessao.aplicar((e) => { const r = criarAula(e, materiaId, { titulo: f.get('titulo'), tipo: f.get('tipo'), inicio: f.get('inicio'), fim: f.get('fim'), pastaId: f.get('pasta_id') ? Number(f.get('pasta_id')) : null }, new Date().toISOString()); id = r.aula.id; return r.estado; });
+      criando = false; erro = ''; selecionada = id;
     } catch (e) { erro = e.message; }
     desenhar();
   };

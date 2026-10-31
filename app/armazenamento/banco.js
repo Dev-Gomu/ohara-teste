@@ -50,6 +50,9 @@ export const MIGRACOES = [
   `CREATE TABLE pasta (
      id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, nome TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);
    ALTER TABLE aula ADD COLUMN pasta_id INTEGER;`,
+  // v7: anos letivos arquivados ("Encerrar o ano"); `disciplina.ano_id` vazio = ano atual
+  `CREATE TABLE ano (id INTEGER PRIMARY KEY, nome TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);
+   ALTER TABLE disciplina ADD COLUMN ano_id INTEGER;`,
 ];
 
 export function versaoDoBanco(db) {

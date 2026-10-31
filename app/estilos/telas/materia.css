@@ -69,3 +69,14 @@ html:root .mt-topo h1{margin:0;font-size:24px;font-weight:600;letter-spacing:-.0
 .mt-duas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .mt-cartoes{min-width:0;flex:1 1 auto!important;min-height:0;overflow:auto}
 @media (max-width:900px){main.mt{overflow:auto}.mt-cols{grid-template-columns:1fr;grid-template-rows:none}.mt-lista{max-height:60vh}.mt-capa{flex:none!important;aspect-ratio:16/9}}
+.mt-so{background:var(--cx);border-radius:18px;padding:12px 16px;font-size:13px;color:var(--tx2)}.mt-so b{color:var(--tx)}
+/* Acervo › anos (ui/telas/biblioteca.js): faixa de pastas de anos, aviso de só consulta e a janela de encerrar */
+.an-pastas{margin:0 0 12px}
+.an-faixa{display:flex;align-items:center;gap:14px;margin-bottom:12px}.an-faixa span{flex:1}
+.mc.ar{opacity:.62;filter:saturate(.6)}
+.an-veu{position:fixed;inset:0;z-index:150;background:#2a2c4566;display:flex;align-items:center;justify-content:center;padding:16px}
+.an-dlg{width:min(560px,100%);background:var(--cx);color:var(--tx);border-radius:26px;padding:26px 28px;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 60px -16px #2a2c4577;max-height:calc(100vh - 32px);overflow:auto}
+.an-dlg h2{margin:0;font-size:20px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--tx)}.an-dlg p{margin:0;font-size:13.5px;color:var(--tx2);line-height:1.55}
+.an-nums{display:flex;gap:10px}.an-nums div{flex:1;background:var(--bg);border-radius:14px;padding:10px 14px;display:flex;flex-direction:column}.an-nums b{font-size:20px}.an-nums small{font-size:11.5px;color:var(--tx2)}
+.an-lst{margin:0;padding-left:18px;font-size:13.5px;line-height:1.55;display:flex;flex-direction:column;gap:4px}
+.an-acoes{display:flex;gap:10px;justify-content:flex-end}

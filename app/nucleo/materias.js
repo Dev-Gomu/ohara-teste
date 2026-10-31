@@ -9,7 +9,7 @@ export const LIMITE_NOME = 80;
 const COR = /^#[0-9a-fA-F]{6}$/;
 
 export function estadoVazio() {
-  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], tarefas: [], cartoes: [], pastas: [] };
+  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], tarefas: [], cartoes: [], pastas: [], anos: [] };
 }
 
 export function proximoId(lista) {
@@ -25,7 +25,7 @@ export function validarNomeMateria(estado, nome, ignorarId = null) {
   if (!limpo) throw new Error('Dê um nome à matéria.');
   if (limpo.length > LIMITE_NOME) throw new Error(`O nome pode ter no máximo ${LIMITE_NOME} letras.`);
   const chave = limpo.toLocaleLowerCase('pt-BR');
-  const repetida = ativas(estado.disciplinas).some((d) => d.id !== ignorarId && d.nome.toLocaleLowerCase('pt-BR') === chave);
+  const repetida = ativas(estado.disciplinas).filter((d) => d.ano_id == null).some((d) => d.id !== ignorarId && d.nome.toLocaleLowerCase('pt-BR') === chave);
   if (repetida) throw new Error('Já existe uma matéria com esse nome.');
   return limpo;
 }
@@ -47,7 +47,7 @@ export function validarSigla(sigla) {
 export const siglaDaMateria = (d) => d.sigla || String(d.nome).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase();
 
 export function criarMateria(estado, { nome, cor, sigla }, agora) {
-  const d = { id: proximoId(estado.disciplinas), nome: validarNomeMateria(estado, nome), cor: validarCor(cor), dificuldade: 2, sigla: validarSigla(sigla), criado_em: agora, excluido_em: null };
+  const d = { id: proximoId(estado.disciplinas), nome: validarNomeMateria(estado, nome), cor: validarCor(cor), dificuldade: 2, sigla: validarSigla(sigla), ano_id: null, criado_em: agora, excluido_em: null };
   return { estado: { ...estado, disciplinas: [...estado.disciplinas, d] }, materia: d };
 }
 
@@ -123,6 +123,7 @@ export function esvaziarLixeira(estado) {
       marcadores: ativas(estado.marcadores ?? []).filter((m) => aulasVivas.has(m.aula_id)),
       blocos: estado.blocos ?? [],
       pastas: ativas(estado.pastas ?? []).filter((p) => vivasD.has(p.disciplina_id)),
+      anos: ativas(estado.anos ?? []),
       provas: ativas(estado.provas ?? []).filter((p) => vivasD.has(p.disciplina_id)),
       tarefas: (estado.tarefas ?? []).filter((t) => !t.excluido_em && vivasD.has(t.disciplina_id) && (t.aula_id == null || aulasVivas.has(t.aula_id))),
     },

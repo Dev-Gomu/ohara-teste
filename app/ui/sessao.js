@@ -17,6 +17,7 @@ import { criarAnkiConnect, enviarCartoes, situacaoDoAnki } from '../armazenament
 import { atualizarAnotacao, deveGuardarVersao, textoDoDelta, versoesParaApagar, VERSOES_MAX } from '../nucleo/anotacoes.js';
 import { criarGravador } from '../armazenamento/gravador.js';
 import { descarregarPendencias } from './pendencias.js';
+import { visivel } from '../nucleo/anos.js';
 
 const carregarScript = (src) => new Promise((ok, erro) => {
   const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => erro(new Error('Não foi possível carregar o SQLite.')); document.head.appendChild(s);
@@ -29,7 +30,7 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
   const guardado = await armazenamento.lerBanco();
   let db = abrirBanco(SQL, guardado?.bytes);
   let estado = carregarEstado(db);
-  const ouvintesGravou = new Set();
+  const ouvintesGravou = new Set(), visCache = { de: null, v: null };
   const gravador = criarGravador(armazenamento, () => exportarBanco(db), { aoFalhar, aoGravar: () => ouvintesGravou.forEach((f) => { try { f(); } catch { /* quem ouve não pode atrapalhar a gravação */ } }) });
 
   const dia = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -46,7 +47,10 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
   if (!lerCfg('inicio_uso')) gravarCfg('inicio_uso', dia());          // dias antes disso nunca são "não estudou"
 
   return {
-    estado: () => estado,
+    /** O que as telas do dia a dia enxergam: sem as matérias de anos arquivados (o mesmo objeto, se não houver nenhum). */
+    estado: () => { if (visCache.de !== estado) { visCache.de = estado; visCache.v = visivel(estado); } return visCache.v; },
+    /** Tudo, inclusive os anos arquivados (Acervo, consulta). Para gravar, use `aplicar((e) => ...)`: ele já recebe o estado completo. */
+    estadoCompleto: () => estado,
     /** Grava os blocos concluídos (da Sala de Foco) no estado. */
     registrarBlocos(registros, agora = new Date().toISOString()) {
       let novo = estado;
