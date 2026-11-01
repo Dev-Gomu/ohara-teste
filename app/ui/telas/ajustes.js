@@ -8,9 +8,11 @@ import { restaurarProva } from '../../nucleo/planejador.js';
 import { restaurarEvento } from '../../nucleo/eventos.js';
 import { CONFIG_PADRAO, ROTULOS_CONFIG, lerConfigFoco, validarConfig } from '../../nucleo/foco.js';
 import { restaurarAula } from '../../nucleo/aulas.js';
+import { temPin, confere, definirPin, removerPin } from '../pin.js';
+import { pinValido } from '../../nucleo/pin.js';
 
 export function desenharAjustes(raiz, ctx) {
-  let confirmando = false, armaz = null, pendente = null, erroBackup = '', erroMetas = '', troca = null, erroTroca = '', ocupado = false;
+  let confirmando = false, armaz = null, pendente = null, erroBackup = '', erroMetas = '', troca = null, erroTroca = '', ocupado = false, erroPin = '';
 
   const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
@@ -52,13 +54,14 @@ export function desenharAjustes(raiz, ctx) {
       `<div class="card bloco"><h2>Backup</h2>${blocoBackup()}</div>` +
       `<div class="card bloco"><h2>Sincronização</h2>${blocoSincronia()}</div>` +
       `<div class="card bloco"><h2>Trocar dados entre aparelhos</h2>${blocoTroca()}</div>` +
+      `<div class="card bloco"><h2>PIN das notas</h2>${blocoPin()}</div>` +
       `<div class="card bloco"><h2>Armazenamento</h2>${armazenamento()}</div>` +
       `<div class="card bloco"><h2>Dica do teclado</h2><p class="sub">Se a tecla Alt virar Cmd no teclado bluetooth, aperte Fn+P por 3 segundos para voltar ao modo Android.</p></div>`;
     refinar();
   }
 
   // Seções em ordem de uso: Aparência e Metas abertas; o resto recolhido. Números ganham − e +.
-  const RECOLHIVEIS = ['Plano de estudo', 'Lixeira', 'Backup', 'Sincronização', 'Trocar dados entre aparelhos', 'Armazenamento', 'Dica do teclado'];
+  const RECOLHIVEIS = ['Plano de estudo', 'PIN das notas', 'Lixeira', 'Backup', 'Sincronização', 'Trocar dados entre aparelhos', 'Armazenamento', 'Dica do teclado'];
   function refinar() {
     raiz.querySelectorAll(':scope > .card.bloco').forEach((card) => {
       const h = card.querySelector(':scope > h2'), nome = h?.textContent;
@@ -135,6 +138,16 @@ export function desenharAjustes(raiz, ctx) {
     const url = URL.createObjectURL(new Blob([bytes], { type: 'application/zip' }));
     const a = Object.assign(document.createElement('a'), { href: url, download: nome });
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+
+  /** PIN da aba Notas: só esconde a tela deste aparelho (não criptografa dados nem backup, e não vai no backup). */
+  function blocoPin() {
+    const aviso = '<p class="sub">O PIN só esconde a tela de Notas neste aparelho. Ele não protege o arquivo de backup nem os dados guardados no navegador, e cada aparelho tem o seu. A tela tranca sozinha depois de 2 minutos sem uso.</p>';
+    if (!temPin()) return aviso + '<p class="sub">Ainda sem PIN. Ele é criado na primeira vez que você abrir a aba Notas de uma matéria.</p>';
+    return aviso + `<form id="pin-form" class="form"><label class="c">PIN atual<input class="in" name="atual" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></label>` +
+      `<label class="c">PIN novo (4 a 6 números)<input class="in" name="novo" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></label>` +
+      (erroPin ? `<p class="erro">${escaparHtml(erroPin)}</p>` : '') +
+      `<div class="acoes"><button class="btn peq" type="submit">Trocar o PIN</button><button class="btn peq sec" type="button" data-a="pin-remover">Remover o PIN</button></div></form>`;
   }
 
   function armazenamento() {
@@ -223,6 +236,12 @@ export function desenharAjustes(raiz, ctx) {
         } catch (e) { erroTroca = e.message; }
         desenhar(); break;
       }
+      case 'pin-remover': {
+        const atual = prompt('Digite o PIN atual para removê-lo (as notas não são apagadas)');
+        if (atual == null) break;
+        if (confere(String(atual))) { removerPin(); erroPin = ''; ctx.aviso('PIN removido. Um novo será pedido ao abrir as Notas.'); } else erroPin = 'O PIN atual não confere.';
+        desenhar(); break;
+      }
       case 'persistir': { try { await navigator.storage.persist(); } catch { /* negado */ } medir(); break; }
     }
   };
@@ -230,6 +249,13 @@ export function desenharAjustes(raiz, ctx) {
     ev.preventDefault();
     if (ev.target.id === 'disp') {
       try { const f = new FormData(ev.target); ctx.sessao.gravarDisponibilidade(Array.from({ length: 7 }, (_, i) => Number(f.get('d' + i)))); ctx.aviso('Tempo livre salvo.'); } catch (e) { ctx.aviso(e.message); }
+      desenhar(); return;
+    }
+    if (ev.target.id === 'pin-form') {
+      const f = new FormData(ev.target);
+      if (!confere(String(f.get('atual')))) erroPin = 'O PIN atual não confere.';
+      else if (!pinValido(String(f.get('novo')))) erroPin = 'O PIN novo tem de ter de 4 a 6 números.';
+      else { definirPin(String(f.get('novo')), 0); erroPin = ''; ctx.aviso('PIN trocado.'); }
       desenhar(); return;
     }
     if (ev.target.id !== 'metas') return;

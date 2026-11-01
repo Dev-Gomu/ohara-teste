@@ -3,7 +3,7 @@
 // soltas; se a prova mudar de aulas, o baralho acompanha. Exclusão = lixeira.
 import { ativas } from './materias.js';
 import { normalizarNome } from './texto.js';
-import { aulasDaProva } from './planejador.js';
+import { aulasDoConteudo } from './planejador.js';
 
 export const LIMITE_NOME_BARALHO = 60;
 
@@ -50,7 +50,7 @@ export function aulasDoBaralho(estado, baralho) {
   const mats = new Set(ativas(estado.disciplinas).map((d) => d.id)), vivas = new Map(ativas(estado.aulas).filter((a) => mats.has(a.disciplina_id)).map((a) => [a.id, a]));
   const ids = new Set(lerIds(baralho.aulas));
   const provas = new Set(lerIds(baralho.provas));
-  for (const p of ativas(estado.provas ?? [])) if (provas.has(p.id)) for (const a of aulasDaProva(p)) ids.add(a);
+  for (const p of ativas(estado.provas ?? [])) if (provas.has(p.id)) for (const a of aulasDoConteudo(estado, p)) ids.add(a);
   return new Set([...ids].filter((id) => vivas.has(id)));
 }
 

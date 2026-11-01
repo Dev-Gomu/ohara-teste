@@ -4,6 +4,8 @@
 import { desenharMaterias } from './materias.js';
 import { desenharCartoes } from './flashcards/gerenciar.js';
 import { aulaParaCriar } from '../../nucleo/aulas.js';
+import { iniciarNovoBimestre, bimestreAtualGeral, bimestresDoAno } from '../../nucleo/pastas.js';
+import { abrirMenu } from '../menu.js';
 import { encerrarAno, reabrirAno, anosEncerrados, materiasDoAno, materiasDoAnoAtual, resumoDoAno } from '../../nucleo/anos.js';
 import { siglaDaMateria, corCss } from '../../nucleo/materias.js';
 import { escaparHtml } from '../../nucleo/texto.js';
@@ -14,6 +16,8 @@ const PASTA = '<svg class="mt-ic" viewBox="0 0 24 24" aria-hidden="true"><path d
 const u = (n, um, vp) => `${n} ${n === 1 ? um : vp}`;
 
 /** `modo`: 'materias' (cards das matérias) ou 'cartoes' (todos os cartões). Devolve a função de limpeza. */
+const CHAVE_VISTA = 'ohara.bimestre.vista';
+
 export function desenharBiblioteca(raiz, ctx, modo = 'materias') {
   const cartoes = modo === 'cartoes', sessao = ctx.sessao;
   let anoSel = Number(pref.ler('ohara.ano.sel')) || null, limpezaCorpo = null, dialogo = null;
@@ -22,7 +26,7 @@ export function desenharBiblioteca(raiz, ctx, modo = 'materias') {
   raiz.innerHTML = `<div class="fc"><div class="fc-topo"><h1>Acervo</h1><div class="fc-abas" role="tablist" aria-label="Acervo">` +
     `<button type="button" role="tab" data-ir="#materias" aria-selected="${!cartoes}" class="${cartoes ? '' : 'on'}">Matérias</button>` +
     `<button type="button" role="tab" data-ir="#cartoes" aria-selected="${cartoes}" class="${cartoes ? 'on' : ''}">Todos os cartões</button>` +
-    (cartoes ? '<button type="button" data-criar="1" title="Criar cartões na Mesa (Alt C)">Criar ›<kbd>Alt C</kbd></button>' : '<button type="button" data-encerrar="1" title="Arquivar as matérias de hoje num ano">Encerrar o ano</button>') +
+    (cartoes ? '<button type="button" data-criar="1" title="Criar cartões na Mesa (Alt C)">Criar ›<kbd>Alt C</kbd></button>' : '<button type="button" data-bimestre-vista="1" title="Qual bimestre mostrar ao abrir uma matéria"></button><button type="button" data-bimestre="1" title="Cria o próximo bimestre em todas as matérias e passa a estrela para ele">Iniciar novo bimestre</button><button type="button" data-encerrar="1" title="Arquivar as matérias de hoje num ano">Encerrar o ano</button>') +
     `</div></div><div id="bib-anos"></div><div class="fc-corpo ${cartoes ? 'fc-gerenciar' : 'fc-materias'}" id="bib-corpo"></div></div>`;
   const corpo = raiz.querySelector('#bib-corpo'), faixa = raiz.querySelector('#bib-anos');
 
@@ -38,6 +42,9 @@ export function desenharBiblioteca(raiz, ctx, modo = 'materias') {
     const e = completo(), anos = anosEncerrados(e);
     if (anoSel != null && !anos.some((a) => a.id === anoSel)) anoSel = null;
     const btn = raiz.querySelector('[data-encerrar]'); if (btn) btn.hidden = !materiasDoAnoAtual(e).length;
+    const ib = raiz.querySelector('[data-bimestre]'); if (ib) ib.hidden = !materiasDoAnoAtual(e).length;
+    const chip = raiz.querySelector('[data-bimestre-vista]');
+    if (chip) { const vista = pref.ler(CHAVE_VISTA), atual = bimestreAtualGeral(e); chip.hidden = !materiasDoAnoAtual(e).length; chip.textContent = `★ ${vista || atual || 'Sem bimestre'}`; chip.classList.toggle('on', !!vista); }
     if (cartoes || !anos.length) { faixa.innerHTML = ''; return; }
     const item = (id, nome, n, extra) => `<div class="mt-pasta${anoSel === id ? ' on' : ''}" role="button" tabindex="0" data-ano="${id ?? 'atual'}">${PASTA}<b>${escaparHtml(nome)}</b><small>${u(n, 'matéria', 'matérias')}${extra}</small></div>`;
     faixa.innerHTML = `<div class="mt-pastas an-pastas">${item(null, 'Ano atual', materiasDoAnoAtual(e).length, '')}${anos.map((a) => item(a.id, a.nome, materiasDoAno(e, a.id).length, ' · arquivado')).join('')}</div>`;
@@ -84,6 +91,21 @@ export function desenharBiblioteca(raiz, ctx, modo = 'materias') {
     if (ir) { location.hash = ir.dataset.ir; return; }
     if (e.target.closest('[data-criar]')) { criar(); return; }
     if (e.target.closest('[data-encerrar]')) { abrirDialogo(); return; }
+    const vb = e.target.closest('[data-bimestre-vista]');
+    if (vb) {
+      const vista = pref.ler(CHAVE_VISTA), mudar = (v) => { if (v) pref.gravar(CHAVE_VISTA, v); else pref.remover(CHAVE_VISTA); montarAnos(); };
+      abrirMenu(vb, [{ rotulo: 'Bimestre atual de cada matéria (★)', marcado: !vista, fazer: () => mudar('') }, ...bimestresDoAno(completo()).map((n) => ({ rotulo: `Abrir as matérias no ${n}`, marcado: vista === n, fazer: () => mudar(n) }))]);
+      return;
+    }
+    if (e.target.closest('[data-bimestre]')) {
+      let plano; try { plano = iniciarNovoBimestre(completo(), new Date().toISOString()); } catch (err) { ctx.aviso(err.message); return; }
+      if (!confirm(`Iniciar o ${plano.nome} em ${u(plano.materias, 'matéria', 'matérias')}? A estrela passa para ele e as aulas novas caem nele. Nada é apagado.`)) return;
+      const antes = completo();
+      sessao.aplicar((s) => iniciarNovoBimestre(s, new Date().toISOString()).estado);
+      montarCorpo();
+      ctx.aviso(`${plano.nome} iniciado em ${u(plano.materias, 'matéria', 'matérias')}.`, { texto: 'Desfazer', fazer: () => { sessao.aplicar(() => antes); montarCorpo(); } });
+      return;
+    }
     const re = e.target.closest('[data-reabrir]');
     if (re) { try { sessao.aplicar((s) => reabrirAno(s, Number(re.dataset.reabrir))); anoSel = null; pref.gravar('ohara.ano.sel', ''); montarCorpo(); ctx.aviso('Ano reaberto. As matérias voltaram para o ano atual.'); } catch (err) { ctx.aviso(err.message); } return; }
     const an = e.target.closest('[data-ano]');

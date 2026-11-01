@@ -86,6 +86,17 @@ export const MIGRACOES = [
      id INTEGER PRIMARY KEY, grade_id INTEGER NOT NULL, dia TEXT NOT NULL, tipo TEXT NOT NULL, novo_dia TEXT, novo_inicio TEXT, novo_fim TEXT, criado_em TEXT NOT NULL);
    ALTER TABLE aula ADD COLUMN grade_id INTEGER;
    ALTER TABLE aula ADD COLUMN grade_dia TEXT;`,
+  // v12 (bimestres): a pasta com estrela é o bimestre atual da matéria; a prova guarda o "bimestre da nota" (pasta) e o "conteúdo" (lista de pastas, em JSON)
+  `ALTER TABLE pasta ADD COLUMN estrela INTEGER NOT NULL DEFAULT 0;
+   ALTER TABLE prova ADD COLUMN bimestre_id INTEGER;
+   ALTER TABLE prova ADD COLUMN conteudo TEXT NOT NULL DEFAULT '[]';`,
+  // v13 (notas): item avaliado (bimestre 1 a 4; peso relativo dentro do bimestre; nota vazia = pendente; `reposicao_de` aponta o item que ela substitui;
+  // `origem` = "prova:ID" quando veio da Agenda) e o esquema de avaliação da matéria (JSON: mínimo, pesos e bônus; vazio = padrão). Sem chave estrangeira.
+  `CREATE TABLE avaliacao (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, bimestre INTEGER NOT NULL, titulo TEXT NOT NULL, tipo TEXT NOT NULL DEFAULT 'prova',
+     peso REAL NOT NULL DEFAULT 1, nota REAL, bonus REAL NOT NULL DEFAULT 0, reposicao_de INTEGER, origem TEXT NOT NULL DEFAULT '',
+     criado_em TEXT NOT NULL, excluido_em TEXT);
+   ALTER TABLE disciplina ADD COLUMN notas_cfg TEXT;`,
 ];
 
 export function versaoDoBanco(db) {

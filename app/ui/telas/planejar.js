@@ -110,7 +110,7 @@ export function desenharPlanejar(raiz, ctx) {
     ev.preventDefault();
     const f = new FormData(ev.target), agora = new Date(ctx.agora()).toISOString();
     try {
-      if (ev.target.id === 'prova') { sessao.aplicar((e) => criarProva(e, { disciplinaId: Number(f.get('materia')), titulo: f.get('titulo'), data: f.get('data'), aulas: f.getAll('aula').map(Number) }, agora).estado); formProva = false; }
+      if (ev.target.id === 'prova') { sessao.aplicar((e) => criarProva(e, { disciplinaId: Number(f.get('materia')), titulo: f.get('titulo'), data: f.get('data'), aulas: f.getAll('aula').map(Number), bimestreId: null, conteudo: [] }, agora).estado); formProva = false; }
       else if (ev.target.id === 'disp') { sessao.gravarDisponibilidade(Array.from({ length: 7 }, (_, i) => Number(f.get('d' + i)))); ctx.aviso('Tempo livre salvo.'); }
       else if (ev.target.id === 'importar') {
         const escolhas = new Map(), memoria = JSON.parse(sessao.lerConfig('ics_materia') || '{}');

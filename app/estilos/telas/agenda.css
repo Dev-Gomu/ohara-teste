@@ -99,3 +99,13 @@ html:root .novo-item .pil{height:32px;border-radius:999px;border:0;background:va
 html:root .novo-item .pil.a{background:var(--ac);color:var(--cx)}
 html:root .novo-item .f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 html:root .novo-item .acoes{display:flex;gap:8px}
+
+/* foco visível (navegação por teclado) */
+html:root .ag-bl:focus-visible,html:root .ag-ch:focus-visible,html:root .ag-dia:focus-visible,html:root .ag-dh:focus-visible,html:root .ag-mm button:focus-visible,html:root .bol:focus-visible,html:root .lin:focus-visible,html:root .ag-it:focus-visible,html:root .ag-topo .pil:focus-visible,html:root .ag-gav .pil:focus-visible{outline:2.5px solid var(--ac);outline-offset:2px}
+html:root .ag-bl.s:focus-visible,html:root .ag-ch.s:focus-visible{outline-color:var(--tx)}
+
+/* prova: conteúdo por pastas */
+html:root .ag-cont{display:flex;flex-direction:column;gap:6px}
+html:root .ag-chk{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--tx);text-transform:none;letter-spacing:0;font-weight:400}
+html:root .ag-chk label{display:flex;align-items:center;gap:6px;cursor:pointer}
+html:root .ag-cont .pil{align-self:flex-start;height:30px;border-radius:999px;border:0;background:var(--bg);color:var(--ac);padding:0 12px;font:inherit;font-size:12.5px;cursor:pointer}

@@ -2,6 +2,7 @@
 
 import { normalizarNome } from './texto.js';
 import { ativas, proximoId, LIMITE_NOME } from './materias.js';
+import { pastaAtual } from './pastas.js';
 
 export const TIPOS = ['aula', 'livro'];
 const DATA_HORA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
@@ -25,7 +26,7 @@ function validar({ titulo, tipo = 'aula', inicio, fim }) {
 
 export function criarAula(estado, disciplinaId, dados, agora, icsUid = null) {
   if (!ativas(estado.disciplinas).some((d) => d.id === disciplinaId)) throw new Error('A matéria não existe.');
-  const aula = { id: proximoId(estado.aulas), disciplina_id: disciplinaId, ...validar(dados), anotacoes: '', ics_uid: icsUid, pasta_id: dados.pastaId ?? null, grade_id: null, grade_dia: null, criado_em: agora, excluido_em: null };
+  const aula = { id: proximoId(estado.aulas), disciplina_id: disciplinaId, ...validar(dados), anotacoes: '', ics_uid: icsUid, pasta_id: dados.pastaId !== undefined ? dados.pastaId : (pastaAtual(estado, disciplinaId)?.id ?? null), grade_id: null, grade_dia: null, criado_em: agora, excluido_em: null };
   return { estado: { ...estado, aulas: [...estado.aulas, aula] }, aula };
 }
 

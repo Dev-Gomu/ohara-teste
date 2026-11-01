@@ -9,7 +9,7 @@ export const LIMITE_NOME = 80;
 const COR = /^#[0-9a-fA-F]{6}$/;
 
 export function estadoVazio() {
-  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], eventos: [], grade: [], excecoes: [], tarefas: [], cartoes: [], pastas: [], anos: [], revisoes: [], revisoes_log: [], baralhos: [] };
+  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], eventos: [], grade: [], excecoes: [], tarefas: [], cartoes: [], pastas: [], anos: [], revisoes: [], revisoes_log: [], baralhos: [], avaliacoes: [] };
 }
 
 export function proximoId(lista) {
@@ -47,7 +47,7 @@ export function validarSigla(sigla) {
 export const siglaDaMateria = (d) => d.sigla || String(d.nome).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase();
 
 export function criarMateria(estado, { nome, cor, sigla }, agora) {
-  const d = { id: proximoId(estado.disciplinas), nome: validarNomeMateria(estado, nome), cor: validarCor(cor), dificuldade: 2, sigla: validarSigla(sigla), ano_id: null, criado_em: agora, excluido_em: null };
+  const d = { id: proximoId(estado.disciplinas), nome: validarNomeMateria(estado, nome), cor: validarCor(cor), dificuldade: 2, sigla: validarSigla(sigla), ano_id: null, notas_cfg: null, criado_em: agora, excluido_em: null };
   return { estado: { ...estado, disciplinas: [...estado.disciplinas, d] }, materia: d };
 }
 
@@ -132,6 +132,7 @@ export function esvaziarLixeira(estado) {
       revisoes_log: estado.revisoes_log ?? [],
       baralhos: ativas(estado.baralhos ?? []),
       provas: ativas(estado.provas ?? []).filter((p) => vivasD.has(p.disciplina_id)),
+      avaliacoes: ativas(estado.avaliacoes ?? []).filter((x) => vivasD.has(x.disciplina_id)),
       tarefas: (estado.tarefas ?? []).filter((t) => !t.excluido_em && vivasD.has(t.disciplina_id) && (t.aula_id == null || aulasVivas.has(t.aula_id))),
     },
     apagados,

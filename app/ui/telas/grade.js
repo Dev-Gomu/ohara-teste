@@ -6,6 +6,7 @@ import { ativas, corCss, siglaDaMateria } from '../../nucleo/materias.js';
 import { criarHorario, alterarHorario, excluirHorario, inverterQuinzenal, sugerirGrade, aplicarGrade } from '../../nucleo/grade.js';
 import { DIAS_SEMANA, dataPorExtenso } from '../../nucleo/datas.js';
 import { diaDe } from '../foco_servico.js';
+import { distribuirFaixas } from '../../nucleo/faixas.js';
 
 const DIAS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
 const min = (h) => { const [a, b] = h.split(':').map(Number); return a * 60 + b; };
@@ -24,10 +25,10 @@ export function desenharGrade(raiz, ctx) {
   };
   const proximaMudanca = () => ativas(sessao.estado().grade ?? []).map((h) => h.desde).filter((d) => d > ref).sort()[0] ?? null;
 
-  function bloco(h, total, h0, porId) {
+  function bloco(h, total, h0, porId, f = { faixa: 0, de: 1 }) {
     const m = porId.get(h.disciplina_id);
-    const topo = (min(h.inicio) - h0 * 60) / total * 100, alt = (min(h.fim) - min(h.inicio)) / total * 100;
-    return `<button type="button" class="gd-bl${h.repete === 'quinzenal' ? ' qz' : ''}${cur?.h?.id === h.id ? ' s' : ''}" data-id="${h.id}" style="--c:${corCss(m.cor)};top:${topo}%;height:${alt}%">` +
+    const topo = (min(h.inicio) - h0 * 60) / total * 100, alt = (min(h.fim) - min(h.inicio)) / total * 100;   // respiro de 1,5 px em cima e embaixo; horários no mesmo horário dividem a largura
+    return `<button type="button" class="gd-bl${h.repete === 'quinzenal' ? ' qz' : ''}${cur?.h?.id === h.id ? ' s' : ''}" data-id="${h.id}" style="--c:${corCss(m.cor)};top:calc(${topo}% + 1.5px);height:calc(${alt}% - 3px);left:calc(${f.faixa / f.de * 100}% + 4px);right:auto;width:calc(${100 / f.de}% - 8px)">` +
       `<span class="l1"><i class="sg">${escaparHtml(siglaDaMateria(m))}</i>${h.rotulo ? `<b>${escaparHtml(h.rotulo)}</b>` : ''}${h.repete === 'quinzenal' ? '<em>quinz.</em>' : ''}</span>` +
       `<span class="l2">${h.inicio}–${h.fim}${h.local ? ` · ${escaparHtml(h.local)}` : ''}</span></button>`;
   }
@@ -64,7 +65,7 @@ export function desenharGrade(raiz, ctx) {
       `<label class="gd-ref">Grade em <input class="in" type="date" id="ref" value="${ref}"></label></div>` +
       `<div class="gd-corpo"><div class="card gd-grade"><div class="gd-cab" style="--nd:${nd}"><span></span>${DIAS.slice(0, nd).map((d) => `<span>${d}</span>`).join('')}</div>` +
       `<div class="gd-gr" style="--nd:${nd}"><div class="gd-hr">${Array.from({ length: h1 - h0 + 1 }, (_, i) => `<span style="top:${i * 60 / total * 100}%">${h0 + i}h</span>`).join('')}</div>` +
-      DIAS.slice(0, nd).map((d, i) => `<div class="gd-col" data-d="${i}" data-h0="${h0}" data-total="${total}">${Array.from({ length: h1 - h0 }, (_, j) => `<i class="ln" style="top:${j * 60 / total * 100}%"></i>`).join('')}${hs.filter((h) => h.dia_semana === i).map((h) => bloco(h, total, h0, porId)).join('')}</div>`).join('') +
+      DIAS.slice(0, nd).map((d, i) => `<div class="gd-col" data-d="${i}" data-h0="${h0}" data-total="${total}">${Array.from({ length: h1 - h0 }, (_, j) => `<i class="ln" style="top:${j * 60 / total * 100}%"></i>`).join('')}${(() => { const doDia = hs.filter((h) => h.dia_semana === i), fx = distribuirFaixas(doDia.map((h) => ({ ini: min(h.inicio), fim: min(h.fim) }))); return doDia.map((h, k) => bloco(h, total, h0, porId, fx[k])).join(''); })()}</div>`).join('') +
       `</div></div><div class="card gd-painel">${painel()}</div></div></div>`;
   }
 

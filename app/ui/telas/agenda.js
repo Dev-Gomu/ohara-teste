@@ -7,6 +7,9 @@ import { somarDias, inicioDaSemana, diaDaSemana, diasEntre, MESES, MESES_CURTOS,
 import { itensDaAgenda, aCompletar, atrasados, salvarItem, excluirItem, restaurarItem } from '../../nucleo/eventos.js';
 import { aulasEfetivas, ocorrenciasCanceladas, materializar, cancelarOcorrencia, restaurarOcorrencia, moverOcorrencia, aulaTemConteudo } from '../../nucleo/grade.js';
 import { excluirAula, alterarAula } from '../../nucleo/aulas.js';
+import { distribuirFaixas } from '../../nucleo/faixas.js';
+import { pastasDaMateria, pastaAtual, pastasAteAqui } from '../../nucleo/pastas.js';
+import { conteudoDaProva } from '../../nucleo/planejador.js';
 import { diaDe } from '../foco_servico.js';
 
 const DS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
@@ -48,10 +51,14 @@ export function desenharAgenda(raiz, ctx) {
     return `<button type="button" class="ag-ch ${CLASSE[i.tipo]}${i.feito ? ' f' : ''}${s}" data-sel="item" data-origem="${i.origem}" data-id="${i.id}" data-dia="${i.dia}" style="--c:${cor(i.disciplina_id)}">` +
       `${i.tipo === 'trabalho' ? `<i class="sg">${escaparHtml(sigla(i.disciplina_id))}</i>` : ''}${escaparHtml(nome)}${i.hora ? ` ${i.hora}` : ''}</button>`;
   }
-  const blocoAula = (a, h0, total) => {
+  /** Posição de um bloco no dia: um respiro de 1,5 px em cima e embaixo (blocos colados não se encostam) e, se há outro no mesmo horário, a faixa dele. */
+  const posicao = (iniMin, fimMin, h0, total, f = { faixa: 0, de: 1 }) => {
+    const topo = (iniMin - h0 * 60) / total * 100, alt = Math.max(3, (fimMin - iniMin) / total * 100);
+    return `top:calc(${topo}% + 1.5px);height:calc(${alt}% - 3px);left:calc(${f.faixa / f.de * 100}% + 3px);right:auto;width:calc(${100 / f.de}% - 6px)`;
+  };
+  const blocoAula = (a, h0, total, f) => {
     const s = sel?.k === 'aula' && sel.grade_id === a.grade_id && sel.id === a.id && sel.inicio === a.inicio ? ' s' : '';
-    const topo = (min(a.inicio.slice(11)) - h0 * 60) / total * 100, alt = Math.max(3, (min(a.fim.slice(11)) - min(a.inicio.slice(11))) / total * 100);
-    return `<button type="button" class="ag-bl${a.quinzenal ? ' qz' : ''}${a.cancelada ? ' x' : ''}${s}" data-sel="aula" data-aid="${a.id ?? ''}" data-gid="${a.grade_id ?? ''}" data-gdia="${a.grade_dia ?? ''}" data-ini="${a.inicio}" style="--c:${cor(a.disciplina_id)};top:${topo}%;height:${alt}%">` +
+    return `<button type="button" class="ag-bl${a.quinzenal ? ' qz' : ''}${a.cancelada ? ' x' : ''}${s}" data-sel="aula" data-aid="${a.id ?? ''}" data-gid="${a.grade_id ?? ''}" data-gdia="${a.grade_dia ?? ''}" data-ini="${a.inicio}" style="--c:${cor(a.disciplina_id)};${posicao(min(a.inicio.slice(11)), min(a.fim.slice(11)), h0, total, f)}">` +
       `<span class="l1"><i class="sg">${escaparHtml(sigla(a.disciplina_id))}</i>${a.rotulo ? `<b>${escaparHtml(a.rotulo)}</b>` : ''}</span><span class="l2">${a.inicio.slice(11)}</span></button>`;
   };
 
@@ -63,10 +70,17 @@ export function desenharAgenda(raiz, ctx) {
     const h0 = Math.min(7, Math.floor(Math.min(...hs.map((x) => x[0]), 420) / 60)), h1 = Math.max(19, Math.ceil(Math.max(...hs.map((x) => x[1]), 1140) / 60)), total = (h1 - h0) * 60;
     const cab = dias.map((d) => `<button type="button" class="ag-dh${d === hoje() ? ' h' : ''}" data-novo="${d}"><span>${DS[diaDaSemana(d)]}</span><b>${+d.slice(8)}</b></button>`).join('');
     const faixa = dias.map((d) => { const l = is.filter((i) => i.dia === d && !tem(i)); return `<div>${l.slice(0, 3).map(chip).join('')}${l.length > 3 ? `<span class="mais">+${l.length - 3}</span>` : ''}</div>`; }).join('');
-    const cols = dias.map((d) => `<div class="ag-col" data-col="${d}" data-h0="${h0}" data-total="${total}">${Array.from({ length: h1 - h0 }, (_, j) => `<i class="ln" style="top:${j * 60 / total * 100}%"></i>`).join('')}` +
-      as.filter((a) => a.dia === d).map((a) => blocoAula(a, h0, total)).join('') +
-      is.filter((i) => i.dia === d && tem(i)).map((i) => { const t = (min(i.hora) - h0 * 60) / total * 100, f = i.hora_fim ? min(i.hora_fim) : min(i.hora) + 60; return `<button type="button" class="ag-bl ev${sel?.k === 'item' && sel.id === i.id && sel.origem === i.origem ? ' s' : ''}" data-sel="item" data-origem="${i.origem}" data-id="${i.id}" data-dia="${i.dia}" style="top:${t}%;height:${(f - min(i.hora)) / total * 100}%"><span class="l1">${escaparHtml(i.titulo)}</span><span class="l2">${i.hora}</span></button>`; }).join('') +
-      (d === hoje() ? `<i class="agora" style="top:${(horaAgora() - h0 * 60) / total * 100}%"></i>` : '') + '</div>').join('');
+    const cols = dias.map((d) => {
+      const doDia = [...as.filter((a) => a.dia === d).map((a) => ({ aula: a, ini: min(a.inicio.slice(11)), fim: min(a.fim.slice(11)) })),
+        ...is.filter((i) => i.dia === d && tem(i)).map((i) => ({ item: i, ini: min(i.hora), fim: i.hora_fim ? min(i.hora_fim) : min(i.hora) + 60 }))];
+      const faixas = distribuirFaixas(doDia);
+      return `<div class="ag-col" data-col="${d}" data-h0="${h0}" data-total="${total}">${Array.from({ length: h1 - h0 }, (_, j) => `<i class="ln" style="top:${j * 60 / total * 100}%"></i>`).join('')}` +
+        doDia.map((x, k) => {
+          if (x.aula) return blocoAula(x.aula, h0, total, faixas[k]);
+          const i = x.item;
+          return `<button type="button" class="ag-bl ev${sel?.k === 'item' && sel.id === i.id && sel.origem === i.origem ? ' s' : ''}" data-sel="item" data-origem="${i.origem}" data-id="${i.id}" data-dia="${i.dia}" style="${posicao(x.ini, x.fim, h0, total, faixas[k])}"><span class="l1">${escaparHtml(i.titulo)}</span><span class="l2">${i.hora}</span></button>`;
+        }).join('') + (d === hoje() ? `<i class="agora" style="top:${(horaAgora() - h0 * 60) / total * 100}%"></i>` : '') + '</div>';
+    }).join('');
     return `<div class="ag-sem"><div class="ag-cab">${'<span></span>'}${cab}</div><div class="ag-faixa"><span></span>${faixa}</div>` +
       `<div class="ag-gr"><div class="ag-hr">${Array.from({ length: h1 - h0 + 1 }, (_, i) => `<span style="top:${i * 60 / total * 100}%">${h0 + i}h</span>`).join('')}</div>${cols}</div></div>`;
   }
@@ -122,13 +136,22 @@ export function desenharAgenda(raiz, ctx) {
       `<div class="f2">${campo('Data', `<input class="in" type="date" name="data" value="${v.data ?? ''}">`)}${campo('Hora', `<input class="in" type="time" name="hora" value="${v.hora ?? ''}">`)}</div>` +
       (tipo === 'compromisso' ? `<div class="f2">${campo('Termina às', `<input class="in" type="time" name="horaFim" value="${v.horaFim ?? ''}">`)}${campo('Repete', `<select class="in" name="rep"><option value="">não repete</option><option value="semanal"${v.rep === 'semanal' ? ' selected' : ''}>toda semana</option><option value="mensal"${v.rep === 'mensal' ? ' selected' : ''}>todo mês</option></select>`)}</div>${v.rep ? campo('Repete até', `<input class="in" type="date" name="ate" value="${v.ate ?? ''}">`) : ''}` : '') +
       `<div class="f2">${campo('Local / sala', `<input class="in" name="local" maxlength="80" autocomplete="off" value="${escaparHtml(v.local ?? '')}">`)}${usaMateria(tipo) ? campo('Peso', `<input class="in" name="peso" inputmode="decimal" placeholder="opcional" value="${v.peso ?? ''}">`) : '<span></span>'}</div>` +
+      (tipo === 'prova' ? blocoBimestre(v) : '') +
       campo('Observação', `<input class="in" name="observacao" maxlength="1000" autocomplete="off" value="${escaparHtml(v.observacao ?? '')}">`) + (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '');
+  }
+  /** Prova: bimestre da nota (a que período a nota pertence) e conteúdo (o que cai: uma ou mais pastas, "do 1º até aqui" para a cumulativa). */
+  function blocoBimestre(v) {
+    const ps = pastasDaMateria(E(), v.disciplinaId);
+    if (!ps.length) return `<p class="dica">Esta matéria ainda não tem pastas de bimestre. Crie em <a href="#materias/${v.disciplinaId}">Acervo</a> (“+ 4 bimestres”).</p>`;
+    const bim = v.bimestreId ?? null, cont = new Set(v.conteudo ?? []);
+    return campo('Bimestre da nota', `<select class="in" name="bim"><option value="">—</option>${ps.map((p) => `<option value="${p.id}"${p.id === bim ? ' selected' : ''}>${escaparHtml(p.nome)}</option>`).join('')}</select>`) +
+      `<div class="c ag-cont"><span>Conteúdo (o que cai)</span><div class="ag-chk">${ps.map((p) => `<label><input type="checkbox" name="cont" value="${p.id}"${cont.has(p.id) ? ' checked' : ''}> ${escaparHtml(p.nome)}</label>`).join('')}</div>${bim != null ? '<button type="button" class="pil" data-a="ate-aqui">Marcar do 1º até aqui</button>' : ''}</div>`;
   }
   const registroDe = (origem, id) => {
     const e = E(), r = origem === 'prova' ? e.provas.find((x) => x.id === id) : (e.eventos ?? []).find((x) => x.id === id);
     if (!r) return null;
     const rep = r.repete ? JSON.parse(r.repete) : null;
-    return { tipo: origem === 'prova' ? 'prova' : r.tipo, disciplinaId: r.disciplina_id, titulo: r.titulo, data: r.data, hora: r.hora, horaFim: r.hora_fim, local: r.local, observacao: r.observacao, peso: r.peso, rep: rep?.freq ?? '', ate: rep?.ate ?? '', feito: !!r.feito_em };
+    return { tipo: origem === 'prova' ? 'prova' : r.tipo, bimestreId: origem === 'prova' ? r.bimestre_id : null, conteudo: origem === 'prova' ? conteudoDaProva(r) : [], disciplinaId: r.disciplina_id, titulo: r.titulo, data: r.data, hora: r.hora, horaFim: r.hora_fim, local: r.local, observacao: r.observacao, peso: r.peso, rep: rep?.freq ?? '', ate: rep?.ate ?? '', feito: !!r.feito_em };
   };
   function gaveta() {
     if (!sel) return '';
@@ -136,6 +159,7 @@ export function desenharAgenda(raiz, ctx) {
       const novo = sel.k === 'novo', reg = novo ? null : registroDe(sel.origem, sel.id);
       if (!novo && !reg) { sel = null; return ''; }
       const tipo = novo ? tipoNovo : reg.tipo, v = novo ? { disciplinaId: mats()[0]?.id, data: sel.dia, hora: sel.hora ?? '', ...(rasc ?? {}) } : { ...reg, ...(rasc ?? {}) };
+      if (novo && tipo === 'prova' && v.bimestreId === undefined) { const at = pastaAtual(E(), v.disciplinaId); v.bimestreId = at?.id ?? null; v.conteudo = at ? [at.id] : []; }
       return `<div class="cab"><h2>${novo ? 'Novo item' : TIPOS[tipo]}</h2><span class="esp"></span>${!novo && (tipo === 'trabalho' || tipo === 'lembrete') ? `<button type="button" class="pil ${reg.feito ? 'a' : ''}" data-a="feito">${tipo === 'trabalho' ? 'Entregue' : 'Feito'}</button>` : ''}</div>` +
         (novo ? `<div class="seg">${Object.keys(TIPOS).map((k) => `<button type="button" class="pil ${tipoNovo === k ? 'a' : ''}" data-tipo="${k}">${TIPOS[k]}</button>`).join('')}</div>` : '') +
         `<form id="fi" class="ag-form">${formulario(v, tipo, novo, sel.origem)}<div class="esp"></div><div class="acoes"><button class="btn peq" type="submit">Salvar</button>${novo ? '' : '<button class="btn peq sec" type="button" data-a="excluir">Excluir</button>'}<button class="btn peq sec" type="button" data-a="fechar">${novo ? 'Cancelar' : 'Fechar'}</button></div></form>`;
@@ -176,7 +200,7 @@ export function desenharAgenda(raiz, ctx) {
   const guardaForm = () => { const f = raiz.querySelector('#fi'); if (f) rasc = lerForm(f); };
   function lerForm(f) {
     const d = new FormData(f), o = Object.fromEntries(d.entries());
-    return { disciplinaId: o.mat ? Number(o.mat) : (rasc?.disciplinaId ?? null), titulo: o.titulo ?? '', data: o.data ?? '', hora: o.hora ?? '', horaFim: o.horaFim ?? '', local: o.local ?? '', observacao: o.observacao ?? '', peso: o.peso ?? '', rep: o.rep ?? '', ate: o.ate ?? '' };
+    return { disciplinaId: f.querySelector('[name=mat]') ? Number(f.querySelector('[name=mat]').value) : (rasc?.disciplinaId ?? null), titulo: o.titulo ?? '', data: o.data ?? '', hora: o.hora ?? '', horaFim: o.horaFim ?? '', local: o.local ?? '', observacao: o.observacao ?? '', peso: o.peso ?? '', rep: o.rep ?? '', ate: o.ate ?? '', ...(f.querySelector('[name=bim]') ? { bimestreId: o.bim ? Number(o.bim) : null, conteudo: d.getAll('cont').map(Number) } : {}) };
   }
   const selAula = (b) => {
     const a = aulas(b.dataset.ini.slice(0, 10), b.dataset.ini.slice(0, 10)).find((x) => x.inicio === b.dataset.ini && String(x.grade_id ?? '') === b.dataset.gid && String(x.id ?? '') === b.dataset.aid);
@@ -210,6 +234,7 @@ export function desenharAgenda(raiz, ctx) {
 
   function acao(a) {
     if (a === 'fechar') { sel = null; rasc = null; erro = ''; return; }
+    if (a === 'ate-aqui') { guardaForm(); const reg = sel.k === 'item' ? registroDe(sel.origem, sel.id) : null, d = rasc?.disciplinaId ?? reg?.disciplinaId; if (rasc?.bimestreId != null) rasc.conteudo = pastasAteAqui(E(), d, rasc.bimestreId); return; }
     if (a === 'feito') { const reg = registroDe(sel.origem, sel.id), antes = sessao.estadoCompleto(); aplicar((e) => ({ ...e, eventos: e.eventos.map((x) => (x.id === sel.id ? { ...x, feito_em: reg.feito ? null : agoraIso() } : x)) })); void antes; return; }
     if (a === 'excluir') {
       const { origem, id } = sel, nome = registroDe(origem, id)?.titulo ?? 'Item';
@@ -232,7 +257,11 @@ export function desenharAgenda(raiz, ctx) {
     if (a === 'restaurar') { if (aplicar((e) => restaurarOcorrencia(e, sel.grade_id, sel.grade_dia))) sel = null; }
   }
 
-  raiz.onchange = (ev) => { if (ev.target.name === 'rep' && raiz.querySelector('#fi')) { guardaForm(); desenhar(); } };
+  raiz.onchange = (ev) => {
+    if (!raiz.querySelector('#fi')) return;
+    if (ev.target.name === 'rep' || ev.target.name === 'bim') { guardaForm(); desenhar(); }
+    else if (ev.target.name === 'mat') { guardaForm(); if (rasc) { rasc.bimestreId = undefined; rasc.conteudo = undefined; } desenhar(); }   // outra matéria: bimestre e conteúdo recomeçam da estrela dela
+  };
   raiz.onsubmit = (ev) => {
     ev.preventDefault();
     if (ev.target.id === 'fm') {
@@ -247,6 +276,7 @@ export function desenharAgenda(raiz, ctx) {
     rasc = v;
     const dados = { tipo, titulo: v.titulo, data: v.data, hora: v.hora, local: v.local, observacao: v.observacao, peso: v.peso };
     if (usaMateria(tipo) && (novo || tipo === 'trabalho')) dados.disciplinaId = v.disciplinaId;
+    if (tipo === 'prova' && v.bimestreId !== undefined) { dados.bimestreId = v.bimestreId; dados.conteudo = v.conteudo ?? []; }
     if (tipo === 'compromisso') { dados.horaFim = v.horaFim; dados.repete = v.rep ? { freq: v.rep, ate: v.ate || null } : ''; }
     if (!novo) dados.id = sel.id;
     let res = null;
@@ -256,14 +286,14 @@ export function desenharAgenda(raiz, ctx) {
     }
     desenhar();
   };
-  // teclado (fora de campos de texto): N novo item · T hoje · ← → período anterior/seguinte · Esc fecha a gaveta
+  // teclado (fora de campos de texto): N novo item · T hoje · [ ] ou PgUp PgDn período anterior/seguinte · Esc fecha a gaveta (as setas ficam livres para andar dentro dos mosaicos)
   const aoTecla = (ev) => {
     if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.target.closest?.('input,select,textarea,[contenteditable="true"]') || document.querySelector('.novo-item-fundo')) return;
     const clicar = (seletor) => { const b = raiz.querySelector(seletor); if (b) { ev.preventDefault(); b.click(); } };
     if (ev.key === 'n' || ev.key === 'N') clicar('.ag-topo [data-novo]');
     else if (ev.key === 't' || ev.key === 'T') clicar('[data-nav="0"]');
-    else if (ev.key === 'ArrowLeft') clicar('[data-nav="-1"]');
-    else if (ev.key === 'ArrowRight') clicar('[data-nav="1"]');
+    else if (ev.key === '[' || ev.key === 'PageUp') clicar('[data-nav="-1"]');
+    else if (ev.key === ']' || ev.key === 'PageDown') clicar('[data-nav="1"]');
     else if (ev.key === 'Escape' && sel) { sel = null; rasc = null; erro = ''; desenhar(); }
   };
   document.addEventListener('keydown', aoTecla);

@@ -8,6 +8,7 @@
 import { somarDias, diasEntre, diaDaSemana } from './datas.js';
 import { normalizarNome } from './texto.js';
 import { ativas } from './materias.js';
+import { pastasDaMateria, pastaAtual, aulasDaPasta } from './pastas.js';
 
 export const DISPONIBILIDADE_PADRAO = [120, 120, 120, 120, 120, 60, 0];   // segunda … domingo, em minutos
 export const REVISOES_DIAS = [1, 7, 30];
@@ -38,22 +39,37 @@ export function camposDaAgenda({ data, hora, local, observacao, peso }) {
 }
 
 // A prova só exige a matéria: data, hora, local e peso podem ser completados depois (ver `aCompletar`, em eventos.js).
-export function criarProva(estado, { disciplinaId, titulo, data, hora, local, observacao, peso, aulas = [] }, agora) {
+export function criarProva(estado, { disciplinaId, titulo, data, hora, local, observacao, peso, aulas = [], bimestreId, conteudo }, agora) {
   if (!ativas(estado.disciplinas).some((d) => d.id === disciplinaId)) throw new Error('A matéria não existe.');
   const t = normalizarNome(titulo) || 'Prova';
   const campos = camposDaAgenda({ data, hora, local, observacao, peso });
   const doDisc = new Set(ativas(estado.aulas).filter((a) => a.disciplina_id === disciplinaId).map((a) => a.id));
   const ids = [...new Set(aulas)].filter((id) => doDisc.has(id));
-  const prova = { id: (estado.provas ?? []).reduce((m, p) => Math.max(m, p.id), 0) + 1, disciplina_id: disciplinaId, titulo: t.slice(0, 80), ...campos, aulas: JSON.stringify(ids), criado_em: agora, excluido_em: null };
+  // bimestre da nota e conteúdo: sem dizer nada, valem a pasta com estrela da matéria (o bimestre atual)
+  const pastasDaMat = new Set(pastasDaMateria(estado, disciplinaId).map((x) => x.id));
+  const bim = bimestreId === undefined ? (pastaAtual(estado, disciplinaId)?.id ?? null) : bimestreId;
+  const cont = conteudo === undefined ? (bim != null ? [bim] : []) : [...new Set(conteudo)];
+  if ((bim != null && !pastasDaMat.has(bim)) || cont.some((id) => !pastasDaMat.has(id))) throw new Error('Essa pasta não é desta matéria.');
+  const prova = { id: (estado.provas ?? []).reduce((m, p) => Math.max(m, p.id), 0) + 1, disciplina_id: disciplinaId, titulo: t.slice(0, 80), ...campos, aulas: JSON.stringify(ids), bimestre_id: bim, conteudo: JSON.stringify(cont), criado_em: agora, excluido_em: null };
   return { estado: { ...estado, provas: [...(estado.provas ?? []), prova] }, prova };
 }
 export const aulasDaProva = (p) => { try { return JSON.parse(p.aulas); } catch { return []; } };
+/** As pastas (bimestres) que caem na prova. Vazio = prova antiga, que usa só `aulasDaProva`. */
+export const conteudoDaProva = (p) => { try { return JSON.parse(p.conteudo ?? '[]'); } catch { return []; } };
+/** Ids das aulas que caem na prova: as das pastas do conteúdo (só até o dia da prova, se ela tem data); sem pastas, as aulas escolhidas à mão (provas antigas). */
+export function aulasDoConteudo(estado, p) {
+  const pastas = conteudoDaProva(p);
+  if (!pastas.length) return aulasDaProva(p);
+  const ids = new Set();
+  for (const pastaId of pastas) for (const a of aulasDaPasta(estado, p.disciplina_id, pastaId)) if (!p.data || !a.inicio || a.inicio.slice(0, 10) <= p.data) ids.add(a.id);
+  return [...ids];
+}
 
 export function alterarProva(estado, id, dados) {
   const atual = (estado.provas ?? []).find((p) => p.id === id && !p.excluido_em);
   if (!atual) throw new Error('Prova não encontrada.');
   const pega = (campo) => (campo in dados ? dados[campo] : atual[campo]);
-  const { prova } = criarProva({ ...estado, provas: [] }, { disciplinaId: atual.disciplina_id, titulo: pega('titulo'), data: pega('data'), hora: pega('hora'), local: pega('local'), observacao: pega('observacao'), peso: pega('peso'), aulas: dados.aulas ?? aulasDaProva(atual) }, atual.criado_em);
+  const { prova } = criarProva({ ...estado, provas: [] }, { disciplinaId: atual.disciplina_id, titulo: pega('titulo'), data: pega('data'), hora: pega('hora'), local: pega('local'), observacao: pega('observacao'), peso: pega('peso'), aulas: dados.aulas ?? aulasDaProva(atual), bimestreId: 'bimestreId' in dados ? dados.bimestreId : atual.bimestre_id, conteudo: dados.conteudo ?? conteudoDaProva(atual) }, atual.criado_em);
   return { ...estado, provas: estado.provas.map((p) => (p.id === id ? { ...prova, id, criado_em: atual.criado_em } : p)) };
 }
 export function excluirProva(estado, id, agora) {
@@ -91,7 +107,7 @@ export function necessidades(estado, hoje, inicioUso = null) {
   }
   for (const p of provasFuturas(estado, hoje)) {
     const mat = mats.get(p.disciplina_id); if (!mat) continue;
-    for (const id of aulasDaProva(p)) {
+    for (const id of aulasDoConteudo(estado, p)) {
       const a = aulasPorId.get(id); if (!a) continue;
       const depoisDaAula = a.inicio ? somarDias(a.inicio.slice(0, 10), 1) : hoje;
       for (let n = 1; n <= blocosPorDificuldade(mat.dificuldade); n++) {
