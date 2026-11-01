@@ -106,11 +106,11 @@ export function desenharRevisor(raiz, ctx) {
       f.onkeydown = (ev) => { if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') { ev.preventDefault(); f.requestSubmit(); } };
       f.onsubmit = (ev) => { ev.preventDefault(); const d = new FormData(f); try { sessao.aplicar((s) => alterarCartao(s, c.id, { frente: d.get('frente'), verso: d.get('verso') }, new Date().toISOString())); editando = false; erro = ''; ctx.aviso('Cartão corrigido.'); } catch (err) { erro = err.message; } cartao(); };
     } else {
-      const pil = (txt) => `<span class="tr-pil"><i></i>${escaparHtml(mat ? siglaDaMateria(mat) : '')} · ${txt}</span>`;
+      const pil = () => `<span class="tr-pil"><i></i>${escaparHtml(mat ? siglaDaMateria(mat) : '')}</span>`, ind = (l, nome) => `<span class="tr-ind" role="img" aria-label="${nome}" title="${nome}">${l}</span>`;   // bolinha F/V na quina: diz de que lado do cartão você está
       const tamF = c.frente.length > 380 ? 'xs' : c.frente.length > 240 ? 's' : c.frente.length > 120 ? 'm' : 'g', tamV = c.verso.length > 1300 ? 'l' : c.verso.length > 700 ? 'm' : 'g';   // texto longo: letra menor (a carta tem tamanho fixo)
       const carta = revelado
-        ? `<article class="tr-card tr-cv" data-tf="${tamF}" data-tv="${tamV}"><div class="tr-topo">${pil('Verso')}<div class="tr-t1">${renderizarFrente(c.frente)}</div></div><div class="tr-corpo fc-card"><div class="corpo verso">${renderizarVerso(c.verso)}</div><div class="tr-imgs" data-lado="verso"></div></div></article>`
-        : `<article class="tr-card tr-cf" data-tf="${tamF}">${pil(`Frente${rev ? '' : ' · novo'}`)}<div class="tr-fr">${renderizarFrente(c.frente)}<div class="tr-imgs" data-lado="frente"></div></div></article>` +
+        ? `<article class="tr-card tr-cv" data-tf="${tamF}" data-tv="${tamV}">${ind('V', 'Verso')}<div class="tr-topo">${pil()}<div class="tr-t1">${renderizarFrente(c.frente)}</div></div><div class="tr-corpo fc-card"><div class="corpo verso">${renderizarVerso(c.verso)}</div><div class="tr-imgs" data-lado="verso"></div></div></article>`
+        : `<article class="tr-card tr-cf" data-tf="${tamF}">${ind('F', 'Frente')}<div class="tr-fr">${renderizarFrente(c.frente)}<div class="tr-imgs" data-lado="frente"></div></div></article>` +
           `<button type="button" class="tr-mostrar" data-a="mostrar">Virar o cartão<kbd>Espaço</kbd></button>`;
       raiz.innerHTML = `<div class="tr-rev" style="--mc:${corCss(mat?.cor)}">${topo}${carta}` +
         (revelado ? `<div class="tr-resp">${RESPOSTAS.map((r) => `<button type="button" class="${r === 'bom' ? 'bom' : ''}" data-r="${r}"><b>${NOMES[r]}</b><small>${rot[r]}</small><kbd>${RESPOSTAS.indexOf(r) + 1}</kbd></button>`).join('')}</div>` : '') +

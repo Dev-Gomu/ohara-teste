@@ -1,6 +1,6 @@
 // Gerado por ferramentas/versao.js — não editar.
 self.OHARA = {
- "versao": "5520520cb853",
+ "versao": "f5fae3373e5f",
  "arquivos": [
   "armazenamento/ankiconnect.js",
   "armazenamento/apkg.js",
