@@ -106,10 +106,15 @@ export function desenharRevisor(raiz, ctx) {
       f.onkeydown = (ev) => { if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') { ev.preventDefault(); f.requestSubmit(); } };
       f.onsubmit = (ev) => { ev.preventDefault(); const d = new FormData(f); try { sessao.aplicar((s) => alterarCartao(s, c.id, { frente: d.get('frente'), verso: d.get('verso') }, new Date().toISOString())); editando = false; erro = ''; ctx.aviso('Cartão corrigido.'); } catch (err) { erro = err.message; } cartao(); };
     } else {
-      raiz.innerHTML = `<div class="tr-rev" style="--mc:${corCss(mat?.cor)}">${topo}<article class="tr-card"><div class="tr-frente" data-rot="Frente${mat ? ' · ' + escaparHtml(siglaDaMateria(mat)) : ''}${rev ? '' : ' · novo'}">${renderizarFrente(c.frente)}<div class="tr-imgs" data-lado="frente"></div></div>` +
-        (revelado ? `<div class="tr-corpo fc-card"><div class="corpo verso">${renderizarVerso(c.verso)}</div><div class="tr-imgs" data-lado="verso"></div></div>` : `<button type="button" class="tr-mostrar" data-a="mostrar">Mostrar resposta<kbd>Espaço</kbd></button>`) + '</article>' +
+      const pil = (txt) => `<span class="tr-pil"><i></i>${escaparHtml(mat ? siglaDaMateria(mat) : '')} · ${txt}</span>`;
+      const tamF = c.frente.length > 380 ? 'xs' : c.frente.length > 240 ? 's' : c.frente.length > 120 ? 'm' : 'g', tamV = c.verso.length > 1300 ? 'l' : c.verso.length > 700 ? 'm' : 'g';   // texto longo: letra menor (a carta tem tamanho fixo)
+      const carta = revelado
+        ? `<article class="tr-card tr-cv" data-tf="${tamF}" data-tv="${tamV}"><div class="tr-topo">${pil('Verso')}<div class="tr-t1">${renderizarFrente(c.frente)}</div></div><div class="tr-corpo fc-card"><div class="corpo verso">${renderizarVerso(c.verso)}</div><div class="tr-imgs" data-lado="verso"></div></div></article>`
+        : `<article class="tr-card tr-cf" data-tf="${tamF}">${pil(`Frente${rev ? '' : ' · novo'}`)}<div class="tr-fr">${renderizarFrente(c.frente)}<div class="tr-imgs" data-lado="frente"></div></div></article>` +
+          `<button type="button" class="tr-mostrar" data-a="mostrar">Virar o cartão<kbd>Espaço</kbd></button>`;
+      raiz.innerHTML = `<div class="tr-rev" style="--mc:${corCss(mat?.cor)}">${topo}${carta}` +
         (revelado ? `<div class="tr-resp">${RESPOSTAS.map((r) => `<button type="button" class="${r === 'bom' ? 'bom' : ''}" data-r="${r}"><b>${NOMES[r]}</b><small>${rot[r]}</small><kbd>${RESPOSTAS.indexOf(r) + 1}</kbd></button>`).join('')}</div>` : '') +
-        `<div class="tr-sub tr-dica">Espaço mostra a resposta · 1 Errei · 2 Difícil · 3 Bom · 4 Fácil · E edita · Esc sai</div></div>`;
+        `<div class="tr-sub tr-dica">Espaço vira o cartão · 1 Errei · 2 Difícil · 3 Bom · 4 Fácil · E edita · Esc sai</div></div>`;
       for (const lado of ['frente', 'verso']) {
         const dest = raiz.querySelector(`.tr-imgs[data-lado="${lado}"]`); if (!dest) continue;
         for (let j = 0; j < n[lado]; j++) sessao.lerImagemLado(c.id, lado, j).then((b) => { if (!b || geracao !== geracaoAtual) return; const url = URL.createObjectURL(b); urls.push(url); dest.insertAdjacentHTML('beforeend', `<img src="${url}" alt="Imagem do cartão">`); }).catch(() => {});
