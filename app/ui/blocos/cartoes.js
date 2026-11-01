@@ -1,4 +1,4 @@
-// Bloco Cartões da Área de trabalho: o editor de cartões (o editor é a prévia, cartão da Enxuta), a aula do cartão e o salvar.
+// Bloco Cartões da Mesa: o editor de cartões (o editor é a prévia, cartão da Enxuta), a aula do cartão e o salvar.
 // Segue o contrato dos blocos de ui/componentes/mosaico.js. O rascunho fica no aparelho (ohara.fc.*) e sobrevive a trocar de tela.
 import { escaparHtml } from '../../nucleo/texto.js';
 import { ativas, corCss, imagensDoCartao } from '../../nucleo/materias.js';

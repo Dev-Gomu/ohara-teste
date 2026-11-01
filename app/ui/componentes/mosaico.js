@@ -1,4 +1,4 @@
-// Motor visual do mosaico da Área de trabalho: grade, cabeçalho como alça de arrastar, vãos que redimensionam, foco, ampliar.
+// Motor visual do mosaico da Mesa: grade, cabeçalho como alça de arrastar, vãos que redimensionam, foco, ampliar.
 // Não conhece Slides, Anotações nem Cartões: recebe blocos prontos (contrato abaixo). A regra está em nucleo/mosaico.js.
 import * as M from '../../nucleo/mosaico.js';
 import { ehToqueDuplo } from '../../nucleo/gestos.js';

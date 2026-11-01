@@ -1,0 +1,11 @@
+/* PC (janelas largas): escala e margens. Não muda nada no tablet (1280×800). Carrega por último.
+   O TOPO (menu 1–6, abas e Atalhos) é FIXO: mesmo tamanho (zoom 1) e mesma posição (18 px das bordas) em todas as telas; só o conteúdo abaixo se adapta.
+   Telas de LISTA e LEITURA (Acervo/Gerenciar, Agenda, Configs): conteúdo com zoom leve (--zl) e margem de 6% nos lados. TREINO: zoom inteiro (--zt).
+   MESA: tela cheia, sem margem nem zoom. HUB: escala própria (ui/telas/hoje.js, mesma fórmula do --zl). */
+html[data-tela="materias"] main,html[data-tela="planejar"] main,html[data-tela="ajustes"] main{zoom:var(--zl,1)}
+html[data-tela="revisor"] main{zoom:var(--zt,1)}
+@media(min-width:1500px){
+  html[data-tela="materias"] main,html[data-tela="planejar"] main,html[data-tela="ajustes"] main,
+  html[data-tela="materias"] main.cheia,html[data-tela="planejar"] main.cheia,html[data-tela="ajustes"] main.cheia{padding-left:6%!important;padding-right:6%!important}
+}
+html[data-tela="revisor"] main.tr{min-height:calc(100vh / var(--zt,1) - 80px)}

@@ -1,0 +1,33 @@
+/* Tokens do Ohara: ÚNICA fonte das cores, fontes, tamanhos, espaços e raios. Identidade vigente: "Névoa enxuta" (lavanda e índigo, Poppins).
+   Para trocar a identidade, edite só este arquivo. Telas novas devem usar sempre estas variáveis (o tema escuro sai de graça).
+   Escuro: só o que difere do claro. A cor da matéria é guardada como posição (m1…m8), nunca como valor. */
+
+/* ---- Tema claro ---- */
+html:root{
+  /* superfícies e texto */
+  --bg:#EEEFFC;--cx:#FFFFFF;--cx2:#E6E8FA;--tx:#2A2C45;--tx2:#54577A;--ln:#B8BCE2;--bd:#B8BCE2;
+  /* cor principal e destaque */
+  --pr:#3F4290;--prt:#FFFFFF;--ac:#3F4290;--acf:#E3E4FA;--faixa:#E3E4FA;--faixa-tom:72%;--faixa-cab:55%;
+  /* menu lateral */
+  --nav:#2A2C45;--navt:#C9CBEA;
+  /* sistema: sucesso e erro */
+  --ok:#2B7A62;--okf:#DDF1EA;--ur:#B3261E;--urt:#fff;
+  /* as 8 matérias */
+  --m1:#4C5399;--m2:#2B7A62;--m3:#B3475E;--m4:#C4623D;--m5:#7A4EA8;--m6:#1F7A86;--m7:#B0457F;--m8:#5D6D7E;
+  /* fontes */
+  --fonte-t:"Poppins",system-ui,sans-serif;--texto:"Poppins",system-ui,sans-serif;--mono:"Fira Code",ui-monospace,monospace;
+  /* escala de texto · f4 título de bloco · f5 título de tela · f6 número grande */
+  --f1:12px;--f2:13.5px;--f3:15.5px;--f4:19px;--f5:28px;--f6:36px;--peso-tit:300;--lh:1.6;
+  /* espaços, raios (r1 itens · r2 blocos · rp botões), borda de foco e alvo de toque */
+  --e1:4px;--e2:8px;--e3:12px;--e4:16px;--e5:24px;--e6:32px;--g:16px;--pad:22px;
+  --r1:12px;--r2:24px;--rp:999px;--raio-cartao:20px;--b:1.5px;--alvo:44px;
+}
+
+/* ---- Tema escuro ---- */
+html:root[data-tema="escuro"]{
+  --bg:#14152B;--cx:#1D1F40;--cx2:#2A2D5C;--tx:#EDEEFB;--tx2:#B3B6DD;--ln:#4A4F96;--bd:#4A4F96;
+  --pr:#A3A6FA;--prt:#14152B;--ac:#A3A6FA;--acf:#2A2D5C;--faixa:#2A2D5C;--faixa-tom:50%;--faixa-cab:38%;
+  --nav:#0E0F20;--navt:#B3B6DD;
+  --ok:#6BCBAA;--okf:#16301F;--ur:#FF9C9C;
+  --m1:#A3A6FA;--m2:#6BCBAA;--m3:#F29DB0;--m4:#EE9A7C;--m5:#C9A8F0;--m6:#6FCBD6;--m7:#F29DCB;--m8:#A9B6C4;
+}

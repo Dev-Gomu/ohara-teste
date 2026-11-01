@@ -50,7 +50,7 @@ html:root .fab{width:auto!important;height:52px!important;border-radius:16px!imp
 html:root .fab span{font-size:24px;line-height:1}
 .hoje2{padding-bottom:84px}
 html:root .semana b{width:40px;height:40px;font-size:14px}
-/* Planejar: círculo de concluir com área de 44 px; hoje em destaque; dias seguintes recolhidos */
+/* Agenda: círculo de concluir com área de 44 px; hoje em destaque; dias seguintes recolhidos */
 .ck{position:relative;width:28px;height:28px}.ck::after{content:"";position:absolute;inset:-8px}
 .dia-t{font-size:14px;font-weight:600;margin:6px 0 4px;text-transform:none;letter-spacing:0;color:var(--tx)}
 .dia-plano.hoje-p{background:var(--cx2);border-radius:16px;padding:6px 14px 8px;margin-bottom:12px}
@@ -65,7 +65,7 @@ details.dia-plano>summary::after{content:"+";margin-left:auto;font-size:20px;col
 html:root .cal span{max-width:52px;font-size:15px}
 .card.sugestao{display:flex;flex-direction:column;gap:6px;padding:22px}.card.sugestao .ov{font-size:12px;color:var(--tx2);font-weight:600}.card.sugestao h2.st{font-size:24px;text-transform:none;letter-spacing:0;margin:0}
 .card.sugestao .acoes{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
-/* Ajustes: números com − e +, metas em grade, seções recolhíveis */
+/* Configs: números com − e +, metas em grade, seções recolhíveis */
 #metas{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px 18px}#metas>:not(label){grid-column:1/-1}
 .passo{display:flex;gap:6px;align-items:center}.passo .in{text-align:center;flex:1;min-width:0}
 .passo button{width:48px;height:48px;border:0;border-radius:14px;background:var(--cx2);color:var(--tx);font-size:22px;cursor:pointer;flex:none}
@@ -77,7 +77,7 @@ details.mais-cartoes{margin-top:14px}details.mais-cartoes>summary{list-style:non
 /* editor: H1/H2/H3 em texto leve (sem o ícone grosso) */
 .barra-ed button.txt{font:inherit;font-size:13px;font-weight:500;letter-spacing:0;width:auto;min-width:36px;padding:0 6px}
 .barra-ed button.txt.ql-active{font-weight:600}
-/* Planejar: o "começar" das tarefas que não são a próxima é só uma seta discreta */
+/* Agenda: o "começar" das tarefas que não são a próxima é só uma seta discreta */
 .ir-linha{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;color:var(--tx2);font-size:13px}.ir-linha:hover{background:var(--cx2);color:var(--tx)}
 html:root .btn[hidden],.btn[hidden],button[hidden]{display:none!important}
 @media(pointer:fine){.barra-ed button{width:36px;height:38px}.barra-ed button.txt{min-width:34px;width:auto}.ocultar-b{padding:0 12px}}

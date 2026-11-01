@@ -1,5 +1,5 @@
 // Serviço de sincronia da interface: login com o Google (só o escopo drive.appdata: a pasta do próprio app no Drive), quando sincronizar
-// (ao abrir, ao voltar para o app, depois de mexer, ao voltar a internet) e o estado para a tela Ajustes mostrar. Sem aviso na tela
+// (ao abrir, ao voltar para o app, depois de mexer, ao voltar a internet) e o estado para a tela Configs mostrar. Sem aviso na tela
 // a não ser quando os dois aparelhos mudaram (conflito) ou chegaram dados novos.
 // O token do Google vale 1 hora e fica só na memória. Para renovar sem a pessoa fazer nada o Google exige um toque na página
 // (senão o navegador bloqueia a janelinha); por isso, se o token vencer, a renovação espera o próximo toque e acontece sozinha.
@@ -114,7 +114,7 @@ export function criarServicoSincronia({ sessao, foco, aoReceber = () => {}, avis
 
   return {
     iniciar,
-    /** O que a tela Ajustes precisa mostrar. */
+    /** O que a tela Configs precisa mostrar. */
     estado: () => ({ ligada: !!guardado().ligada, status: guardado().ligada ? status : 'desligada', mensagem, ultima: guardado().ultima ?? null, conflito: conflito ? { origem: conflito.analise.origem, geradoEm: conflito.analise.geradoEm, resumo: conflito.analise.resumo, faltam: conflito.analise.faltam, motivo: conflito.analise.motivo } : null }),
     ouvir(f) { ouvintes.add(f); return () => ouvintes.delete(f); },
     /** Carrega o script do Google antes de o usuário apertar "Ligar" (o toque precisa chamar o Google na hora). */

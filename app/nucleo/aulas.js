@@ -25,7 +25,7 @@ function validar({ titulo, tipo = 'aula', inicio, fim }) {
 
 export function criarAula(estado, disciplinaId, dados, agora, icsUid = null) {
   if (!ativas(estado.disciplinas).some((d) => d.id === disciplinaId)) throw new Error('A matéria não existe.');
-  const aula = { id: proximoId(estado.aulas), disciplina_id: disciplinaId, ...validar(dados), anotacoes: '', ics_uid: icsUid, pasta_id: dados.pastaId ?? null, criado_em: agora, excluido_em: null };
+  const aula = { id: proximoId(estado.aulas), disciplina_id: disciplinaId, ...validar(dados), anotacoes: '', ics_uid: icsUid, pasta_id: dados.pastaId ?? null, grade_id: null, grade_dia: null, criado_em: agora, excluido_em: null };
   return { estado: { ...estado, aulas: [...estado.aulas, aula] }, aula };
 }
 
@@ -99,7 +99,7 @@ export function rotuloDoCard(estado, disciplinaId, agoraLocal, diaDaSemana) {
 }
 
 /**
- * Aula em que a Área de trabalho abre para criar cartões: a guardada (se ainda existir e a matéria estiver ativa); senão a aula mais
+ * Aula em que a Mesa abre para criar cartões: a guardada (se ainda existir e a matéria estiver ativa); senão a aula mais
  * recente que já começou; senão a primeira que ainda vai começar; senão null. `agoraLocal`: AAAA-MM-DDTHH:MM.
  */
 export function aulaParaCriar(estado, guardadaId, agoraLocal) {
@@ -114,7 +114,7 @@ export function aulaParaCriar(estado, guardadaId, agoraLocal) {
 }
 
 /**
- * Aula em que o botão "Área de trabalho" do menu abre: a que está acontecendo agora; senão a última em que você mexeu (se ainda existir);
+ * Aula em que o botão "Mesa" do menu abre: a que está acontecendo agora; senão a última em que você mexeu (se ainda existir);
  * senão a mais recente que já começou; senão a próxima. `null` se não houver nenhuma aula. `agoraLocal`: AAAA-MM-DDTHH:MM.
  */
 export function aulaParaAbrirAgora(estado, ultimaId, agoraLocal) {

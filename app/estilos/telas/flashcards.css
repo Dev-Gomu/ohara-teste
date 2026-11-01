@@ -1,4 +1,4 @@
-/* Tela Flashcards (Criar, Gerenciar, Treinar). Só variáveis do tema: serve ao claro e ao escuro. */
+/* Cartões (Gerenciar e criação). Só variáveis do tema: serve ao claro e ao escuro. */
 .fc{display:flex;flex-direction:column;min-height:100%}
 .fc-topo{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px}
 .fc-topo h1{margin:0}
@@ -99,16 +99,10 @@ kbd{font:600 10.5px system-ui;letter-spacing:.04em;border:1px solid currentColor
 
 /* ---- Gerenciar cartões (ui/telas/flashcards/gerenciar.js): lista à esquerda, cartão no editor à direita. Prefixo gc-. ---- */
 .fc:has(.gc){height:100%}.fc-corpo:has(.gc){min-height:0}
-.gc{display:flex;flex-direction:column;gap:14px;height:100%;min-height:0}
+.gc{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0;position:relative}
 .gc-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:none}
 .gc-esp{flex:1}
 .gc-i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.gc-busca{flex:1 1 320px;max-width:560px;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:99px;background:var(--cx);color:var(--tx2);min-width:260px}
-.gc-busca input{border:0;background:transparent;color:var(--tx);font:inherit;font-size:14px;flex:1;min-width:0;outline:0}
-.gc-chips{display:flex;gap:8px;align-items:center;overflow-x:auto;flex:none}.gc-chips[hidden]{display:none}.gc-chip{flex:none}
-.gc-chip{min-height:44px;padding:0 16px;border:0;border-radius:99px;background:var(--cx);color:var(--tx2);font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
-.gc-chip em{font-style:normal;font-size:11.5px;opacity:.65}
-.gc-chip.on{background:var(--pr);color:var(--prt)}
 .gc-pt{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
 .gc-btn{min-height:44px;padding:0 18px;border:0;border-radius:99px;background:var(--pr);color:var(--prt);font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .gc-btn.gc-sec{background:var(--cx2);color:var(--tx)}.gc-btn[disabled]{opacity:.45;cursor:default}.gc-btn kbd{margin-left:2px}
@@ -133,3 +127,40 @@ kbd{font:600 10.5px system-ui;letter-spacing:.04em;border:1px solid currentColor
 .gc-acoes{display:flex;gap:10px;align-items:center;flex:none}
 .gc-mais{flex:1;min-height:0;overflow:auto}
 @media(max-width:900px){.gc-cols{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}}
+
+/* Gerenciar: marcar, seleção em massa, busca avançada e limpeza */
+.gc-btn.on{background:var(--pr);color:var(--prt)}
+.gc-marc .gc-i{width:14px;height:14px}.gc-marc.on .gc-i,.gc-star .gc-i,.gc-btn.on .gc-i{fill:currentColor}
+.gc-star{color:var(--ac);display:inline-flex;flex:none}.gc-star .gc-i{width:15px;height:15px}
+.gc-ck{width:22px;height:22px;border-radius:7px;border:2px solid var(--tx2);display:grid;place-items:center;color:transparent;flex:none}.gc-ck .gc-i{width:14px;height:14px;stroke-width:2.6}.gc-ck.on{background:var(--pr);border-color:var(--pr);color:var(--prt)}
+.gc-lin.pick{background:var(--cx2)}
+.gc-mais h2 em,.gc-mais .bloco h2 em{font-style:normal;font-size:13px;color:var(--tx2);margin-left:6px}
+.gc-grupo{border-radius:16px;background:var(--cx2);padding:6px 6px 8px;margin-top:12px}
+.gc-grupo-t{display:flex;align-items:center;gap:10px;padding:8px 12px;font-size:13px}
+.gc-l2{display:flex;align-items:center;gap:12px;min-height:58px;padding:4px 12px;border-radius:12px}
+.gc-grupo .gc-l2{background:var(--cx);margin-top:4px}
+.gc-limp-vazio{color:var(--tx2)}
+.gc-pop{position:fixed;z-index:120;width:min(440px,calc(100vw - 16px));background:var(--cx);color:var(--tx);border-radius:18px;padding:14px 16px;box-shadow:0 18px 44px -14px #2a2c4577;display:flex;flex-direction:column;gap:2px}.gc-pop[hidden]{display:none}
+.gc-pop-t{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);margin-bottom:6px}
+.gc-pop-l{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:baseline;padding:4px 0}.gc-pop-l code{font-size:13px;font-weight:600;color:var(--ac);background:none;padding:0}.gc-pop-l span{font-size:12.5px;color:var(--tx2)}
+
+/* Gerenciar, proposta C1: UMA barra (campo com fichas, + de filtros, ⋯), barra de seleção que a substitui, menus e cabeçalho dos modos */
+.gc-bar{flex-wrap:nowrap}
+.gc-campo{flex:1;min-width:0;display:flex;align-items:center;gap:8px;min-height:48px;padding:0 6px 0 16px;border-radius:99px;background:var(--cx);color:var(--tx2);overflow:hidden}
+.gc-campo input{flex:1;min-width:80px;border:0;background:transparent;color:var(--tx);font:inherit;font-size:14px;outline:0}
+.gc-fichas{display:inline-flex;gap:6px;flex:none}
+.gc-tok{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 6px 0 12px;border:0;border-radius:99px;background:var(--cx2);color:var(--tx);font:inherit;font-size:13px;font-weight:600;white-space:nowrap;flex:none;cursor:pointer}
+.gc-tok .gc-i{width:14px;height:14px}.gc-tok button{border:0;background:none;color:inherit;width:24px;height:24px;display:grid;place-items:center;cursor:pointer;padding:0}
+.gc-mw .gc-tok{min-height:40px;padding:0 14px}.gc-tok.on{background:var(--pr);color:var(--prt)}.gc-tok.on .gc-i{fill:currentColor}
+.gc-ib{width:48px;height:48px;border:0;border-radius:50%;background:var(--cx);color:var(--tx2);display:grid;place-items:center;flex:none;cursor:pointer;padding:0}
+.gc-ib.peq{width:36px;height:36px;background:var(--cx2)}
+.gc-lote{flex:none;position:relative;display:flex;align-items:center;gap:6px;min-height:48px;padding:0 6px 0 20px;border-radius:99px;background:var(--pr);color:var(--prt);font-weight:600;font-size:13px}.gc-lote[hidden]{display:none}
+.gc-lote b{margin-right:auto;white-space:nowrap}
+.gc-lb{height:38px;padding:0 14px;border:0;border-radius:99px;background:transparent;color:inherit;font:inherit;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer}.gc-lb[disabled]{opacity:.45;cursor:default}
+.gc-menu{position:absolute;z-index:30;top:60px;background:var(--cx);color:var(--tx);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:240px;box-shadow:0 18px 44px -14px #2a2c4577}.gc-menu[hidden]{display:none}
+.gc-menu-filtro{right:62px;max-width:430px}.gc-menu-mais{right:0;min-width:270px}.gc-lote .gc-menu{top:calc(100% + 8px);right:0;gap:2px}
+.gc-mh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2)}.gc-mw{display:flex;flex-wrap:wrap;gap:8px}
+.gc-mi{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:var(--tx);font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer}.gc-mi:hover{background:var(--cx2)}.gc-mi kbd{margin-left:auto}
+.gc-topo{padding:0 4px}.gc-topo b{font-size:18px}
+.gc-ib:focus-visible,.gc-lb:focus-visible,.gc-mi:focus-visible,.gc-tok:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+@media(max-width:1100px){.gc-btn kbd,.gc-mi kbd{display:none}}

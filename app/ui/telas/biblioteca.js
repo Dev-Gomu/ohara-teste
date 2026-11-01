@@ -1,5 +1,5 @@
-// Acervo (a Biblioteca): tudo o que você guardou. Duas visões no mesmo lugar: as matérias (cards) e todos os cartões (o antigo Gerenciar).
-// "Criar ›" (Alt C) abre a Área de trabalho, na aba de cartões, na aula certa. Em Matérias há também os anos: "Encerrar o ano" arquiva as
+// Acervo: tudo o que você guardou. Duas visões no mesmo lugar: as matérias (cards) e todos os cartões (o antigo Gerenciar).
+// "Criar ›" (Alt C) abre a Mesa, na aba de cartões, na aula certa. Em Matérias há também os anos: "Encerrar o ano" arquiva as
 // matérias de hoje num grupo (pasta no alto, como as pastas da matéria) e os anos arquivados abrem só para consulta (nucleo/anos.js).
 import { desenharMaterias } from './materias.js';
 import { desenharCartoes } from './flashcards/gerenciar.js';
@@ -22,7 +22,7 @@ export function desenharBiblioteca(raiz, ctx, modo = 'materias') {
   raiz.innerHTML = `<div class="fc"><div class="fc-topo"><h1>Acervo</h1><div class="fc-abas" role="tablist" aria-label="Acervo">` +
     `<button type="button" role="tab" data-ir="#materias" aria-selected="${!cartoes}" class="${cartoes ? '' : 'on'}">Matérias</button>` +
     `<button type="button" role="tab" data-ir="#cartoes" aria-selected="${cartoes}" class="${cartoes ? 'on' : ''}">Todos os cartões</button>` +
-    (cartoes ? '<button type="button" data-criar="1" title="Criar cartões na Área de trabalho (Alt C)">Criar ›<kbd>Alt C</kbd></button>' : '<button type="button" data-encerrar="1" title="Arquivar as matérias de hoje num ano">Encerrar o ano</button>') +
+    (cartoes ? '<button type="button" data-criar="1" title="Criar cartões na Mesa (Alt C)">Criar ›<kbd>Alt C</kbd></button>' : '<button type="button" data-encerrar="1" title="Arquivar as matérias de hoje num ano">Encerrar o ano</button>') +
     `</div></div><div id="bib-anos"></div><div class="fc-corpo ${cartoes ? 'fc-gerenciar' : 'fc-materias'}" id="bib-corpo"></div></div>`;
   const corpo = raiz.querySelector('#bib-corpo'), faixa = raiz.querySelector('#bib-anos');
 

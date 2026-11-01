@@ -9,6 +9,8 @@ import { sequencia } from '../../nucleo/estudo.js';
 import { formatarRelogio, restanteMs } from '../../nucleo/foco.js';
 import { janelaDeSemanas, proximasProvasPorData, agendaCompacta, posicaoDoMarcador, proximoDiaComAula } from '../../nucleo/hoje.js';
 import { diaDe } from '../foco_servico.js';
+import { provasSemData } from '../../nucleo/eventos.js';
+import { abrirNovoItem } from '../blocos/novo_item.js';
 
 const dois = (n) => String(n).padStart(2, '0');
 const horaLocal = (ms) => { const d = new Date(ms); return `${dois(d.getHours())}:${dois(d.getMinutes())}`; };
@@ -20,7 +22,8 @@ const cap = (t) => t[0].toUpperCase() + t.slice(1);
 export function desenharHoje(raiz, ctx) {
   const { sessao, foco } = ctx;
   // escala proporcional ao desenho do tablet (1280×800): cresce com a tela até 1,5x e nunca encolhe
-  const ajustarEscala = () => { const hj = raiz.querySelector('.hj'); if (hj) hj.style.setProperty('--z', Math.max(1, Math.min(innerWidth / 1280, innerHeight / 800, 1.5)).toFixed(3)); };
+  // escala: metade do zoom, igual às outras telas do PC (estilos/pc.css)
+  const ajustarEscala = () => { const hj = raiz.querySelector('.hj'); if (hj) hj.style.setProperty('--z', (1 + (Math.max(1, Math.min(innerWidth / 1280, innerHeight / 800, 1.5)) - 1) / 2).toFixed(3)); };
   window.addEventListener('resize', ajustarEscala);
   let deslocamento = 0;   // semanas que o calendário andou para a frente (ou para trás) em relação à semana de hoje
 
@@ -57,9 +60,9 @@ export function desenharHoje(raiz, ctx) {
       `<div class="hds">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map((x) => `<span>${x}</span>`).join('')}</div><div class="hsems" style="--sem:${janela.length}">${corpoCal}</div></div>`;
 
     // próximas provas em faixa, no alto: um bloco por data (até 5), com a data, o tempo que falta em chip e as siglas com a pílula da cor
-    const { datas, total } = proximasProvasPorData(estado, hoje, 5);
+    const { datas, total } = proximasProvasPorData(estado, hoje, 5), semData = provasSemData(estado);
     const bloco = (d, k) => `<div class="hbl${k === 0 ? ' px' : ''}" aria-label="${d.n} de ${MESES_CURTOS[d.mes - 1]}, ${d.texto}"><div class="hl1"><span class="hd"><b>${dois(d.n)}</b><small>${MESES_CURTOS[d.mes - 1]}</small></span><span class="hr" title="${d.texto}">${d.em === 0 ? 'hoje' : `${d.em}d`}</span></div><div class="hsg">${d.disciplinas.map((id) => { const m = porId.get(id); return `<span class="sg"><i style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></i>${escaparHtml(m ? siglaDaMateria(m) : '?')}</span>`; }).join('')}</div></div>`;
-    const provas = `<div class="card hprov"><div class="hph"><h2>Próximas provas${total ? ` <span class="cont">${total}</span>` : ''}</h2>${total > datas.length ? `<a class="mais" href="#planejar">Ver todas · ${total} dias ›</a>` : ''}</div>` + (datas.length
+    const provas = `<div class="card hprov"><div class="hph"><h2>Próximas provas${total ? ` <span class="cont">${total}</span>` : ''}</h2><span class="esp"></span>${semData ? `<a class="mais" href="#planejar" title="Provas cadastradas sem data: complete na Agenda">${semData} sem data</a>` : ''}${total > datas.length ? `<a class="mais" href="#planejar">Ver todas · ${total} dias ›</a>` : ''}<button type="button" class="seta" data-add aria-label="Anotar uma data" title="Anotar uma data na Agenda">+</button></div>` + (datas.length
       ? `<div class="htiles">${datas.map(bloco).join('')}</div>`
       : '<div class="hvazio">Nenhuma prova marcada. Cadastre em&nbsp;<a href="#planejar"><b>Agenda</b></a>.</div>') + '</div>';
 
@@ -89,6 +92,7 @@ export function desenharHoje(raiz, ctx) {
   }
 
   raiz.onclick = (ev) => {
+    if (ev.target.closest('[data-add]')) { abrirNovoItem({ sessao, agora: () => new Date(ctx.agora()).toISOString(), dia: diaDe(ctx.agora()), aviso: ctx.aviso, aoSalvar: desenhar }); return; }
     const b = ev.target.closest('[data-sem]'); if (!b) return;
     const d = Number(b.dataset.sem); deslocamento = d === 0 ? 0 : deslocamento + d; desenhar();
   };

@@ -12,7 +12,7 @@ html:root .hj .hacao{height:40px;display:inline-flex;align-items:center;max-widt
    --z vem do JavaScript (menor entre largura/1280 e altura/800, de 1 a 1,5). Os chips da barra de cima não escalam (seguem do tamanho das pílulas). */
 html:root .hj{--u:1;zoom:var(--z,1)}
 html:root .hj .hchips{zoom:calc(1 / var(--z,1))}
-html:root .hj .hgrade{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,44fr) minmax(0,56fr);grid-template-rows:auto minmax(0,1fr);gap:14px;align-items:stretch}
+html:root .hj .hgrade{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,30fr) minmax(0,70fr);grid-template-rows:auto minmax(0,1fr);gap:14px;align-items:stretch}
 html:root .hj .hgrade>.hprov{grid-column:1/-1}
 html:root .hj .hdir{display:flex;flex-direction:column;min-width:0;min-height:0}
 /* topo dos 3 cartões: mesma fonte (caixa-alta, 11,5 px, 600, .08em), título cinza, informação e ação em roxo, 28 px de altura e 12 px até o conteúdo */
@@ -31,15 +31,19 @@ html:root .hj .hsem.at{background:color-mix(in srgb,var(--ac) 6%,var(--cx))}
 html:root .hj .hdia{--cel:min(14.2857cqw,calc(100cqh / var(--sem,6)));--fs:clamp(14px,calc(var(--cel) * .27),34px);--pw:clamp(12px,calc(var(--cel) * .26),32px);--ph:clamp(5px,calc(var(--cel) * .09),11px);position:relative;min-width:0;min-height:0}
 html:root .hj .hdia .n{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:var(--fs);font-weight:500;line-height:1.1;z-index:2;color:var(--tx)}
 html:root .hj .hdia.p .n{font-weight:700}
-html:root .hj .hdia.h .n{color:var(--cx);font-weight:700}
-html:root .hj .hdia.h::before{content:"";position:absolute;left:50%;top:50%;width:calc(var(--fs) * 1.9);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:var(--tx)}
+html:root .hj .hdia.h .n{color:var(--ac);font-weight:700}
+/* hoje = cápsula suave atrás do número (mesma família das pílulas de prova, que ficam logo abaixo) */
+html:root .hj .hdia.h::before{content:"";position:absolute;left:50%;top:50%;width:calc(var(--fs) * 3);height:calc(var(--fs) * 1.7);transform:translate(-50%,-50%);border-radius:999px;background:color-mix(in srgb,var(--ac) 16%,var(--cx))}
 html:root .hj .hdia .mm{position:absolute;top:calc(50% - var(--fs) * 1.35);left:0;right:0;text-align:center;font-size:max(8px,calc(var(--fs) * .42));letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);font-weight:600;z-index:2;margin:0}
 html:root .hj .hdia .pils{position:absolute;left:3px;right:3px;top:calc(50% + var(--fs) * .75);display:flex;flex-wrap:wrap;justify-content:center;gap:max(3px,calc(var(--ph) * .5));z-index:2}
+/* dia de hoje: as pílulas das provas descem para ficar abaixo da cápsula */
+html:root .hj .hdia.h .pils{top:calc(50% + var(--fs) * 1.05)}
 html:root .hj .hdia .pils i{width:var(--pw);height:var(--ph);border-radius:999px;display:block}
 /* próximas provas: faixa no alto, um bloco por data (a próxima em destaque); sem divisórias */
 html:root .hj .hprov{flex:none;padding:18px 20px 18px;display:flex;flex-direction:column}
 html:root .hj .hprov .cont{color:var(--ac);letter-spacing:.08em}
-html:root .hj .hprov .mais{margin-left:auto;color:var(--ac);text-decoration:none;white-space:nowrap}
+html:root .hj .hprov .hph .esp{flex:1}
+html:root .hj .hprov .mais{margin-left:0;color:var(--ac);text-decoration:none;white-space:nowrap}
 /* a faixa tem sempre a altura de quando está preenchida (76 px de blocos, em escala no PC), com ou sem provas */
 html:root .hj .htiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;min-height:calc(76px * var(--u))}
 html:root .hj .hvazio{min-height:calc(76px * var(--u));background:var(--bg);border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--tx2);font-size:calc(14px * var(--u))}html:root .hj .hvazio a{color:var(--ac)}

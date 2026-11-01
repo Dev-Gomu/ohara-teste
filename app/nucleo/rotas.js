@@ -1,6 +1,6 @@
 // Núcleo (regras puras, sem I/O): telas do app e leitura do endereço (#hoje, #materias, #aula/7, #ajustes...).
 
-/** O menu de cima, na ordem (Alt 1 … Alt 6): Hub (Hoje), Mesa (Área de trabalho), Acervo (Biblioteca: matérias e todos os cartões), Treino (Revisor), Agenda (Planejar), Configs (Ajustes). "area" abre a Mesa de uma aula. */
+/** O menu de cima, na ordem (Alt 1 … Alt 6): Hub (Hoje), Mesa, Acervo (matérias e todos os cartões), Treino, Agenda, Configs. "area" abre a Mesa de uma aula. */
 export const TELAS = [
   { chave: 'hoje', nome: 'Hub' },
   { chave: 'area', nome: 'Mesa' },
@@ -22,9 +22,9 @@ export function telaDoEndereco(hash) {
 }
 
 /**
- * Lê o endereço completo: #materias (Biblioteca), #materias/3 (aulas da matéria 3), #cartoes (Biblioteca, todos os cartões),
- * #aula/7 ou #aula/7?cartoes (Área de trabalho da aula 7, com o bloco pedido aberto), #area (abre a aula certa da Área de trabalho),
- * #foco/5 (Sala de Foco com a tarefa 5), #revisor, #planejar. `menu` é a entrada do menu que fica destacada naquela tela.
+ * Lê o endereço completo: #materias (Acervo), #materias/3 (aulas da matéria 3), #cartoes (Acervo, todos os cartões),
+ * #aula/7 ou #aula/7?cartoes (Mesa da aula 7, com o bloco pedido aberto), #area (abre a aula certa da Mesa),
+ * #foco/5 (Sala de Foco com a tarefa 5), #revisor, #planejar, #planejar/grade (editor da grade semanal, dentro da Agenda), #planejar/plano (plano de estudo antigo, até ser aposentado). `menu` é a entrada do menu que fica destacada naquela tela.
  */
 export function rotaDoEndereco(hash) {
   const bruto = String(hash ?? '').replace(/^#\/?/, ''), [caminho, consulta = ''] = bruto.split('?');
@@ -32,6 +32,8 @@ export function rotaDoEndereco(hash) {
   const n = /^\d+$/.test(id ?? '') ? Number(id) : null;
   if (chave === 'materias' && n !== null) return { tela: 'materia', id: n, menu: 'materias' };
   if (chave === 'foco' && n !== null) return { tela: 'foco', id: n, menu: TELAS_FORA_DO_MENU.foco };
+  if (chave === 'planejar' && id === 'plano') return { tela: 'plano', id: null, menu: 'planejar' };
+  if (chave === 'planejar' && id === 'grade') return { tela: 'grade', id: null, menu: 'planejar' };
   if (chave === 'aula' && n !== null) return { tela: 'area', id: n, menu: 'area', abrir: ['slides', 'anotacoes', 'cartoes'].includes(consulta) ? consulta : null };
   if (chave === 'area') return { tela: 'area-atalho', id: null, menu: 'area' };
   const tela = telaDoEndereco(hash);

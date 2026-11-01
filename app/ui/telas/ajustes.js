@@ -1,9 +1,11 @@
-// Tela Ajustes: lixeira (restaurar e esvaziar com confirmação), tema e estado do armazenamento.
+// Tela Configs: lixeira (restaurar e esvaziar com confirmação), tema e estado do armazenamento.
 import { escaparHtml, formatarBytes } from '../../nucleo/texto.js';
-import { itensDaLixeira, contarLixeira, restaurarMateria } from '../../nucleo/materias.js';
+import { itensDaLixeira, contarLixeira, restaurarMateria, alterarMateria, ativas, corCss } from '../../nucleo/materias.js';
+import { DIAS_SEMANA } from '../../nucleo/datas.js';
 import { restaurarArquivo } from '../../nucleo/arquivos.js';
 import { restaurarCartao } from '../../nucleo/cartoes.js';
 import { restaurarProva } from '../../nucleo/planejador.js';
+import { restaurarEvento } from '../../nucleo/eventos.js';
 import { CONFIG_PADRAO, ROTULOS_CONFIG, lerConfigFoco, validarConfig } from '../../nucleo/foco.js';
 import { restaurarAula } from '../../nucleo/aulas.js';
 
@@ -14,26 +16,36 @@ export function desenharAjustes(raiz, ctx) {
 
   const abertas = new Set();
 
+  /** Dificuldade de cada matéria e minutos livres por dia da semana: alimentam o plano de estudo que roda por trás (blocos de estudo antes das provas). */
+  function blocoPlano() {
+    const mats = ativas(ctx.sessao.estado().disciplinas), disp = ctx.sessao.disponibilidade();
+    return `<p class="sub">O plano de estudo (o “Próximo estudo” da Hub) usa estes dois ajustes. Dificuldade de 1 (fácil) a 3 (difícil): matéria mais difícil pede mais blocos por aula.</p>` +
+      (mats.map((m) => `<div class="lin"><span class="pt" style="background:${corCss(m.cor)}"></span><div class="t">${escaparHtml(m.nome)}</div><select class="in curto" data-dif="${m.id}" aria-label="Dificuldade de ${escaparHtml(m.nome)}">${[1, 2, 3].map((n) => `<option value="${n}"${(m.dificuldade ?? 2) === n ? ' selected' : ''}>${n}</option>`).join('')}</select></div>`).join('') || '<p class="sub">Crie matérias primeiro.</p>') +
+      `<form id="disp" class="form"><h3 class="sub" style="margin:12px 0 4px">Tempo livre para estudar</h3><div class="semana">${DIAS_SEMANA.map((d, i) => `<label class="c">${d.slice(0, 3)}<input class="in" name="d${i}" type="number" min="0" max="1440" step="5" inputmode="numeric" value="${disp[i]}"></label>`).join('')}</div><p class="sub" style="margin:0">Minutos por dia da semana. Zero = dia sem estudo.</p><div class="acoes"><button class="btn peq" type="submit">Salvar</button></div></form>`;
+  }
+
   function desenhar() {
     const estado = ctx.sessao.estado();
-    const { materias, aulas, arquivos, cartoes, provas } = itensDaLixeira(estado);
+    const { materias, aulas, arquivos, cartoes, provas, eventos } = itensDaLixeira(estado);
     const total = contarLixeira(estado);
-    const vazia = !total.disciplinas && !total.aulas && !total.arquivos && !total.cartoes && !total.provas;
+    const vazia = !total.disciplinas && !total.aulas && !total.arquivos && !total.cartoes && !total.provas && !total.eventos;
     raiz.innerHTML = '<h1>Configs</h1><p class="sub">Tema, lixeira e armazenamento.</p>' +
       `<div class="card bloco"><h2>Aplicativo</h2><p class="sub" style="margin-bottom:10px">Se uma novidade não aparecer, baixe a versão mais recente (precisa de internet). Seus dados não são apagados.</p><div class="acoes"><button class="btn peq" type="button" data-a="atualizar-app">Atualizar o app</button></div></div>` +
       `<div class="card bloco"><h2>Tema</h2><div class="acoes">` +
       ['claro', 'escuro'].map((t) => `<button class="btn peq ${document.documentElement.dataset.tema === t ? '' : 'sec'}" type="button" data-a="tema" data-tema="${t}">${t === 'claro' ? 'Claro' : 'Escuro'}</button>`).join('') +
       `</div></div>` +
       `<div class="card bloco"><h2>Metas e foco</h2>${blocoMetas()}</div>` +
+      `<div class="card bloco"><h2>Plano de estudo</h2>${blocoPlano()}</div>` +
       `<div class="card bloco"><h2>Lixeira</h2>` +
       (vazia ? '<p class="sub">A lixeira está vazia.</p>'
         : materias.map((m) => `<div class="lin"><div class="t">${escaparHtml(m.nome)}<small>Matéria · com as aulas dela</small></div><button class="btn peq sec" type="button" data-a="rest-m" data-id="${m.id}">Restaurar</button></div>`).join('') +
           aulas.map((a) => `<div class="lin"><div class="t">${escaparHtml(a.titulo)}<small>${a.tipo === 'livro' ? 'Livro' : 'Aula'}</small></div><button class="btn peq sec" type="button" data-a="rest-a" data-id="${a.id}">Restaurar</button></div>`).join('') +
           arquivos.map((f) => `<div class="lin"><div class="t">${escaparHtml(f.nome)}<small>Arquivo anexado</small></div><button class="btn peq sec" type="button" data-a="rest-f" data-id="${f.id}">Restaurar</button></div>`).join('') +
           cartoes.map((c) => `<div class="lin"><div class="t">${escaparHtml(c.frente.slice(0, 60))}<small>Cartão</small></div><button class="btn peq sec" type="button" data-a="rest-c" data-id="${c.id}">Restaurar</button></div>`).join('') +
-          provas.map((p) => `<div class="lin"><div class="t">${escaparHtml(p.titulo)}<small>Prova de ${escaparHtml(p.data)}</small></div><button class="btn peq sec" type="button" data-a="rest-p" data-id="${p.id}">Restaurar</button></div>`).join('') +
+          provas.map((p) => `<div class="lin"><div class="t">${escaparHtml(p.titulo)}<small>Prova ${p.data ? `de ${escaparHtml(p.data)}` : "sem data"}</small></div><button class="btn peq sec" type="button" data-a="rest-p" data-id="${p.id}">Restaurar</button></div>`).join('') +
+          eventos.map((x) => `<div class="lin"><div class="t">${escaparHtml(x.titulo)}<small>${{ trabalho: 'Trabalho', compromisso: 'Compromisso', lembrete: 'Lembrete' }[x.tipo] ?? 'Item'} da Agenda${x.data ? ` · ${escaparHtml(x.data)}` : ''}</small></div><button class="btn peq sec" type="button" data-a="rest-e" data-id="${x.id}">Restaurar</button></div>`).join('') +
           (confirmando
-            ? `<div class="confirma"><p>Apagar de vez ${plural(total.disciplinas, 'matéria', 'matérias')} e ${plural(total.aulas, 'aula ou livro', 'aulas e livros')}, ${plural(total.arquivos, 'arquivo', 'arquivos')}, ${plural(total.cartoes, 'cartão', 'cartões')} e ${plural(total.provas, 'prova', 'provas')}? Não dá para desfazer.</p>` +
+            ? `<div class="confirma"><p>Apagar de vez ${plural(total.disciplinas, 'matéria', 'matérias')} e ${plural(total.aulas, 'aula ou livro', 'aulas e livros')}, ${plural(total.arquivos, 'arquivo', 'arquivos')}, ${plural(total.cartoes, 'cartão', 'cartões')}, ${plural(total.provas, 'prova', 'provas')} e ${plural(total.eventos, 'item da Agenda', 'itens da Agenda')}? Não dá para desfazer.</p>` +
               `<div class="acoes"><button class="btn peq ur" type="button" data-a="esvaziar-sim">Apagar de vez</button><button class="btn peq sec" type="button" data-a="esvaziar-nao">Cancelar</button></div></div>`
             : `<p><button class="btn peq sec" type="button" data-a="esvaziar">Esvaziar lixeira</button></p>`)) +
       `</div>` +
@@ -46,7 +58,7 @@ export function desenharAjustes(raiz, ctx) {
   }
 
   // Seções em ordem de uso: Aparência e Metas abertas; o resto recolhido. Números ganham − e +.
-  const RECOLHIVEIS = ['Lixeira', 'Backup', 'Sincronização', 'Trocar dados entre aparelhos', 'Armazenamento', 'Dica do teclado'];
+  const RECOLHIVEIS = ['Plano de estudo', 'Lixeira', 'Backup', 'Sincronização', 'Trocar dados entre aparelhos', 'Armazenamento', 'Dica do teclado'];
   function refinar() {
     raiz.querySelectorAll(':scope > .card.bloco').forEach((card) => {
       const h = card.querySelector(':scope > h2'), nome = h?.textContent;
@@ -156,6 +168,7 @@ export function desenharAjustes(raiz, ctx) {
       case 'rest-a': restaurar(estado.aulas.find((a) => a.id === id)?.titulo, (e) => restaurarAula(e, id)); break;
       case 'rest-f': restaurar(estado.arquivos.find((f) => f.id === id)?.nome, (e) => restaurarArquivo(e, id)); break;
       case 'rest-c': restaurar(estado.cartoes.find((c) => c.id === id)?.frente.slice(0, 30), (e) => restaurarCartao(e, id)); break;
+      case 'rest-e': restaurar(estado.eventos.find((x) => x.id === id)?.titulo, (e) => restaurarEvento(e, id)); break;
       case 'rest-p': restaurar(estado.provas.find((p) => p.id === id)?.titulo, (e) => restaurarProva(e, id)); break;
       case 'esvaziar': confirmando = true; desenhar(); break;
       case 'esvaziar-nao': confirmando = false; desenhar(); break;
@@ -215,6 +228,10 @@ export function desenharAjustes(raiz, ctx) {
   };
   raiz.onsubmit = (ev) => {
     ev.preventDefault();
+    if (ev.target.id === 'disp') {
+      try { const f = new FormData(ev.target); ctx.sessao.gravarDisponibilidade(Array.from({ length: 7 }, (_, i) => Number(f.get('d' + i)))); ctx.aviso('Tempo livre salvo.'); } catch (e) { ctx.aviso(e.message); }
+      desenhar(); return;
+    }
     if (ev.target.id !== 'metas') return;
     try {
       const f = new FormData(ev.target), v = Object.keys(CONFIG_PADRAO).map((k) => [k, validarConfig(k, f.get(k))]);
@@ -223,6 +240,10 @@ export function desenharAjustes(raiz, ctx) {
     desenhar();
   };
   raiz.onchange = async (ev) => {
+    if (ev.target.dataset.dif) {
+      try { ctx.sessao.aplicar((e) => alterarMateria(e, Number(ev.target.dataset.dif), { dificuldade: Number(ev.target.value) })); } catch (e) { ctx.aviso(e.message); }
+      desenhar(); return;
+    }
     if (ev.target.id === 'arq-troca' && ev.target.files[0]) {
       troca = null; erroTroca = '';
       try {

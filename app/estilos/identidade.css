@@ -1,10 +1,5 @@
 /* Identidade visual do Ohara (Quadro): painéis claros e macios, azul e roxo, Outfit + DM Sans, borda de destaque no bloco com foco.
    Primeiro os componentes (herdados do antigo Focus); depois, ao fim, as formas e fontes do Quadro. Variáveis de cor logo abaixo. */
-html:root{--bg:#E9EEF5;--cx:#FFFFFF;--cx2:#DDE5F0;--tx:#142033;--tx2:#4B5A73;--ln:#B7C3D6;--bd:#6B7A93;--pr:#2457D6;--prt:#FFFFFF;--ac:#2457D6;--acf:#DCE6FB;--faixa:#CFE0FF;--nav:#17243A;--navt:#C5D0E3;--ok:#166A3A;--okf:#DDF1E6;--ur:#C62828;
- --m1:#2F5FD0;--m2:#2E8B6A;--m3:#B0306A;--m4:#B7791F;--m5:#7B4BB7;--m6:#0E8A9A;--m7:#5D6D7E;--m8:#C0603E;
- --fonte-t:"Outfit",system-ui,sans-serif;--raio-cartao:18px;--faixa-tom:72%;--faixa-cab:55%}
-html:root[data-tema="escuro"]{--bg:#0D1320;--cx:#151D2E;--cx2:#1E2840;--tx:#E8EDF8;--tx2:#A5B0C8;--ln:#2E3A57;--bd:#7C8BAA;--pr:#7EA3FF;--prt:#0D1320;--ac:#7EA3FF;--acf:#1E2840;--faixa:#2B3F73;--nav:#080C16;--navt:#AEB9D2;--ok:#5DC48A;--okf:#16301F;--ur:#FF8A80;
- --faixa-tom:50%;--faixa-cab:38%;--m1:#7FA4F0;--m2:#5DC4A0;--m3:#E57AA6;--m4:#E0B050;--m5:#B596E8;--m6:#4CC4D4;--m7:#9FB0C0;--m8:#EE9A7C}
 html:root body{background:var(--bg)}
 /* menu lateral */
 html:root nav{background:var(--nav);color:var(--navt);border-right:0}
@@ -127,11 +122,7 @@ html:root .card,html:root .cd,html:root .painel{border-radius:18px}
 html:root .til .capa,html:root .til.edit{border-radius:18px}
 
 /* ===== Identidade "Névoa enxuta" (2026-10-29): lavanda e índigo, Poppins, contornos só onde há foco, atalhos em Fira Code sem moldura =====
-   Vem da 5ª versão "Enxuta" do protótipo de Flashcards (rótulo da seção em cima). Sobrepõe o Quadro; para voltar, apague este bloco. */
-html:root{--bg:#EEEFFC;--cx:#FFFFFF;--cx2:#E6E8FA;--tx:#2A2C45;--tx2:#54577A;--ln:#B8BCE2;--bd:#B8BCE2;--pr:#3F4290;--prt:#FFFFFF;--ac:#3F4290;--acf:#E3E4FA;--faixa:#E3E4FA;--nav:#2A2C45;--navt:#C9CBEA;--ok:#2B7A62;--okf:#DDF1EA;--ur:#B3261E;
- --m1:#4C5399;--m2:#2B7A62;--m3:#B3475E;--m4:#C4623D;--m5:#7A4EA8;--m6:#1F7A86;--m7:#B0457F;--m8:#5D6D7E;--fonte-t:"Poppins",system-ui,sans-serif;--raio-cartao:20px}
-html:root[data-tema="escuro"]{--bg:#14152B;--cx:#1D1F40;--cx2:#2A2D5C;--tx:#EDEEFB;--tx2:#B3B6DD;--ln:#4A4F96;--bd:#4A4F96;--pr:#A3A6FA;--prt:#14152B;--ac:#A3A6FA;--acf:#2A2D5C;--faixa:#2A2D5C;--nav:#0E0F20;--navt:#B3B6DD;--ok:#6BCBAA;--okf:#16301F;--ur:#FF9C9C;
- --m1:#A3A6FA;--m2:#6BCBAA;--m3:#F29DB0;--m4:#EE9A7C;--m5:#C9A8F0;--m6:#6FCBD6;--m7:#F29DCB;--m8:#A9B6C4}
+   Vem da 5ª versão "Enxuta" do protótipo de Cartões (rótulo da seção em cima). Sobrepõe o Quadro; para voltar, apague este bloco. */
 html:root body{font-family:"Poppins",system-ui,sans-serif}
 html:root h1{font-weight:300;font-size:30px;letter-spacing:-.01em}
 html:root h2,html:root .sec{font-weight:600;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2)}
@@ -199,8 +190,4 @@ html:root .fc-ed .l[data-t=secao]{letter-spacing:.08em}
 /* ===== Kit · Etapa 0 · Base "A · Leve" (2026-10-29): tokens que as próximas peças do kit usam (ver docs/PLANO_KIT.md) =====
    Tamanhos f1 rótulo · f2 secundário · f3 texto · f4 título de bloco · f5 título de tela · f6 número grande; e1–e6 espaços;
    3 raios (r1 peças · r2 blocos · rp botões); uma borda (b, só no foco); nenhuma sombra; alvo de toque 44 px. */
-html:root{--f1:12px;--f2:13.5px;--f3:15.5px;--f4:19px;--f5:28px;--f6:36px;--peso-tit:300;--lh:1.6;
- --e1:4px;--e2:8px;--e3:12px;--e4:16px;--e5:24px;--e6:32px;--g:16px;--pad:22px;
- --r1:12px;--r2:24px;--rp:999px;--b:1.5px;--alvo:44px;
- --texto:"Poppins",system-ui,sans-serif;--mono:"Fira Code",ui-monospace,monospace}
 html:root h1{font-size:var(--f5);font-weight:var(--peso-tit)}

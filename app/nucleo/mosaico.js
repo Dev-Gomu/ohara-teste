@@ -1,4 +1,4 @@
-// Núcleo (regras puras, sem DOM nem I/O): o arranjo dos blocos da Área de trabalho (Slides, Anotações, Cartões).
+// Núcleo (regras puras, sem DOM nem I/O): o arranjo dos blocos da Mesa (Slides, Anotações, Cartões).
 // Toda função devolve um arranjo novo e nunca altera o recebido. Guardado por aula e por aparelho (ver chaveArranjo).
 
 export const BLOCOS = ['slides', 'anotacoes', 'cartoes'];

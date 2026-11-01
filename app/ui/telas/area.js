@@ -1,4 +1,4 @@
-// Área de trabalho: uma tela só com até 3 blocos em mosaico (Slides, Anotações, Cartões) para uma aula.
+// Mesa: uma tela só com até 3 blocos em mosaico (Slides, Anotações, Cartões) para uma aula.
 // A tela monta o topo, cria o mosaico e os blocos, guarda o arranjo (por aula e por aparelho) e registra os atalhos.
 import { escaparHtml } from '../../nucleo/texto.js';
 import { ativas, corCss, siglaDaMateria } from '../../nucleo/materias.js';
@@ -55,7 +55,7 @@ export function desenharArea(raiz, ctx, aulaId, rota = {}) {
   const aoMover = (e) => { if (e.target.closest?.('.mo-bloco')) { mosaico.mover(e.detail.direcao); e.preventDefault(); } };   // Alt H J K L andam entre blocos
   raiz.addEventListener('ohara-mover', aoMover);
 
-  // ---- atalhos (ver a tabela de colisões em docs/PLANO_IMPLEMENTACAO_AREA_DE_TRABALHO.md)
+  // ---- atalhos (ver a tabela de colisões em docs/historico/PLANO_IMPLEMENTACAO_AREA_DE_TRABALHO.md)
   const DIRECOES = { KeyH: 'esq', KeyJ: 'baixo', KeyK: 'cima', KeyL: 'dir', ArrowLeft: 'esq', ArrowDown: 'baixo', ArrowUp: 'cima', ArrowRight: 'dir' };
   const mapa = {
     'Alt+KeyS': () => { mosaico.alternar('slides'); }, 'Alt+KeyA': () => { mosaico.alternar('anotacoes'); }, 'Alt+KeyC': () => { mosaico.alternar('cartoes'); },

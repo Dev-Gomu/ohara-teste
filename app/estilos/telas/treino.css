@@ -52,11 +52,9 @@ main.tr{display:flex;flex-direction:column;align-items:center;justify-content:ce
 /* O cartão da revisão (rodada de 1/11): frente = carta inteira na cor da matéria; verso = carta branca com o bloco colorido da pergunta no alto. */
 .tr-cf,.tr-cv{border:0;border-radius:28px;box-shadow:0 10px 26px rgba(0,0,0,.14)}
 .tr-cf{position:relative;background:color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);color:#fff;justify-content:center;padding:24px 40px}
-.tr-pil{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;border-radius:99px;padding:6px 14px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.2);color:#fff}
-.tr-pil i{width:9px;height:9px;border-radius:50%;background:#fff}
 .tr-fr{text-align:center;font-size:38px;font-weight:600;line-height:1.2;padding:20px 20px 0}.tr-fr p{margin:0 0 4px}.tr-fr mark{background:rgba(255,255,255,.28);color:inherit;border-radius:4px;padding:0 3px}
 .tr-cf,.tr-cv{aspect-ratio:4/3;width:100%;flex:none}   /* proporção fixa 4:3 nas duas faces: nunca achata; o verso longo rola por dentro */
-.tr-topo{background:color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);color:#fff;padding:20px 32px 22px;display:flex;flex-direction:column;gap:10px;flex:none}
+.tr-topo{background:color-mix(in srgb,var(--mc) var(--faixa-tom,72%),#000);color:#fff;padding:22px 64px 24px 32px;display:flex;flex-direction:column;gap:10px;flex:none}
 .tr-t1{font-size:20px;font-weight:600;line-height:1.3}.tr-t1 p{margin:0}.tr-t1 mark{background:rgba(255,255,255,.28);color:inherit;border-radius:4px;padding:0 3px}
 .tr-cv .tr-corpo{flex:1;min-height:0;overflow:auto;padding:18px 32px 16px}
 .tr-mostrar{width:100%;min-height:58px;border-radius:18px;background:var(--cx)}
@@ -66,7 +64,22 @@ main.tr{display:flex;flex-direction:column;align-items:center;justify-content:ce
 .tr-cf[data-tf=m] .tr-fr{font-size:30px}.tr-cf[data-tf=s] .tr-fr{font-size:23px;text-align:left}.tr-cf[data-tf=xs] .tr-fr{font-size:18px;text-align:left;line-height:1.35}
 .tr-topo{max-height:44%;overflow:auto}
 .tr-cv[data-tf=m] .tr-t1{font-size:19px}.tr-cv[data-tf=s] .tr-t1,.tr-cv[data-tf=xs] .tr-t1{font-size:18px;line-height:1.35}   /* nunca abaixo de 18 px: passou disso, rola */
-.tr-cv[data-tf=s] .tr-topo,.tr-cv[data-tf=xs] .tr-topo{padding:16px 28px 18px;gap:8px}
+.tr-cv[data-tf=s] .tr-topo,.tr-cv[data-tf=xs] .tr-topo{padding:18px 64px 18px 28px;gap:8px}
 .tr-cv[data-tv=m] .tr-corpo,.tr-cv[data-tv=m] .tr-corpo .corpo,.tr-cv[data-tv=l] .tr-corpo,.tr-cv[data-tv=l] .tr-corpo .corpo{font-size:18px}
 .tr-cv{position:relative}
 .tr-ind{position:absolute;top:16px;right:18px;z-index:1;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.22);color:#fff;display:grid;place-items:center;font-size:14px;font-weight:700;letter-spacing:0}
+
+/* estudo personalizado: origem, baralhos, janela do baralho; marcar e desfazer na barra da revisão */
+.tr-linha{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.tr-i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tr-marca.on{color:var(--ac)}.tr-marca.on .tr-i{fill:currentColor}
+.tr-bar .tr-ed{gap:8px}
+.tr-dlg{width:min(620px,100%)}
+.tr-dlg-c{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--tx2)}
+.tr-dlg-corpo{display:flex;flex-direction:column;gap:4px;overflow:auto;max-height:46vh;padding-right:4px}
+.tr-dlg-t{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);margin-top:8px}
+.tr-dlg-l{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 10px;border-radius:12px;font-size:14px;cursor:pointer}.tr-dlg-l:hover{background:var(--cx2)}
+.tr-dlg-l input{width:20px;height:20px;flex:none}.tr-dlg-l small{color:var(--tx2)}
+.tr-dlg-d{border-radius:14px;background:var(--cx2);padding:0 6px;margin-top:6px}.tr-dlg-d summary{min-height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;font-size:14px;font-weight:600;cursor:pointer}.tr-dlg-d summary em{font-style:normal;color:var(--tx2);font-size:12px;font-weight:500}
+.tr-dlg-d[open]{padding-bottom:6px}
+.tr-bar{flex-wrap:nowrap}.tr-sair{white-space:nowrap}.tr-pos{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.tr-ed{white-space:nowrap}

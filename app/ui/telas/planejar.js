@@ -1,4 +1,4 @@
-// Tela Planejar: plano dos próximos dias, provas, dificuldade e horas disponíveis, importar aulas (.ics) e exportar o plano.
+// Tela Agenda: plano dos próximos dias, provas, dificuldade e horas disponíveis, importar aulas (.ics) e exportar o plano.
 import { escaparHtml } from '../../nucleo/texto.js';
 import { ativas, corCss, alterarMateria } from '../../nucleo/materias.js';
 import { DIAS_SEMANA, diaComSemana, somarDias, dataPorExtenso, diasEntre } from '../../nucleo/datas.js';
@@ -26,7 +26,7 @@ export function desenharPlanejar(raiz, ctx) {
     const dias = Array.from({ length: 7 }, (_, i) => somarDias(h, i)), disp = sessao.disponibilidade();
     const doDia = (d) => estado.tarefas.filter((t) => !t.excluido_em && (t.feita_em ? t.feita_em.slice(0, 10) === d : t.dia === d));
     const semVaga = estado.tarefas.filter((t) => !t.feita_em && t.sem_vaga).length;
-    raiz.innerHTML = `<h1>Agenda</h1><p class="sub">O plano se refaz sozinho: o que atrasa passa para os próximos dias, sempre antes da prova.</p>` +
+    raiz.innerHTML = `<a class="voltar" href="#planejar">‹ Agenda</a><h1>Plano de estudo</h1><p class="sub">O plano se refaz sozinho: o que atrasa passa para os próximos dias, sempre antes da prova. <a class="voltar" href="#planejar/grade">Grade semanal</a></p>` +
       (semVaga ? `<div class="aviso ur"><span>${semVaga} ${semVaga === 1 ? 'bloco não cabe' : 'blocos não cabem'} nas horas disponíveis. Aumente o tempo livre abaixo ou fale com o professor sobre a data.</span></div>` : '') +
       `<div class="card bloco"><h2>Próximos 7 dias</h2>${(() => { let primeiro = true; return dias.map((d, i) => { const ts = doDia(d), pend = ts.filter((t) => !t.feita_em).length, titulo = `${escaparHtml(diaComSemana(d))}${d === h ? ' · hoje' : ''}`;
         const corpo = ts.length ? ts.map((t) => { const eh = primeiro && !t.feita_em; if (eh) primeiro = false; return linhaTarefa(t, porId, eh); }).join('') : '<p class="sub" style="margin:4px 0 10px">Nada planejado.</p>';
@@ -34,12 +34,11 @@ export function desenharPlanejar(raiz, ctx) {
           : `<details class="dia-plano"><summary>${titulo} <span>${ts.length ? `${ts.length} ${ts.length === 1 ? 'tarefa' : 'tarefas'}` : 'livre'}</span></summary>${corpo}</details>`; }).join(''); })()}</div>` +
       `<div class="card bloco"><h2>Provas</h2>${provasFuturas(estado, h).map((p) => { const m = porId.get(p.disciplina_id), n = diasEntre(h, p.data); return `<div class="lin"><span class="pt" style="background:${m ? corCss(m.cor) : 'var(--tx2)'}"></span><div class="t">${escaparHtml(p.titulo)}<small>${escaparHtml(m?.nome ?? '')} · ${escaparHtml(dataPorExtenso(p.data))} · ${n === 0 ? 'hoje' : n === 1 ? 'amanhã' : `em ${n} dias`} · ${aulasDaProva(p).length} ${aulasDaProva(p).length === 1 ? 'aula' : 'aulas'}</small></div><button class="btn peq sec" type="button" data-a="excluir-prova" data-id="${p.id}">Excluir</button></div>`; }).join('') || '<p class="sub">Nenhuma prova marcada.</p>'}` +
       (formProva ? formularioProva(estado) : '<p><button class="btn peq" type="button" data-a="nova-prova">Nova prova</button></p>') + '</div>' +
-      `<div class="card bloco"><h2>Dificuldade das matérias</h2><p class="sub">De 1 (fácil) a 3 (difícil): matéria mais difícil pede mais blocos de estudo por aula.</p>${mats().map((m) => `<div class="lin"><span class="pt" style="background:${corCss(m.cor)}"></span><div class="t">${escaparHtml(m.nome)}</div><select class="in curto" data-dif="${m.id}" aria-label="Dificuldade de ${escaparHtml(m.nome)}">${[1, 2, 3].map((n) => `<option value="${n}" ${(m.dificuldade ?? 2) === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`).join('') || '<p class="sub">Crie matérias primeiro.</p>'}</div>` +
-      `<div class="card bloco"><h2>Tempo livre para estudar</h2><form id="disp" class="form"><div class="semana">${DIAS_SEMANA.map((d, i) => `<label class="c">${d.slice(0, 3)}<input class="in" name="d${i}" type="number" min="0" max="1440" step="5" inputmode="numeric" value="${disp[i]}"></label>`).join('')}</div><p class="sub" style="margin:0">Minutos por dia da semana. Zero = dia sem estudo.</p><div class="acoes"><button class="btn peq" type="submit">Salvar</button></div></form></div>` +
+      `<div class="card bloco"><h2>Dificuldade e tempo livre</h2><p class="sub">Agora ficam em <a class="voltar" href="#ajustes">Configs › Plano de estudo</a>.</p></div>` +
       `<div class="card bloco"><h2>Agenda (.ics)</h2><p class="sub">Importe as aulas do Google Agenda (Configurações › Importar e exportar › Exportar) ou leve o plano para ele. Importar de novo não duplica.</p>` +
       `<div class="acoes"><label class="btn peq sec arquivo">Importar aulas (.ics)<input type="file" id="ics" accept=".ics,text/calendar" hidden></label><button class="btn peq sec" type="button" data-a="exportar">Exportar plano (.ics)</button></div>` + painelImportacao() + (relatorio ? `<p class="sub" style="margin-top:10px">${escaparHtml(relatorio)}</p>` : '') + '</div>' +
       (erro ? `<p class="erro">${escaparHtml(erro)}</p>` : '');
-    document.title = 'Agenda · Ohara';
+    document.title = 'Plano de estudo · Ohara';
   }
 
   function linhaTarefa(t, porId, destaque = false) {

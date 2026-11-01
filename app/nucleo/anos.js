@@ -67,6 +67,6 @@ export function visivel(estado) {
     aulas: estado.aulas.filter((a) => !aulasFora.has(a.id)),
     arquivos: sem(estado.arquivos, 'aula_id', aulasFora), marcadores: sem(estado.marcadores, 'aula_id', aulasFora), cartoes: sem(estado.cartoes, 'aula_id', aulasFora),
     revisoes: sem(estado.revisoes, 'cartao_id', new Set(estado.cartoes.filter((c) => aulasFora.has(c.aula_id)).map((c) => c.id))),
-    provas: sem(estado.provas, 'disciplina_id', fora), tarefas: sem(estado.tarefas, 'disciplina_id', fora), pastas: sem(estado.pastas, 'disciplina_id', fora),
+    provas: sem(estado.provas, 'disciplina_id', fora), eventos: sem(estado.eventos, 'disciplina_id', fora), grade: sem(estado.grade, 'disciplina_id', fora), tarefas: sem(estado.tarefas, 'disciplina_id', fora), pastas: sem(estado.pastas, 'disciplina_id', fora),
   };
 }

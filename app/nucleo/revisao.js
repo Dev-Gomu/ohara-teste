@@ -4,6 +4,7 @@
 import { ativas } from './materias.js';
 import { somarDias, diasEntre } from './datas.js';
 import { aulasDaPasta } from './pastas.js';
+import { aulasDoBaralho } from './baralhos.js';
 
 export const RESPOSTAS = ['errei', 'dificil', 'bom', 'facil'];
 export const NOVOS_POR_DIA = 12;
@@ -45,16 +46,27 @@ export function responder(estado, cartaoId, resposta, hoje, agora) {
   return { ...estado, revisoes: [...lista(estado, 'revisoes').filter((r) => r.cartao_id !== cartaoId), nova], revisoes_log: [...lista(estado, 'revisoes_log'), log] };
 }
 
+/**
+ * Desfaz uma resposta: devolve a revisão do cartão ao que era (`antes`, ou nada se era novo) e tira a resposta do registro.
+ * `logId`: o id da linha do registro criada por essa resposta.
+ */
+export function desfazerResposta(estado, { cartaoId, antes, logId }) {
+  return { ...estado, revisoes: [...lista(estado, 'revisoes').filter((r) => r.cartao_id !== cartaoId), ...(antes ? [antes] : [])], revisoes_log: lista(estado, 'revisoes_log').filter((l) => l.id !== logId) };
+}
+
 // ---------- escopo: de onde vêm os cartões ----------
 
 /**
- * `escopo`: { tipo: 'tudo' } | { tipo: 'ano', materiaId } | { tipo: 'bimestre', materiaId, pastaId } | { tipo: 'aula', aulaId }.
+ * `escopo`: { tipo: 'tudo' } | { tipo: 'ano', materiaId } | { tipo: 'bimestre', materiaId, pastaId } | { tipo: 'aula', aulaId }
+ * | { tipo: 'baralho', baralhoId } (estudo personalizado) | { tipo: 'marcados' } (os cartões marcados com estrela).
  * Devolve os cartões vivos (do ano atual, que é o que `estado` mostra), em ordem de aula e de criação.
  */
 export function cartoesDoEscopo(estado, escopo) {
   const aulas = ativas(estado.aulas), mats = new Set(ativas(estado.disciplinas).map((d) => d.id));
   let ids;
-  if (escopo.tipo === 'aula') ids = new Set([escopo.aulaId]);
+  if (escopo.tipo === 'marcados') return ativas(estado.cartoes ?? []).filter((c) => c.marcado && aulas.some((a) => a.id === c.aula_id && mats.has(a.disciplina_id))).sort((a, b) => a.aula_id - b.aula_id || a.id - b.id);
+  if (escopo.tipo === 'baralho') { const b = ativas(estado.baralhos ?? []).find((x) => x.id === escopo.baralhoId); ids = b ? aulasDoBaralho(estado, b) : new Set(); }
+  else if (escopo.tipo === 'aula') ids = new Set([escopo.aulaId]);
   else if (escopo.tipo === 'bimestre') ids = new Set(aulasDaPasta(estado, escopo.materiaId, escopo.pastaId).map((a) => a.id));
   else if (escopo.tipo === 'ano') ids = new Set(aulas.filter((a) => a.disciplina_id === escopo.materiaId).map((a) => a.id));
   else ids = new Set(aulas.filter((a) => mats.has(a.disciplina_id)).map((a) => a.id));

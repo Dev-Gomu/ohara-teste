@@ -38,7 +38,7 @@ export function criarCartao(estado, aulaId, { frente, verso, pagina = null, etiq
   const base = validar({ frente, verso });
   const id = proximoId(estado.cartoes);
   const cartao = { id, aula_id: aulaId, pagina: Number.isInteger(pagina) && pagina > 0 ? pagina : null, ...base, etiquetas: normalizarEtiquetas(etiquetas),
-    tem_imagem: codificarImagens(temImagem, temImagemVerso), guid: guid ?? `ohara-${id}-${Date.parse(agora) || 0}`, criado_em: agora, atualizado_em: agora, exportado_em: null, excluido_em: null };
+    tem_imagem: codificarImagens(temImagem, temImagemVerso), guid: guid ?? `ohara-${id}-${Date.parse(agora) || 0}`, criado_em: agora, atualizado_em: agora, exportado_em: null, excluido_em: null, marcado: 0 };
   const marcadores = marcadorId == null ? estado.marcadores : estado.marcadores.map((m) => (m.id === marcadorId && !m.excluido_em ? { ...m, excluido_em: agora } : m));
   return { estado: { ...estado, cartoes: [...estado.cartoes, cartao], marcadores }, cartao };
 }
@@ -101,4 +101,31 @@ export function importarTexto(estado, aulaId, texto, agora, novoGuid = () => und
     catch (err) { ignorados.push({ linha: i + 1, texto: linha, motivo: err.message }); }
   });
   return { estado: e, criados, ignorados };
+}
+
+// ---------- marcar, mover e etiquetar vários (Treino e Gerenciar) ----------
+
+/** Marca ou desmarca (estrela) um cartão. Não mexe em `atualizado_em`: marcar não conta como alterar o cartão para o Anki. */
+export function marcarCartao(estado, id, valor) {
+  if (!estado.cartoes.some((c) => c.id === id && !c.excluido_em)) throw new Error('Cartão não encontrado.');
+  return { ...estado, cartoes: estado.cartoes.map((c) => (c.id === id ? { ...c, marcado: valor ? 1 : 0 } : c)) };
+}
+export function marcarVarios(estado, ids, valor) {
+  const s = new Set(ids);
+  return { ...estado, cartoes: estado.cartoes.map((c) => (s.has(c.id) && !c.excluido_em ? { ...c, marcado: valor ? 1 : 0 } : c)) };
+}
+
+/** Move cartões para outra aula (o "baralho" do Anki é Matéria::Aula). Conta como alterado, para o Anki trocar de baralho no próximo envio. */
+export function moverCartoes(estado, ids, aulaId, agora) {
+  if (!ativas(estado.aulas).some((a) => a.id === aulaId)) throw new Error('A aula de destino não existe.');
+  const s = new Set(ids);
+  return { ...estado, cartoes: estado.cartoes.map((c) => (s.has(c.id) && !c.excluido_em && c.aula_id !== aulaId ? { ...c, aula_id: aulaId, atualizado_em: agora } : c)) };
+}
+
+/** Acrescenta uma etiqueta a vários cartões (sem repetir). */
+export function etiquetarCartoes(estado, ids, etiqueta, agora) {
+  const nova = normalizarEtiquetas(etiqueta);
+  if (!nova) throw new Error('Escreva a etiqueta.');
+  const s = new Set(ids);
+  return { ...estado, cartoes: estado.cartoes.map((c) => (s.has(c.id) && !c.excluido_em ? { ...c, etiquetas: normalizarEtiquetas(`${c.etiquetas} ${nova}`), atualizado_em: agora } : c)) };
 }

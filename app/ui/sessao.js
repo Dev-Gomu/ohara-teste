@@ -58,7 +58,7 @@ export async function iniciarSessao({ nomeBanco = 'ohara', aoFalhar = () => {} }
       salvarEstado(db, novo); estado = novo; gravador.agendar();
     },
     /** Sessão de foco em andamento (guardada no banco para sobreviver a recarregar a página). */
-    /** Põe o plano em dia (replaneja atrasos, tira o que deixou de valer). Chamar ao abrir Hoje, Planejar e Foco. */
+    /** Põe o plano em dia (replaneja atrasos, tira o que deixou de valer). Chamar ao abrir Hub, Agenda e Foco. */
     sincronizarPlano(hoje, agora = new Date().toISOString()) {
       const novo = reconciliarPlano(estado, hoje, lerDisponibilidade(lerCfg('disponibilidade')), lerCfg('inicio_uso'), agora);
       if (planoMudou(estado.tarefas, novo)) { estado = { ...estado, tarefas: novo }; salvarEstado(db, estado); gravador.agendar(); }

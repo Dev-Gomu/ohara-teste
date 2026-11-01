@@ -12,6 +12,10 @@ import { desenharHoje } from './telas/hoje.js';
 import { desenharFoco } from './telas/foco.js';
 import { desenharPainel } from './telas/painel.js';
 import { desenharPlanejar } from './telas/planejar.js';
+import { desenharGrade } from './telas/grade.js';
+import { desenharAgenda } from './telas/agenda.js';
+import { ocorrenciasVirtuais, materializarDoDia } from '../nucleo/grade.js';
+import { diaDe } from './foco_servico.js';
 import { desenharRevisor } from './telas/revisor.js';
 import { aulaParaAbrirAgora } from '../nucleo/aulas.js';
 import { criarServicoFoco } from './foco_servico.js';
@@ -40,7 +44,9 @@ const TEXTOS = {
   foco: ['Foco', 'Em construção.'],
   painel: ['Painel', 'Em construção.'],
   planejar: ['Agenda', 'Em construção.'],
-  cartoes: ['Flashcards', 'Em construção.'],
+  grade: ['Grade', 'Em construção.'],
+  plano: ['Plano de estudo', 'Em construção.'],
+  cartoes: ['Cartões', 'Em construção.'],
 };
 
 const CHAVE_TEMA = 'ohara.tema';
@@ -51,16 +57,16 @@ const guardar = {
 
 const CHAVE_BARRA = 'ohara.barra';
 const html = document.documentElement;
-const lerBarra = () => (pref.ler(CHAVE_BARRA) === 'solta' ? 'solta' : 'fixa');
+// A barra "solta" (☰ flutuante) saiu de uso: o menu de cima fica sempre visível. Preferência antiga guardada como 'solta' é ignorada.
+const lerBarra = () => 'fixa';
 function aplicarBarra(v) { html.dataset.barra = v; html.removeAttribute('data-barra-aberta'); }
 const barra = {
   fixa: () => html.dataset.barra !== 'solta',
   aberta: () => !!html.dataset.barraAberta,
   abrir() { if (!barra.fixa()) html.dataset.barraAberta = '1'; },
   fechar() { html.removeAttribute('data-barra-aberta'); },
-  alternar() { const v = barra.fixa() ? 'solta' : 'fixa'; pref.gravar(CHAVE_BARRA, v); aplicarBarra(v); atualizarBotaoBarra(); },
+  alternar() { /* sem barra solta por enquanto: Alt B não faz nada */ },
 };
-function atualizarBotaoBarra() { const b = document.getElementById('fixar'); if (b) b.textContent = barra.fixa() ? 'Soltar a barra' : 'Fixar a barra'; }
 const modoFoco = { ativo: () => !!html.dataset.foco, sair() { html.removeAttribute('data-foco'); }, alternar() { if (html.dataset.foco) html.removeAttribute('data-foco'); else { html.dataset.foco = '1'; barra.fechar(); } } };
 function corDaBarra() {
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -79,16 +85,24 @@ function abrirAreaDeTrabalho(raiz, ctx) {
   raiz.innerHTML = '<h1>Mesa</h1><p class="sub">Crie uma matéria e uma aula para começar. <a class="voltar" href="#materias">Ir para o Acervo</a></p>';
 }
 
+/** As aulas da grade que caem hoje viram aulas de verdade (com espaço para slides, anotações e cartões). Só grava se houver o que criar. */
+function materializarHoje() {
+  if (!sessao) return;
+  const ms = window.ohara?.agoraFalsoMs ?? Date.now(), dia = diaDe(ms);
+  if (ocorrenciasVirtuais(sessao.estadoCompleto(), dia, dia).length) sessao.aplicar((e) => materializarDoDia(e, dia, new Date(ms).toISOString()));
+}
+
 function desenhar() {
   if (limpar) { limpar(); limpar = null; }
+  try { materializarHoje(); } catch (e) { aviso('Não consegui criar as aulas de hoje: ' + e.message); }
   const rota = rotaDoEndereco(location.hash);
   const tela = rota.menu;
+  document.documentElement.dataset.tela = tela;   // estilos/pc.css usa isto para a escala e as margens no PC
   const tema = document.documentElement.dataset.tema;
   document.getElementById('nav').innerHTML = '<div class="logo">Ohara</div>' +
     TELAS.map((t) => `<a href="#${t.chave}" title="${escaparHtml(t.nome)}" class="${t.chave === tela ? 'on' : ''}" ${t.chave === tela ? 'aria-current="page"' : ''}>` +
       `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[t.chave]}</svg>${escaparHtml(t.nome)}</a>`).join('') +
-    `<div class="fim"><button id="fixar" type="button" title="Alt B">${barra.fixa() ? 'Soltar a barra' : 'Fixar a barra'}</button><button id="ver-atalhos" type="button" title="?">Atalhos (?)</button></div>`;
-  document.getElementById('fixar').onclick = () => barra.alternar();
+    `<div class="fim"><button id="ver-atalhos" type="button" title="?">Atalhos (?)</button></div>`;
   document.getElementById('ver-atalhos').onclick = () => teclado.abrirAjuda();
   document.getElementById('nav').onclick = (ev) => { if (ev.target.closest('a') && !barra.fixa()) barra.fechar(); };
   const [titulo, texto] = TEXTOS[tela];
@@ -106,7 +120,9 @@ function desenhar() {
   else if (rota.tela === 'ajustes') desenharAjustes(raiz, ctx);
   else if (rota.tela === 'hoje') limpar = desenharHoje(raiz, ctx);
   else if (rota.tela === 'foco') limpar = desenharFoco(raiz, ctx, rota.id);
-  else if (rota.tela === 'planejar') limpar = desenharPlanejar(raiz, ctx);
+  else if (rota.tela === 'planejar') limpar = desenharAgenda(raiz, ctx);
+  else if (rota.tela === 'plano') limpar = desenharPlanejar(raiz, ctx);
+  else if (rota.tela === 'grade') limpar = desenharGrade(raiz, ctx);
   else if (rota.tela === 'painel') limpar = desenharPainel(raiz, ctx);
   else raiz.innerHTML = `<h1>${escaparHtml(titulo)}</h1><p class="sub">${escaparHtml(texto)}</p>`;
 }
@@ -119,6 +135,12 @@ function aviso(texto, acao) {
   t.classList.add('on'); clearTimeout(aviso.t); aviso.t = setTimeout(() => t.classList.remove('on'), 6000);
 }
 
+// Escala no PC: 1 no tablet (1280×800); em janelas maiores o desenho cresce (--zt inteiro no Treino; --zl metade, nas telas de lista e leitura). Ver estilos/pc.css.
+function escalarPc() {
+  const z = Math.max(1, Math.min(innerWidth / 1280, innerHeight / 800, 1.5)), r = document.documentElement.style;
+  r.setProperty('--zt', z.toFixed(3)); r.setProperty('--zl', (1 + (z - 1) / 2).toFixed(3));
+}
+escalarPc(); addEventListener('resize', escalarPc);
 aplicarBarra(lerBarra());
 document.addEventListener('click', (ev) => { if (barra.aberta() && !ev.target.closest('#nav') && !ev.target.closest('#abrir-barra')) barra.fechar(); });
 document.getElementById('abrir-barra').onclick = () => (barra.aberta() ? barra.fechar() : barra.abrir());
@@ -139,7 +161,17 @@ iniciarSessao({ aoFalhar: (e) => aviso('Não consegui salvar: ' + e.message) })
 
 // Service worker: o app abre sem internet e atualiza sozinho (a página nova aparece ao recarregar).
 // Atualização: a versão nova baixa sozinha e assume; a página aberta continua na antiga até recarregar, então avisamos.
-if ('serviceWorker' in navigator) {
+// Em localhost/127.0.0.1 (desenvolvimento) o service worker só atrapalha: guarda arquivos antigos e mistura versões. Lá ele é desligado e o
+// que ele guardou é apagado (recarrega uma vez só, se havia algo). No app publicado e no tablet pela rede ele funciona normalmente.
+const emDesenvolvimento = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+if (emDesenvolvimento && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(async (regs) => {
+    const chaves = await caches.keys();
+    if (!regs.length && !chaves.length) return;
+    await Promise.all([...regs.map((r) => r.unregister()), ...chaves.map((k) => caches.delete(k))]);
+    location.reload();
+  }).catch(() => {});
+} else if ('serviceWorker' in navigator) {
   const tinhaControle = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.register('sw.js').then((reg) => {
     const procurar = () => reg.update().catch(() => {});

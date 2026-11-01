@@ -59,6 +59,33 @@ export const MIGRACOES = [
      lapsos INTEGER NOT NULL DEFAULT 0, vence_dia TEXT NOT NULL, ultima_em TEXT NOT NULL);
    CREATE TABLE revisao_log (
      id INTEGER PRIMARY KEY, cartao_id INTEGER NOT NULL, dia TEXT NOT NULL, resposta TEXT NOT NULL, novo INTEGER NOT NULL DEFAULT 0, criado_em TEXT NOT NULL);`,
+  // v9: cartão marcado durante a revisão (estrela) e baralhos do Treino (estudo personalizado: provas e/ou aulas escolhidas, guardadas como listas de ids em JSON)
+  `ALTER TABLE cartao ADD COLUMN marcado INTEGER NOT NULL DEFAULT 0;
+   CREATE TABLE baralho (
+     id INTEGER PRIMARY KEY, nome TEXT NOT NULL, provas TEXT NOT NULL DEFAULT '[]', aulas TEXT NOT NULL DEFAULT '[]', criado_em TEXT NOT NULL, excluido_em TEXT);`,
+  // v10 (Agenda): a prova passa a aceitar data vazia (cadastro só com a matéria) e ganha hora, local, observação e peso (a tabela é refeita
+  // porque o SQLite não tira o NOT NULL de uma coluna). `evento` guarda trabalho, compromisso e lembrete; `repete` é um JSON ({freq, ate}) ou vazio.
+  `CREATE TABLE prova_nova (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, titulo TEXT NOT NULL, data TEXT, hora TEXT, local TEXT NOT NULL DEFAULT '',
+     observacao TEXT NOT NULL DEFAULT '', peso REAL, aulas TEXT NOT NULL DEFAULT '[]', criado_em TEXT NOT NULL, excluido_em TEXT);
+   INSERT INTO prova_nova (id, disciplina_id, titulo, data, aulas, criado_em, excluido_em)
+     SELECT id, disciplina_id, titulo, data, aulas, criado_em, excluido_em FROM prova;
+   DROP TABLE prova;
+   ALTER TABLE prova_nova RENAME TO prova;
+   CREATE TABLE evento (
+     id INTEGER PRIMARY KEY, tipo TEXT NOT NULL, disciplina_id INTEGER, titulo TEXT NOT NULL, data TEXT, hora TEXT, hora_fim TEXT,
+     local TEXT NOT NULL DEFAULT '', observacao TEXT NOT NULL DEFAULT '', peso REAL, repete TEXT NOT NULL DEFAULT '', feito_em TEXT,
+     criado_em TEXT NOT NULL, excluido_em TEXT);`,
+  // v11 (Grade): horários semanais (regra; `ate` vazio = sem fim; `ancora` só na quinzenal), exceções por data (cancelada ou movida) e o elo
+  // da aula de verdade com o horário que a gerou (`grade_id` + `grade_dia`, a data original), sem chave estrangeira.
+  `CREATE TABLE grade (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, dia_semana INTEGER NOT NULL, inicio TEXT NOT NULL, fim TEXT NOT NULL,
+     repete TEXT NOT NULL DEFAULT 'semanal', ancora TEXT, desde TEXT NOT NULL, ate TEXT, rotulo TEXT NOT NULL DEFAULT '', local TEXT NOT NULL DEFAULT '',
+     criado_em TEXT NOT NULL, excluido_em TEXT);
+   CREATE TABLE grade_excecao (
+     id INTEGER PRIMARY KEY, grade_id INTEGER NOT NULL, dia TEXT NOT NULL, tipo TEXT NOT NULL, novo_dia TEXT, novo_inicio TEXT, novo_fim TEXT, criado_em TEXT NOT NULL);
+   ALTER TABLE aula ADD COLUMN grade_id INTEGER;
+   ALTER TABLE aula ADD COLUMN grade_dia TEXT;`,
 ];
 
 export function versaoDoBanco(db) {

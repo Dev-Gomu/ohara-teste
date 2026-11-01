@@ -9,7 +9,7 @@ export const LIMITE_NOME = 80;
 const COR = /^#[0-9a-fA-F]{6}$/;
 
 export function estadoVazio() {
-  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], tarefas: [], cartoes: [], pastas: [], anos: [], revisoes: [], revisoes_log: [] };
+  return { disciplinas: [], aulas: [], arquivos: [], marcadores: [], blocos: [], provas: [], eventos: [], grade: [], excecoes: [], tarefas: [], cartoes: [], pastas: [], anos: [], revisoes: [], revisoes_log: [], baralhos: [] };
 }
 
 export function proximoId(lista) {
@@ -97,7 +97,7 @@ export function restaurarMateria(estado, id) {
 
 /** Quanto a lixeira tem, para a confirmação "Apagar de vez N matérias, M aulas e K arquivos?". */
 export function contarLixeira(estado) {
-  return { disciplinas: naLixeira(estado.disciplinas).length, aulas: naLixeira(estado.aulas).length, arquivos: naLixeira(estado.arquivos ?? []).length, cartoes: naLixeira(estado.cartoes ?? []).length, provas: naLixeira(estado.provas ?? []).length };
+  return { disciplinas: naLixeira(estado.disciplinas).length, aulas: naLixeira(estado.aulas).length, arquivos: naLixeira(estado.arquivos ?? []).length, cartoes: naLixeira(estado.cartoes ?? []).length, provas: naLixeira(estado.provas ?? []).length, eventos: naLixeira(estado.eventos ?? []).length };
 }
 
 /**
@@ -117,15 +117,20 @@ export function esvaziarLixeira(estado) {
   const cartoesAntes = estado.cartoes ?? [];
   const cartoes = ativas(cartoesAntes).filter((c) => aulasVivas.has(c.aula_id));
   const cartoesVivos = new Set(cartoes.map((c) => c.id));
+  const grade = ativas(estado.grade ?? []).filter((h) => vivasD.has(h.disciplina_id)), gradeVivas = new Set(grade.map((h) => h.id));
   return {
     estado: {
+      ...estado,           // o que esta função não conhece (listas novas) passa intacto
       disciplinas, aulas, arquivos, cartoes,
+      eventos: ativas(estado.eventos ?? []).filter((x) => x.disciplina_id == null || vivasD.has(x.disciplina_id)),
+      grade, excecoes: (estado.excecoes ?? []).filter((x) => gradeVivas.has(x.grade_id)),
       marcadores: ativas(estado.marcadores ?? []).filter((m) => aulasVivas.has(m.aula_id)),
       blocos: estado.blocos ?? [],
       pastas: ativas(estado.pastas ?? []).filter((p) => vivasD.has(p.disciplina_id)),
       anos: ativas(estado.anos ?? []),
       revisoes: (estado.revisoes ?? []).filter((r) => cartoesVivos.has(r.cartao_id)),
       revisoes_log: estado.revisoes_log ?? [],
+      baralhos: ativas(estado.baralhos ?? []),
       provas: ativas(estado.provas ?? []).filter((p) => vivasD.has(p.disciplina_id)),
       tarefas: (estado.tarefas ?? []).filter((t) => !t.excluido_em && vivasD.has(t.disciplina_id) && (t.aula_id == null || aulasVivas.has(t.aula_id))),
     },
@@ -178,5 +183,6 @@ export function itensDaLixeira(estado) {
     arquivos: naLixeira(estado.arquivos ?? []).filter((f) => aulasAtivas.has(f.aula_id)).sort(porData),
     cartoes: naLixeira(estado.cartoes ?? []).filter((c) => aulasAtivas.has(c.aula_id)).sort(porData),
     provas: naLixeira(estado.provas ?? []).filter((p) => ativasIds.has(p.disciplina_id)).sort(porData),
+    eventos: naLixeira(estado.eventos ?? []).filter((x) => x.disciplina_id == null || ativasIds.has(x.disciplina_id)).sort(porData),
   };
 }

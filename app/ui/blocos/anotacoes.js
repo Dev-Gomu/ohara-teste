@@ -1,4 +1,4 @@
-// Bloco Anotações da Área de trabalho: o texto da aula no Quill, salvo sozinho, com marcador de página, marcados e histórico.
+// Bloco Anotações da Mesa: o texto da aula no Quill, salvo sozinho, com marcador de página, marcados e histórico.
 // Segue o contrato dos blocos de ui/componentes/mosaico.js. O texto continua guardado como antes (sessao.salvarAnotacao).
 import { escaparHtml } from '../../nucleo/texto.js';
 import { textoDoDelta } from '../../nucleo/anotacoes.js';

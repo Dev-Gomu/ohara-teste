@@ -25,21 +25,35 @@ export function lerDisponibilidade(texto) {
 }
 
 // ---------- provas ----------
-export function criarProva(estado, { disciplinaId, titulo, data, aulas = [] }, agora) {
+const DIA = /^\d{4}-\d{2}-\d{2}$/, HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
+/** Campos opcionais da Agenda, comuns à prova e ao evento: devolve null para vazio e lança Error para valor inválido. */
+export function camposDaAgenda({ data, hora, local, observacao, peso }) {
+  const d = data == null || data === '' ? null : data;
+  if (d !== null && (!DIA.test(d) || Number.isNaN(Date.parse(d)))) throw new Error('Data inválida: use AAAA-MM-DD.');
+  const h = hora == null || hora === '' ? null : hora;
+  if (h !== null && !HORA.test(h)) throw new Error('Hora inválida: use HH:MM.');
+  const p = peso == null || peso === '' ? null : Number(peso);
+  if (p !== null && (!Number.isFinite(p) || p < 0)) throw new Error('O peso precisa ser um número maior ou igual a zero.');
+  return { data: d, hora: h, local: normalizarNome(local ?? '').slice(0, 80), observacao: String(observacao ?? '').trim().slice(0, 1000), peso: p };
+}
+
+// A prova só exige a matéria: data, hora, local e peso podem ser completados depois (ver `aCompletar`, em eventos.js).
+export function criarProva(estado, { disciplinaId, titulo, data, hora, local, observacao, peso, aulas = [] }, agora) {
   if (!ativas(estado.disciplinas).some((d) => d.id === disciplinaId)) throw new Error('A matéria não existe.');
   const t = normalizarNome(titulo) || 'Prova';
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(data ?? '') || Number.isNaN(Date.parse(data))) throw new Error('Informe a data da prova.');
+  const campos = camposDaAgenda({ data, hora, local, observacao, peso });
   const doDisc = new Set(ativas(estado.aulas).filter((a) => a.disciplina_id === disciplinaId).map((a) => a.id));
   const ids = [...new Set(aulas)].filter((id) => doDisc.has(id));
-  const prova = { id: (estado.provas ?? []).reduce((m, p) => Math.max(m, p.id), 0) + 1, disciplina_id: disciplinaId, titulo: t.slice(0, 80), data, aulas: JSON.stringify(ids), criado_em: agora, excluido_em: null };
+  const prova = { id: (estado.provas ?? []).reduce((m, p) => Math.max(m, p.id), 0) + 1, disciplina_id: disciplinaId, titulo: t.slice(0, 80), ...campos, aulas: JSON.stringify(ids), criado_em: agora, excluido_em: null };
   return { estado: { ...estado, provas: [...(estado.provas ?? []), prova] }, prova };
 }
 export const aulasDaProva = (p) => { try { return JSON.parse(p.aulas); } catch { return []; } };
 
-export function alterarProva(estado, id, { titulo, data, aulas }) {
+export function alterarProva(estado, id, dados) {
   const atual = (estado.provas ?? []).find((p) => p.id === id && !p.excluido_em);
   if (!atual) throw new Error('Prova não encontrada.');
-  const { estado: e2, prova } = criarProva({ ...estado, provas: [] }, { disciplinaId: atual.disciplina_id, titulo: titulo ?? atual.titulo, data: data ?? atual.data, aulas: aulas ?? aulasDaProva(atual) }, atual.criado_em);
+  const pega = (campo) => (campo in dados ? dados[campo] : atual[campo]);
+  const { prova } = criarProva({ ...estado, provas: [] }, { disciplinaId: atual.disciplina_id, titulo: pega('titulo'), data: pega('data'), hora: pega('hora'), local: pega('local'), observacao: pega('observacao'), peso: pega('peso'), aulas: dados.aulas ?? aulasDaProva(atual) }, atual.criado_em);
   return { ...estado, provas: estado.provas.map((p) => (p.id === id ? { ...prova, id, criado_em: atual.criado_em } : p)) };
 }
 export function excluirProva(estado, id, agora) {
@@ -51,7 +65,7 @@ export function restaurarProva(estado, id) {
   if (!p || !p.excluido_em) throw new Error('Essa prova não está na lixeira.');
   return { ...estado, provas: estado.provas.map((x) => (x.id === id ? { ...x, excluido_em: null } : x)) };
 }
-export const provasFuturas = (estado, hoje) => ativas(estado.provas ?? []).filter((p) => p.data >= hoje).sort((a, b) => a.data.localeCompare(b.data));
+export const provasFuturas = (estado, hoje) => ativas(estado.provas ?? []).filter((p) => p.data && p.data >= hoje).sort((a, b) => a.data.localeCompare(b.data));
 
 // ---------- necessidades do plano ----------
 const blocosPorDificuldade = (d) => ({ 1: 1, 2: 2, 3: 3 })[d ?? 2] ?? 2;

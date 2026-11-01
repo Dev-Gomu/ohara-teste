@@ -1,4 +1,4 @@
-// Bloco Slides da Área de trabalho: o arquivo da aula (PDF ou imagem) no leitor, com página, zoom e o menu ⋮.
+// Bloco Slides da Mesa: o arquivo da aula (PDF ou imagem) no leitor, com página, zoom e o menu ⋮.
 // Segue o contrato dos blocos de ui/componentes/mosaico.js. A página em que você parou fica guardada por arquivo.
 import { escaparHtml, formatarBytes } from '../../nucleo/texto.js';
 import { arquivosDaAula, excluirArquivo, restaurarArquivo, ehPdf } from '../../nucleo/arquivos.js';
