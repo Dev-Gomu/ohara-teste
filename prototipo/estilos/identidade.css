@@ -171,7 +171,7 @@ html:root .fc-ed .l[data-t=secao]{letter-spacing:.08em}
  html:root nav .fim{margin:0 0 0 auto;flex-direction:row;border:0;padding:0;gap:8px;align-items:center;color:var(--tx2)}
  html:root nav .fim #fixar{display:none}
  html:root nav .fim button{height:40px;padding:0 16px;border-radius:99px;background:var(--cx);color:var(--tx);border:0;font-size:13px}
- html:root main:not(.cheia){padding:14px 18px 24px}
+ html:root main:not(.cheia){padding:var(--tela-topo) var(--tela-x) var(--tela-base)}
  html:root .fc-topo h1{display:none}
  html:root .fc-topo{position:fixed;top:12px;right:138px;margin:0;z-index:5}
 }

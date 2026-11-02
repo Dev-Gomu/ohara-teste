@@ -1,5 +1,5 @@
 /* Mesa (ui/telas/area.js). Prefixo at-: só estas classes são da tela; o topo reaproveita .topo (posição na barra superior). */
-main.at{padding:0;display:flex;flex-direction:column;overflow:hidden}
+html:root main.at{padding:var(--tela-topo) var(--tela-x) var(--tela-base);display:flex;flex-direction:column;overflow:hidden}
 main.at .at-topo{display:flex;align-items:center;gap:10px;min-height:52px;padding:4px 14px;border:0;margin:0}
 .at-mat{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:99px;background:var(--c,var(--ac));color:#fff;font-size:13px;font-weight:600;text-decoration:none;flex:none}
 .at-tt{display:flex;flex-direction:column;min-width:0}.at-tt b{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.at-tt small{font-size:11px;color:var(--tx2);white-space:nowrap}

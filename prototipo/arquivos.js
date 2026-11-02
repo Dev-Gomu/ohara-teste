@@ -1,6 +1,6 @@
 // Gerado por ferramentas/versao.js — não editar.
 self.OHARA = {
- "versao": "d28bfcfe85ba",
+ "versao": "706a0a5f3197",
  "arquivos": [
   "armazenamento/ankiconnect.js",
   "armazenamento/apkg.js",
@@ -76,6 +76,7 @@ self.OHARA = {
   "nucleo/teclado.js",
   "nucleo/texto.js",
   "nucleo/troca.js",
+  "nucleo/zonas.js",
   "ui/app.js",
   "ui/atalhos.js",
   "ui/atualizar.js",
@@ -111,6 +112,7 @@ self.OHARA = {
   "ui/telas/painel.js",
   "ui/telas/planejar.js",
   "ui/telas/revisor.js",
+  "ui/zonas.js",
   "vendor/SHA256.txt",
   "vendor/fflate.LICENSE",
   "vendor/fflate.mjs",

@@ -99,18 +99,13 @@ export function criarMosaico(grade, { blocos, arranjo, aoMudar = () => {}, aoFoc
     for (const n of nomes) blocos[n].el.classList.toggle('mo-foco', n === nome && mostrados.has(n));
     aoFocar(nome);
   }
-  // ---- trilha: mostra onde o foco está (bloco › seção › elemento) e a dica da vez; marca a seção no bloco (data-sec)
-  const trilha = Object.assign(document.createElement('div'), { className: 'mo-trilha', ariaHidden: 'true' });
-  grade.after(trilha);   // numa faixa fixa logo abaixo da grade (não cobre nenhum bloco)
+  // ---- marca a seção em que o foco está no bloco (data-sec); sem rodapé (a trilha foi removida a pedido do usuário)
   function atualizarTrilha() {
     const at = document.activeElement, bl = at?.closest?.('.mo-bloco');
     for (const n of nomes) delete blocos[n].el.dataset.sec;
-    if (!bl || !grade.contains(at) || bl.hidden) { trilha.classList.remove('on'); return; }
-    const nome = bl.dataset.bloco, b = blocos[nome], bloco = at === bl, sec = bloco ? null : secaoDoFoco(b);
+    if (!bl || !grade.contains(at) || bl.hidden) return;
+    const nome = bl.dataset.bloco, b = blocos[nome], sec = at === bl ? null : secaoDoFoco(b);
     if (sec) bl.dataset.sec = sec;
-    const rot = bloco ? '' : (at.getAttribute('aria-label') || at.title || at.textContent || '').replace(/\(.*?\)/g, '').trim().slice(0, 30);
-    trilha.innerHTML = `<span><em>Mesa ›</em> ${bloco ? `<b>${NOMES[nome]}</b>` : `${NOMES[nome]} <em>›</em> ${SECOES[sec]}${rot ? ` <em>›</em> <b>${escaparHtml(rot)}</b>` : ''}`}</span><span class="dica">${bloco ? 'Enter entra no campo · Alt T F B seções · Esc menu de cima' : 'Esc sobe · Alt , . elementos · Alt T F B seções'}</span>`;
-    trilha.classList.add('on');
   }
   grade.addEventListener('focusin', atualizarTrilha); grade.addEventListener('focusout', () => setTimeout(atualizarTrilha, 0));
   grade.addEventListener('focusin', (e) => { const el = e.target.closest('.mo-bloco'); if (el && mostrados.has(el.dataset.bloco)) marcarFoco(el.dataset.bloco); });
@@ -233,7 +228,7 @@ export function criarMosaico(grade, { blocos, arranjo, aoMudar = () => {}, aoFoc
     redimensionar(eixo, delta) { mudar(M.redimensionar(a, eixo, delta)); },
     padraoTamanhos() { ampliado = null; mudar(M.tamanhosPadrao(a)); },
     padraoOrdem() { ampliado = null; mudar(M.ordemPadrao(a)); },
-    destruir() { trilha.remove(); removeEventListener('resize', aoRedimJanela); obs.disconnect(); },
+    destruir() { removeEventListener('resize', aoRedimJanela); obs.disconnect(); },
   };
   render();
   return api;

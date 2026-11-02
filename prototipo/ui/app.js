@@ -23,6 +23,7 @@ import { criarServicoSincronia } from './sincronia.js';
 import { iniciarTeclado } from './teclado.js';
 import * as pref from './preferencias.js';
 import { abrirNovoItem } from './blocos/novo_item.js';
+import { iniciarZonas } from './zonas.js';
 
 const ICONES = {
   hoje: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
@@ -154,6 +155,7 @@ function novoLembrete() {
   const agora = () => new Date(window.ohara?.agoraFalsoMs ?? Date.now()).toISOString();
   abrirNovoItem({ sessao, agora, dia: diaDe(window.ohara?.agoraFalsoMs ?? Date.now()), aviso, tipo: 'lembrete', aoSalvar: () => { if (['#hoje', '#planejar', ''].includes(location.hash.split('?')[0])) desenhar(); else aviso('Lembrete anotado.'); } });
 }
+iniciarZonas();   // zonas de teclado nas telas além da Mesa (Tab, Enter, Esc, Alt T F B)
 const teclado = iniciarTeclado({ estado: () => sessao?.estado() ?? { disciplinas: [], aulas: [] }, barra, novoLembrete });
 
 iniciarSessao({ aoFalhar: (e) => aviso('Não consegui salvar: ' + e.message) })

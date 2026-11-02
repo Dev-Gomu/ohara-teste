@@ -1,5 +1,5 @@
 /* Motor do mosaico (ui/componentes/mosaico.js). Prefixo mo-: não usar nomes genéricos (.card, .th, .menu...) que já existem no app. */
-.mo-grade{position:relative;display:grid;gap:12px;flex:1;min-height:0;margin:0 16px 12px;grid-template-columns:minmax(0,1fr)}
+.mo-grade{position:relative;display:grid;gap:12px;flex:1;min-height:0;margin:0;grid-template-columns:minmax(0,1fr)}
 .mo-grade.mo-empilha{display:flex;flex-direction:column;overflow:auto;margin:0 12px 12px}
 .mo-grade.mo-empilha>.mo-bloco{flex:none;height:72vh;min-height:420px}
 .mo-bloco{container-type:inline-size;container-name:mo;display:flex;flex-direction:column;min-width:0;min-height:0;border:2px solid transparent;border-radius:var(--mo-r);background:var(--cx2);overflow:hidden;position:relative;outline:0}
@@ -45,9 +45,3 @@ html:root[data-tema="escuro"] .mo-grade{--mo-dim:.3}
 .mo-bloco[data-sec="topo"]>.mo-cab,.mo-bloco[data-sec="base"]>.at-rodape{background:var(--cx2)}
 .mo-cab :is(button,select):focus-visible,.at-rodape :is(button,select):focus-visible,.mo-cab .at-redondo:focus-visible{background:var(--pr);color:var(--prt);outline:0}
 .mo-bloco:focus-visible{outline:0}
-/* trilha: onde o foco está e o que as teclas fazem aqui */
-.mo-trilha{flex:none;display:flex;gap:14px;justify-content:space-between;align-items:center;min-height:30px;margin:0 22px 8px;color:var(--tx2);font-size:12.5px;opacity:0;pointer-events:none;transition:opacity .16s ease;white-space:nowrap;overflow:hidden}
-.mo-trilha.on{opacity:1}
-.mo-trilha b{color:var(--tx);font-weight:600}.mo-trilha em{font-style:normal;opacity:.7}.mo-trilha .dica{overflow:hidden;text-overflow:ellipsis}
-@media (prefers-reduced-motion:reduce){.mo-trilha{transition:none}}
-.mo-grade.mo-empilha+.mo-trilha{display:none}

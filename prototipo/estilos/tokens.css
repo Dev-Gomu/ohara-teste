@@ -24,6 +24,8 @@ html:root{
   --e1:4px;--e2:8px;--e3:12px;--e4:16px;--e5:24px;--e6:32px;--g:16px;--pad:22px;
   --r1:12px;--r2:24px;--rp:999px;--raio-cartao:20px;
   /* regra dos raios: canto de dentro = canto de fora − recuo (mínimo 8). Bloco da Mesa: 22 px, borda 2 + margem 6 → 14 px por dentro */
+  /* margens das telas: lateral, espaço entre a barra do topo e o conteúdo, e embaixo (iguais em todas as telas) */
+  --tela-x:18px;--tela-topo:12px;--tela-base:16px;
   --mo-r:22px;--mo-recuo:8px;--mo-ri:max(calc(var(--mo-r) - var(--mo-recuo)),8px);--b:1.5px;--alvo:44px;
 }
 

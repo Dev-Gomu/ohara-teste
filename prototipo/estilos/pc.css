@@ -1,11 +1,10 @@
 /* PC (janelas largas): escala e margens. Não muda nada no tablet (1280×800). Carrega por último.
    O TOPO (menu 1–6, abas e Atalhos) é FIXO: mesmo tamanho (zoom 1) e mesma posição (18 px das bordas) em todas as telas; só o conteúdo abaixo se adapta.
-   Telas de LISTA e LEITURA (Acervo/Gerenciar, Agenda, Configs): conteúdo com zoom leve (--zl) e margem de 6% nos lados. TREINO: zoom inteiro (--zt).
-   MESA: tela cheia, sem margem nem zoom. HUB: escala própria (ui/telas/hoje.js, mesma fórmula do --zl). */
+   Telas de LISTA e LEITURA (Acervo/Gerenciar, Agenda, Configs): conteúdo com zoom leve (--zl) e as mesmas margens das outras telas. TREINO: zoom inteiro (--zt).
+   MESA: sem zoom, com as mesmas margens. HUB: escala própria (ui/telas/hoje.js, mesma fórmula do --zl). */
 html[data-tela="materias"] main,html[data-tela="planejar"] main,html[data-tela="ajustes"] main{zoom:var(--zl,1)}
 html[data-tela="revisor"] main{zoom:var(--zt,1)}
-@media(min-width:1500px){
-  html[data-tela="materias"] main,html[data-tela="planejar"] main,html[data-tela="ajustes"] main,
-  html[data-tela="materias"] main.cheia,html[data-tela="planejar"] main.cheia,html[data-tela="ajustes"] main.cheia{padding-left:6%!important;padding-right:6%!important}
-}
+/* margens iguais em todas as telas (tokens --tela-x / --tela-topo / --tela-base): nas telas com zoom a margem é dividida pelo zoom, para dar o mesmo tamanho na tela */
+html:root[data-tela="materias"] main:not(.cheia),html:root[data-tela="planejar"] main:not(.cheia),html:root[data-tela="ajustes"] main:not(.cheia){padding:calc(var(--tela-topo) / var(--zl,1)) calc(var(--tela-x) / var(--zl,1)) calc(var(--tela-base) / var(--zl,1))}
+html:root[data-tela="revisor"] main:not(.cheia){padding:calc(var(--tela-topo) / var(--zt,1)) calc(var(--tela-x) / var(--zt,1)) calc(var(--tela-base) / var(--zt,1))}
 html[data-tela="revisor"] main.tr{min-height:calc(100vh / var(--zt,1) - 80px)}

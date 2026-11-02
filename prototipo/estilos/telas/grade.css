@@ -1,7 +1,7 @@
 /* Editor da grade semanal (Agenda › Grade): semana à esquerda, painel fixo à direita. Tudo em porcentagem para encher qualquer altura; sem tarja lateral. */
 /* tela cheia: preenche a janela, mas nunca fica menor que 560 px (a página rola) — assim não "achata" se a janela for medida pequena na primeira vez */
 /* a altura vem da janela (vh), não de uma cadeia de porcentagens: no Chrome instalado a cadeia às vezes ficava com a altura mínima até o primeiro clique. 52 px = o menu de cima; o zoom do PC (--zl) é desfeito aqui dentro. */
-html:root main.tgrade{padding:10px 18px 14px;display:flex;flex-direction:column;overflow:auto;box-sizing:border-box;height:calc((100vh - 52px) / var(--zl,1))}
+html:root main.tgrade{padding:var(--tela-topo) var(--tela-x) var(--tela-base);display:flex;flex-direction:column;overflow:auto;box-sizing:border-box;height:calc((100vh - 52px) / var(--zl,1))}
 html:root .gd{display:flex;flex-direction:column;gap:12px;flex:1;min-height:560px}
 html:root .gd-topo{display:flex;align-items:center;gap:10px;flex:none}
 html:root .gd-topo h1{margin:0;font-size:28px;font-weight:300}

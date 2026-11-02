@@ -1,6 +1,6 @@
 /* Tela Matéria (ui/telas/materia.js): abas Aulas | Cartões, faixa de pastas, lista e card da aula selecionada. Prefixo mt-. */
 html:root .mt-btn{font-size:13px;letter-spacing:0;text-transform:none;border:0;padding:0 18px}
-main.mt{display:flex;flex-direction:column;gap:14px;width:100%;max-width:1500px;margin:0 auto;overflow:hidden}   /* a altura é a da janela: quem rola é a lista, não a página */
+main.mt{display:flex;flex-direction:column;gap:14px;width:100%;margin:0;overflow:hidden}   /* a altura é a da janela: quem rola é a lista, não a página */
 main.mt>*{flex:none}
 main.mt>.mt-cols,main.mt>.mt-cartoes{flex:1 1 auto;min-height:0}
 .mt-topo{display:flex;align-items:center;gap:14px;flex-wrap:wrap}

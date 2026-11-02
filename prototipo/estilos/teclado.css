@@ -28,3 +28,7 @@ html[data-barra="solta"][data-barra-aberta] nav{transform:none;visibility:visibl
 /* barra solta: botão flutuante (☰) no canto; o conteúdo reserva o lugar dele */
 html[data-barra="solta"] main:not(.cheia){padding-top:70px}
 html[data-barra="solta"] main.cheia .topo{padding-left:68px}
+
+/* zona de teclado fora da Mesa: o mesmo foco dos blocos (borda de 2 px na cor principal enquanto o foco está dentro) */
+[data-zona]{outline:0;transition:box-shadow .2s}
+[data-zona]:focus-within{box-shadow:0 0 0 2px var(--pr)}

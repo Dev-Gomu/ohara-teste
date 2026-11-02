@@ -3,7 +3,8 @@ import { interpretar, vizinho, proximaZona, AJUDA } from '../nucleo/teclado.js';
 import { filtrar, itensDoLancador } from '../nucleo/lancador.js';
 import { escaparHtml } from '../nucleo/texto.js';
 
-const SELETOR = 'a[href],button,input:not([type="hidden"]),select,textarea,summary,[tabindex]:not([tabindex="-1"]),.ql-editor,[contenteditable="true"],.mo-bloco';
+const SELETOR = 'a[href],button,input:not([type="hidden"]),select,textarea,summary,[tabindex]:not([tabindex="-1"]),.ql-editor,[contenteditable="true"],.mo-bloco,[data-zona]';
+const BLOCO = '.mo-bloco,[data-zona]';   // zona de teclado: bloco da Mesa ou região marcada em ui/zonas.js
 const digitando = (el) => !!el && (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
 
 /** `app`: { estado(), barra: { alternar(), aberta(), abrir(), fixa() } }. */
@@ -52,12 +53,12 @@ export function iniciarTeclado(app) {
   const dentroDaBarraFechada = (el) => el.closest('#nav') && html.dataset.barra === 'solta' && !html.dataset.barraAberta;
   function focaveis() {
     const escopo = !lancador.hidden ? lancador : !ajuda.hidden ? ajuda : document;
-    const meu = document.activeElement?.closest?.('.mo-bloco');
-    return [...escopo.querySelectorAll(SELETOR)].filter((el) => visivel(el) && !dentroDaBarraFechada(el) && (el.classList.contains('mo-bloco') ? !meu || el !== meu : (!el.closest('.mo-bloco') || el.closest('.mo-bloco') === meu)));
+    const meu = document.activeElement?.closest?.(BLOCO);
+    return [...escopo.querySelectorAll(SELETOR)].filter((el) => visivel(el) && !dentroDaBarraFechada(el) && (el.matches(BLOCO) ? !meu || el !== meu : (!el.closest(BLOCO) || el.closest(BLOCO) === meu)));
   }
   function irParaFoco(el) { el.focus({ preventScroll: true }); if (!el.closest('.mo-bloco')) el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); }   // a Mesa não rola: foco sem deslocar o PDF
   function mover(direcao, { exigeFoco = false, simples = false } = {}) {   // devolve se o foco andou
-    const atual = document.activeElement, bloco = simples ? atual?.closest?.('.mo-bloco') : null;   // sem Alt dentro de um bloco: não sai dele
+    const atual = document.activeElement, bloco = simples ? atual?.closest?.(BLOCO) : null;   // sem Alt dentro de um bloco: não sai dele
     const lista = focaveis().filter((el) => !bloco || bloco.contains(el)), i = lista.indexOf(atual);
     if (i < 0 && exigeFoco) return false;
     if (i < 0) {                                       // nada em foco: entra pelo conteúdo (ou pelo menu, se pediu esquerda)
@@ -77,7 +78,7 @@ export function iniciarTeclado(app) {
   }
   // Tab entre zonas: o menu e cada bloco do mosaico. Sem mosaico na tela, o Tab segue normal.
   function zonas() {
-    const z = [...document.querySelectorAll('.mo-bloco')].filter((el) => !el.hidden && el.getClientRects().length);
+    const z = [...document.querySelectorAll(BLOCO)].filter((el) => !el.hidden && el.getClientRects().length);
     if (!z.length) return [];
     const nav = document.querySelector('#nav');
     if (nav && !(html.dataset.barra === 'solta' && !html.dataset.barraAberta)) z.unshift(nav);
@@ -91,7 +92,7 @@ export function iniciarTeclado(app) {
     return true;
   }
   function entrarNoConteudo() {
-    const b = document.querySelector('.mo-bloco.mo-foco:not([hidden])') ?? [...document.querySelectorAll('.mo-bloco')].find((x) => !x.hidden);
+    const b = document.querySelector('.mo-bloco.mo-foco:not([hidden])') ?? [...document.querySelectorAll(BLOCO)].find((x) => !x.hidden && x.getClientRects().length);
     const alvo = b ?? focaveis().find((el) => !el.closest('#nav'));
     if (!alvo) return false; alvo.focus({ preventScroll: true }); return true;
   }
@@ -115,7 +116,7 @@ export function iniciarTeclado(app) {
         if (!r.seta) e.preventDefault();
         const ev = new CustomEvent('ohara-mover', { detail: { direcao: r.direcao, simples: !!r.simples }, cancelable: true, bubbles: true });
         const livre = (document.activeElement ?? document.body).dispatchEvent(ev);                // a tela (ex.: Mesa) pode tratar e cancelar
-        const dentro = !!document.activeElement?.closest?.('.mo-bloco');
+        const dentro = !!document.activeElement?.closest?.(BLOCO);
         if (r.seta) { if (!livre || mover(r.direcao, { exigeFoco: true, simples: true })) e.preventDefault(); }  // seta solta só toma a tecla se foi para algum lugar
         else if (livre) mover(r.direcao, { exigeFoco: dentro, simples: !!r.simples });
         break;
