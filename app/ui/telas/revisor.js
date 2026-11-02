@@ -57,7 +57,7 @@ export function desenharRevisor(raiz, ctx) {
     const seg = (modo, rot, extra = '', off = false) => `<button type="button" class="${esc.modo === modo ? 'on' : ''}" data-modo="${modo}" ${off ? 'disabled' : ''} ${extra}>${rot}</button>`;
     const segO = (o, rot, off = false) => `<button type="button" class="${esc.origem === o ? 'on' : ''}" data-origem="${o}" ${off ? 'disabled' : ''}>${rot}</button>`;
     const segOrigem = `<div class="tr-seg" role="group" aria-label="De onde vêm os cartões">${segO('materia', 'Por matéria')}${segO('baralho', `Baralhos${bars.length ? ` · ${bars.length}` : ''}`)}${segO('marcados', `Marcados${nMarcados ? ` · ${nMarcados}` : ''}`, !nMarcados)}</div>`;
-    const dia = (d) => `${Number(d.slice(8, 10))} ${MESES[Number(d.slice(5, 7)) - 1]}`;
+    const dia = (d) => (d ? `${Number(d.slice(8, 10))} ${MESES[Number(d.slice(5, 7)) - 1]}` : 'sem data');
     const atual = bars.find((b) => b.id === esc.baralho), rb = atual ? resumoDoBaralho(e, atual) : null;
     const painelOrigem = esc.origem === 'marcados' ? '<div class="tr-sub tr-peq">Os cartões marcados com estrela (tecla M na revisão), de todas as matérias.</div>'
       : esc.origem !== 'baralho' ? '' : bars.length
@@ -107,8 +107,8 @@ export function desenharRevisor(raiz, ctx) {
     if (dlg) return;
     const e = sessao.estado(), sel = { provas: new Set(existente ? lerIds(existente.provas) : []), aulas: new Set(existente ? lerIds(existente.aulas) : []) };
     const nomeMat = new Map(ativas(e.disciplinas).map((d) => [d.id, d]));
-    const provas = ativas(e.provas ?? []).filter((p) => nomeMat.has(p.disciplina_id) && (p.data >= somarDias(hoje(), -14) || sel.provas.has(p.id))).sort((a, b) => a.data.localeCompare(b.data));
-    const dia = (d) => `${Number(d.slice(8, 10))} ${MESES[Number(d.slice(5, 7)) - 1]}`;
+    const provas = ativas(e.provas ?? []).filter((p) => nomeMat.has(p.disciplina_id) && (!p.data || p.data >= somarDias(hoje(), -14) || sel.provas.has(p.id))).sort((a, b) => (a.data ?? '9999').localeCompare(b.data ?? '9999'));
+    const dia = (d) => (d ? `${Number(d.slice(8, 10))} ${MESES[Number(d.slice(5, 7)) - 1]}` : 'sem data');
     const el = document.createElement('div'); el.className = 'an-veu'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', existente ? 'Editar baralho' : 'Novo baralho');
     el.innerHTML = `<form class="an-dlg tr-dlg"><h2>${existente ? 'Editar baralho' : 'Novo baralho'}</h2>` +
       `<label class="tr-dlg-c">Nome<input class="in" name="nome" maxlength="60" autocomplete="off" placeholder="Ex.: Semana de provas, Prova de Fisiologia" value="${escaparHtml(existente?.nome ?? '')}" required></label>` +

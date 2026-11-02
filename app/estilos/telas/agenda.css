@@ -12,12 +12,12 @@ html:root .ag-tr .cab,html:root .ag-gav .cab{display:flex;align-items:center;gap
 html:root .ag-tr .cab h2,html:root .ag-gav .cab h2{margin:0;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);font-weight:600}
 html:root .ag-tr .cab .ac{color:var(--ac);font-size:11.5px;font-weight:600}
 html:root .ag-pend{flex:1}
-html:root .ag-pend .rol,html:root .ag-gav .rol{display:flex;flex-direction:column;gap:5px;overflow:auto;min-height:0;flex:1;scrollbar-width:thin}
+html:root .ag-pend .rol,html:root .ag-gav .rol{display:flex;flex-direction:column;gap:5px;overflow:auto;min-height:0;flex:1}
 html:root .lin{border:0;background:var(--bg);border-radius:12px;padding:6px 10px;font:inherit;font-size:12.5px;color:var(--tx);cursor:pointer;display:flex;gap:8px;align-items:center;text-align:left}
 html:root .lin small{color:var(--tx2);margin-left:auto;font-size:11px;white-space:nowrap}
 html:root .lin span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html:root .ag-tr .vazio,html:root .ag-gav .vazio,html:root .ag-lista .vazio{color:var(--tx2);font-size:13px;margin:0}
-html:root .sg{font-style:normal;display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.04em;color:var(--cx);background:var(--c);border-radius:999px;padding:0 8px;line-height:17px}
+html:root i.sg{font-style:normal;display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.04em;color:var(--cx);background:var(--c);border-radius:999px;padding:0 8px;line-height:17px}
 html:root .ag-mm{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;text-align:center;font-size:11px}
 html:root .ag-mm button,html:root .ag-mm .dw{border:0;background:transparent;font:inherit;color:var(--tx);padding:3px 0;border-radius:8px;position:relative;cursor:pointer}
 html:root .ag-mm .dw{color:var(--tx2);font-size:10px;font-weight:600;cursor:default}
@@ -70,7 +70,7 @@ html:root .ag-mes i.p,html:root .ag-mes i.t,html:root .ag-mes i.d{display:inline
 html:root .ag-mes i.t{background:transparent;box-shadow:inset 0 0 0 2px var(--c)}html:root .ag-mes i.d{width:8px;height:8px;border-radius:50%;background:var(--ac);box-shadow:none}
 html:root .ag-leg{display:flex;gap:16px;font-size:12px;color:var(--tx2);margin-top:8px;align-items:center;flex:none}
 /* lista */
-html:root .ag-lista{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin}
+html:root .ag-lista{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:6px}
 html:root .ag-lista .gr,html:root .ag-gav .gr{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--tx2);margin:10px 0 2px}
 html:root .ag-it{border:0;font:inherit;color:var(--tx);display:flex;align-items:center;gap:12px;padding:8px 14px 8px 8px;border-radius:16px;background:var(--bg);cursor:pointer;text-align:left;min-width:0;--c:var(--ac)}
 html:root .ag-it.f{opacity:.5}html:root .ag-it.s{box-shadow:0 0 0 2px var(--ac)}

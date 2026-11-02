@@ -3,26 +3,29 @@
 import { ativas } from './materias.js';
 import { provasFuturas } from './planejador.js';
 import { somarDias, diasEntre, inicioDaSemana } from './datas.js';
-import { aulasDoDia } from './linhadia.js';
+import { aulasEfetivas } from './grade.js';
+import { entregasPorDia } from './eventos.js';
 
 export const SEMANAS_PADRAO = 6;
 
 /**
  * Janela do calendário: `semanas` semanas inteiras (segunda a domingo) a partir da semana de `hoje` (mais `deslocamento` semanas).
- * Cada dia: { dia, n, hoje, passado, primeiroDoMes, mes, provas: [disciplina_id, …] }, com as provas ativas daquele dia (uma entrada por prova).
+ * Cada dia: { dia, n, hoje, passado, primeiroDoMes, mes, provas: [disciplina_id, …], entregas: [disciplina_id, …] }: as provas ativas daquele dia (uma entrada
+ * por prova) e os trabalhos a entregar (a Agenda é a fonte; compromissos e lembretes não entram no calendário).
  * `semana: 0` marca a semana de hoje.
  */
 export function janelaDeSemanas(estado, hoje, { semanas = SEMANAS_PADRAO, deslocamento = 0 } = {}) {
   const ini = somarDias(inicioDaSemana(hoje), deslocamento * 7);
   const porDia = new Map();
-  for (const p of ativas(estado.provas ?? [])) { if (!porDia.has(p.data)) porDia.set(p.data, []); porDia.get(p.data).push(p.disciplina_id); }
+  for (const p of ativas(estado.provas ?? [])) { if (!p.data) continue; if (!porDia.has(p.data)) porDia.set(p.data, []); porDia.get(p.data).push(p.disciplina_id); }
   const ativasIds = new Set(ativas(estado.disciplinas).map((d) => d.id));
+  const entregas = entregasPorDia(estado, ini, somarDias(ini, semanas * 7 - 1));
   const linhas = [];
   for (let s = 0; s < semanas; s++) {
     const dias = [];
     for (let k = 0; k < 7; k++) {
       const dia = somarDias(ini, s * 7 + k), n = Number(dia.slice(8, 10)), mes = Number(dia.slice(5, 7));
-      dias.push({ dia, n, mes, hoje: dia === hoje, passado: dia < hoje, primeiroDoMes: n === 1, provas: (porDia.get(dia) ?? []).filter((id) => ativasIds.has(id)) });
+      dias.push({ dia, n, mes, hoje: dia === hoje, passado: dia < hoje, primeiroDoMes: n === 1, provas: (porDia.get(dia) ?? []).filter((id) => ativasIds.has(id)), entregas: (entregas.get(dia) ?? []).filter((id) => ativasIds.has(id)) });
     }
     linhas.push({ atual: dias.some((d) => d.hoje), dias });
   }
@@ -59,12 +62,22 @@ export function proximasProvasPorData(estado, hoje, limite = 5) {
  * e { tipo: 'livre', ini, fim } entre duas aulas separadas por pelo menos `livreMin` minutos.
  * `marcadorEntre`: se o agora cai numa lacuna (ou antes da primeira aula / depois da última), o índice do item DEPOIS do qual o marcador fica (−1 = antes de todos).
  */
+const minutosDe = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+/** Aulas do dia, de verdade e as que a grade ainda vai criar (virtuais, com `grade_id` e `grade_dia` e sem `id`), com início e fim em minutos. */
+export function aulasDoDiaComGrade(estado, dia) {
+  return aulasEfetivas(estado, dia, dia).map((a) => {
+    const ini = minutosDe(a.inicio.slice(11, 16)), fimBruto = a.fim && a.fim.slice(0, 10) === dia ? minutosDe(a.fim.slice(11, 16)) : ini + 60;
+    const m = estado.disciplinas.find((d) => d.id === a.disciplina_id);
+    return { id: a.id, disciplina_id: a.disciplina_id, titulo: a.virtual ? `${m?.nome ?? ''}${a.rotulo ? ` ${a.rotulo}` : ''}` : a.titulo, ini, fim: fimBruto > ini ? fimBruto : ini + 60, virtual: !!a.virtual, grade_id: a.grade_id ?? null, grade_dia: a.grade_dia ?? null };
+  }).sort((x, y) => x.ini - y.ini || x.fim - y.fim);
+}
+
 export function agendaCompacta(estado, hoje, agoraMin, { livreMin = 45 } = {}) {
-  const aulas = aulasDoDia(estado, hoje), itens = [];
+  const aulas = aulasDoDiaComGrade(estado, hoje), itens = [];
   aulas.forEach((a, i) => {
     if (i > 0 && a.ini - aulas[i - 1].fim >= livreMin) itens.push({ tipo: 'livre', ini: aulas[i - 1].fim, fim: a.ini });
     const situacao = a.fim <= agoraMin ? 'passou' : a.ini <= agoraMin ? 'agora' : 'depois';
-    itens.push({ tipo: 'aula', id: a.id, disciplina_id: a.disciplina_id, titulo: a.titulo, ini: a.ini, fim: a.fim, situacao, fracao: situacao === 'agora' ? (agoraMin - a.ini) / (a.fim - a.ini) : null });
+    itens.push({ tipo: 'aula', id: a.id, virtual: a.virtual, grade_id: a.grade_id, grade_dia: a.grade_dia, disciplina_id: a.disciplina_id, titulo: a.titulo, ini: a.ini, fim: a.fim, situacao, fracao: situacao === 'agora' ? (agoraMin - a.ini) / (a.fim - a.ini) : null });
   });
   let marcadorEntre = null;
   if (!itens.some((x) => x.tipo === 'aula' && x.situacao === 'agora')) {
@@ -76,7 +89,7 @@ export function agendaCompacta(estado, hoje, agoraMin, { livreMin = 45 } = {}) {
 
 /** Primeiro dia depois de `hoje` (até `limite` dias à frente) que tem aula; null se não houver. Usado quando hoje não tem aula. */
 export function proximoDiaComAula(estado, hoje, limite = 30) {
-  for (let i = 1; i <= limite; i++) { const d = somarDias(hoje, i); if (aulasDoDia(estado, d).length) return d; }
+  for (let i = 1; i <= limite; i++) { const d = somarDias(hoje, i); if (aulasDoDiaComGrade(estado, d).length) return d; }
   return null;
 }
 

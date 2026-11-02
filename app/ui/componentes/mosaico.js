@@ -2,11 +2,16 @@
 // Não conhece Slides, Anotações nem Cartões: recebe blocos prontos (contrato abaixo). A regra está em nucleo/mosaico.js.
 import * as M from '../../nucleo/mosaico.js';
 import { ehToqueDuplo } from '../../nucleo/gestos.js';
+import { escaparHtml } from '../../nucleo/texto.js';
 
 const SEM_ALCA = 'button,select,input,textarea,a,[data-sem-alca],[contenteditable="true"],.ql-editor';
 const ico = (p) => `<svg class="at-s" viewBox="0 0 18 18" aria-hidden="true">${p}</svg>`;
 const ICO_AMPLIAR = ico('<path d="M10 8l5-5M11 3h4v4M8 10l-5 5M7 15H3v-4"/>'), ICO_RECOLHER = ico('<path d="M15 3l-5 5M10 4v4h4M3 15l5-5M8 14v-4H4"/>'), ICO_FECHAR = ico('<path d="M4.5 4.5l9 9M13.5 4.5l-9 9"/>');
-const LARGURA_EMPILHA = 820;   // abaixo disso os blocos empilham em coluna e a tela rola
+const NOMES = { slides: 'Slide', anotacoes: 'Anotações', cartoes: 'Cartão' }, SECOES = { topo: 'Barra de topo', campo: 'Campo', base: 'Barra de baixo' };
+const LARGURA_EMPILHA = 820;
+const REDUZ = matchMedia('(prefers-reduced-motion: reduce)');
+const HYPR = 'cubic-bezier(.05,.9,.1,1.05)';   // curva "popin" do Hyprland: arranca rápido e passa um fio do ponto
+const caixa = (el) => ({ l: el.offsetLeft, t: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });   // abaixo disso os blocos empilham em coluna e a tela rola
 
 /**
  * `grade`: elemento vazio que vira a grade. `blocos`: { slides, anotacoes, cartoes }, cada um:
@@ -25,7 +30,7 @@ export function criarMosaico(grade, { blocos, arranjo, aoMudar = () => {}, aoFoc
   for (const nome of nomes) {
     const b = blocos[nome];
     b.el.classList.add('mo-bloco'); b.el.dataset.bloco = nome; b.el.tabIndex = -1; b.cabecalho.classList.add('mo-cab');
-    b.cabecalho.insertAdjacentHTML('beforeend', '<button type="button" class="mo-ib" data-mo="ampliar" aria-label="Ampliar o bloco (Alt F)" title="Ampliar (Alt F)">'+ICO_AMPLIAR+'</button><button type="button" class="mo-ib" data-mo="fechar" aria-label="Fechar o bloco (Alt Q)" title="Fechar (Alt Q)">'+ICO_FECHAR+'</button>');
+    b.cabecalho.insertAdjacentHTML('beforeend', '<button type="button" class="mo-ib" data-mo="ampliar" aria-label="Ampliar o bloco (Alt M)" title="Ampliar (Alt M)">'+ICO_AMPLIAR+'</button><button type="button" class="mo-ib" data-mo="fechar" aria-label="Fechar o bloco (Alt W)" title="Fechar (Alt W)">'+ICO_FECHAR+'</button>');
     grade.append(b.el); ligarArrasto(nome, b);
   }
   grade.append(vazio, vaoV, vaoH);
@@ -43,7 +48,30 @@ export function criarMosaico(grade, { blocos, arranjo, aoMudar = () => {}, aoFoc
     if (v.length === 3) Object.assign(vaoH.style, { left: `${r[1].left - m.left}px`, top: `${(r[1].bottom + r[2].top) / 2 - m.top - 13}px`, width: `${r[1].width}px`, height: '26px' });
   }
 
-  function render() {
+  // ---- abrir, fechar e trocar blocos (popin): quem entra surge de 87% do tamanho, quem sai volta a 87% e some, quem fica desliza para o novo lugar
+  const fantasmas = new Map();
+  function terminarFantasmas() { for (const fim of [...fantasmas.values()]) fim(); fantasmas.clear(); }
+  function animarTroca(antes, entrou, saiu) {
+    for (const nome of saiu) {
+      const b0 = antes.get(nome), el = blocos[nome].el; if (!b0) continue;
+      el.hidden = false; Object.assign(el.style, { position: 'absolute', left: `${b0.l}px`, top: `${b0.t}px`, width: `${b0.w}px`, height: `${b0.h}px`, gridArea: 'auto', zIndex: '3', pointerEvents: 'none', transformOrigin: '50% 50%' });
+      const fim = () => { fantasmas.delete(nome); an.cancel(); el.hidden = true; for (const k of ['position', 'left', 'top', 'width', 'height', 'gridArea', 'zIndex', 'pointerEvents', 'transformOrigin']) el.style[k] = ''; };
+      const an = el.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(.87)' }], { duration: 200, easing: 'cubic-bezier(.3,0,.8,.15)', fill: 'forwards' });
+      fantasmas.set(nome, fim); an.finished.then(() => fantasmas.get(nome) === fim && fim(), () => {});
+    }
+    for (const nome of nomes) {
+      const el = blocos[nome].el;
+      if (entrou.includes(nome)) { el.style.transformOrigin = '50% 50%'; el.animate([{ opacity: 0, transform: 'scale(.87)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 250, easing: HYPR }).finished.then(() => { el.style.transformOrigin = ''; }, () => {}); }
+      else if (mostrados.has(nome) && antes.has(nome)) {
+        const a0 = antes.get(nome), a1 = caixa(el);
+        if (a0.l !== a1.l || a0.t !== a1.t || a0.w !== a1.w || a0.h !== a1.h) { el.style.transformOrigin = '0 0'; el.animate([{ transform: `translate(${a0.l - a1.l}px,${a0.t - a1.t}px) scale(${a0.w / a1.w},${a0.h / a1.h})` }, { transform: 'none' }], { duration: 260, easing: HYPR }).finished.then(() => { el.style.transformOrigin = ''; }, () => {}); }
+      }
+    }
+  }
+
+  function render(anim = false) {
+    terminarFantasmas();
+    const antes = anim && !REDUZ.matches && !empilhado() ? new Map([...mostrados].filter((n) => !blocos[n].el.hidden).map((n) => [n, caixa(blocos[n].el)])) : null, entrou = [], saiu = [];
     if (ampliado && !visiveis().includes(ampliado)) ampliado = null;
     const emp = empilhado(), d = M.disposicao(a, ampliado);
     grade.classList.toggle('mo-empilha', emp); grade.classList.toggle('mo-redim', redim); grade.toggleAttribute('data-ampliado', !!ampliado);
@@ -55,14 +83,15 @@ export function criarMosaico(grade, { blocos, arranjo, aoMudar = () => {}, aoFoc
       b.el.style.gridColumn = lug && !emp ? lug.coluna : ''; b.el.style.gridRow = lug && !emp ? lug.linha : '';
       b.el.classList.toggle('mo-foco', mostra && nome === a.foco); b.el.toggleAttribute('data-ampliado', ampliado === nome);
       const bAmp = b.cabecalho.querySelector('[data-mo="ampliar"]'), rec = ampliado === nome;
-      if (bAmp) { bAmp.innerHTML = rec ? ICO_RECOLHER : ICO_AMPLIAR; bAmp.title = rec ? 'Recolher (Alt F)' : 'Ampliar (Alt F)'; bAmp.setAttribute('aria-label', rec ? 'Recolher o bloco (Alt F)' : 'Ampliar o bloco (Alt F)'); }
-      if (mostra && !mostrados.has(nome)) { mostrados.add(nome); b.mostrar(); }
-      else if (!mostra && mostrados.has(nome)) { mostrados.delete(nome); b.esconder(); }
+      if (bAmp) { bAmp.innerHTML = rec ? ICO_RECOLHER : ICO_AMPLIAR; bAmp.title = rec ? 'Recolher (Alt M)' : 'Ampliar (Alt M)'; bAmp.setAttribute('aria-label', rec ? 'Recolher o bloco (Alt M)' : 'Ampliar o bloco (Alt M)'); }
+      if (mostra && !mostrados.has(nome)) { mostrados.add(nome); entrou.push(nome); b.mostrar(); }
+      else if (!mostra && mostrados.has(nome)) { mostrados.delete(nome); saiu.push(nome); b.esconder(); }
     }
     vazio.hidden = !(a.abertos.length === 0);
     posicionar();
+    if (antes && !empilhado()) animarTroca(antes, entrou, saiu);
   }
-  const mudar = (novo, { guardar = true } = {}) => { a = novo; render(); if (guardar) aoMudar(a); todosRedim(); };
+  const mudar = (novo, { guardar = true, anim = false } = {}) => { a = novo; render(anim); if (guardar) aoMudar(a); todosRedim(); };
 
   function marcarFoco(nome) {
     if (a.foco === nome) return;
@@ -70,14 +99,37 @@ export function criarMosaico(grade, { blocos, arranjo, aoMudar = () => {}, aoFoc
     for (const n of nomes) blocos[n].el.classList.toggle('mo-foco', n === nome && mostrados.has(n));
     aoFocar(nome);
   }
+  // ---- trilha: mostra onde o foco está (bloco › seção › elemento) e a dica da vez; marca a seção no bloco (data-sec)
+  const trilha = Object.assign(document.createElement('div'), { className: 'mo-trilha', ariaHidden: 'true' });
+  grade.after(trilha);   // numa faixa fixa logo abaixo da grade (não cobre nenhum bloco)
+  function atualizarTrilha() {
+    const at = document.activeElement, bl = at?.closest?.('.mo-bloco');
+    for (const n of nomes) delete blocos[n].el.dataset.sec;
+    if (!bl || !grade.contains(at) || bl.hidden) { trilha.classList.remove('on'); return; }
+    const nome = bl.dataset.bloco, b = blocos[nome], bloco = at === bl, sec = bloco ? null : secaoDoFoco(b);
+    if (sec) bl.dataset.sec = sec;
+    const rot = bloco ? '' : (at.getAttribute('aria-label') || at.title || at.textContent || '').replace(/\(.*?\)/g, '').trim().slice(0, 30);
+    trilha.innerHTML = `<span><em>Mesa ›</em> ${bloco ? `<b>${NOMES[nome]}</b>` : `${NOMES[nome]} <em>›</em> ${SECOES[sec]}${rot ? ` <em>›</em> <b>${escaparHtml(rot)}</b>` : ''}`}</span><span class="dica">${bloco ? 'Enter entra no campo · Alt T F B seções · Esc menu de cima' : 'Esc sobe · Alt , . elementos · Alt T F B seções'}</span>`;
+    trilha.classList.add('on');
+  }
+  grade.addEventListener('focusin', atualizarTrilha); grade.addEventListener('focusout', () => setTimeout(atualizarTrilha, 0));
   grade.addEventListener('focusin', (e) => { const el = e.target.closest('.mo-bloco'); if (el && mostrados.has(el.dataset.bloco)) marcarFoco(el.dataset.bloco); });
   grade.addEventListener('pointerdown', (e) => { const el = e.target.closest('.mo-bloco'); if (el && mostrados.has(el.dataset.bloco)) marcarFoco(el.dataset.bloco); }, true);
   grade.addEventListener('click', (e) => {
     const bt = e.target.closest('[data-mo]'), el = bt?.closest('.mo-bloco'); if (!bt || !el) return;
     if (bt.dataset.mo === 'ampliar') { marcarFoco(el.dataset.bloco); api.ampliar(); } else if (bt.dataset.mo === 'fechar') api.fechar(el.dataset.bloco);
   });
-  grade.addEventListener('keydown', (e) => {   // Enter com o foco no próprio bloco entra no miolo
-    if (e.key === 'Enter' && !e.altKey && !e.ctrlKey && !e.shiftKey && e.target.classList?.contains('mo-bloco')) { e.preventDefault(); blocos[e.target.dataset.bloco].focar(); }
+  // seções do bloco: topo (cabeçalho), campo (miolo) e base (rodapé, só os Cartões)
+  const controles = (raiz) => raiz ? [...raiz.querySelectorAll('button,a[href],select,input:not([type="hidden"]),summary')].filter((x) => !x.disabled && x.getClientRects().length && !x.closest('[hidden]')) : [];
+  const raizDa = (b, secao) => secao === 'topo' ? b.cabecalho : b.el.querySelector('.at-rodape');
+  const secaoDoFoco = (b) => { const at = document.activeElement; return at && b.cabecalho.contains(at) ? 'topo' : at?.closest?.('.at-rodape') ? 'base' : 'campo'; };
+  function entrar(nome) { blocos[nome].focar(); }
+  grade.addEventListener('keydown', (e) => {   // Esc de dentro do bloco volta o foco ao bloco (nível dos mosaicos); Esc no bloco segue para quem sai do foco
+    const el = e.target.closest?.('.mo-bloco');
+    if (e.key === 'Escape' && el && el !== e.target && !e.defaultPrevented && !redim) { e.preventDefault(); el.focus({ preventScroll: true }); }
+  });
+  grade.addEventListener('keydown', (e) => {   // Enter com o foco no próprio bloco entra no campo
+    if (e.key === 'Enter' && !e.altKey && !e.ctrlKey && !e.shiftKey && e.target.classList?.contains('mo-bloco')) { e.preventDefault(); entrar(e.target.dataset.bloco); }
   });
 
   // ---- arrastar o cabeçalho sobre outro bloco para trocar os dois de lugar
@@ -101,7 +153,7 @@ export function criarMosaico(grade, { blocos, arranjo, aoMudar = () => {}, aoFoc
       if (!ini) return;
       const eraArrasto = ativo; ini = null; ativo = false; b.el.classList.remove('mo-arrasta'); b.el.style.transform = '';
       const destino = alvo?.dataset.bloco; alvo?.classList.remove('mo-alvo'); alvo = null;
-      if (eraArrasto && destino) mudar(M.trocar(a, nome, destino));
+      if (eraArrasto && destino) mudar(M.trocar(a, nome, destino), { anim: true });
     };
     alca.addEventListener('pointerup', fim); alca.addEventListener('pointercancel', fim);
   }
@@ -140,7 +192,7 @@ export function criarMosaico(grade, { blocos, arranjo, aoMudar = () => {}, aoFoc
     focar(nome) { if (mostrados.has(nome)) focarEl(nome); },
     abrir(nome) { if (!a.abertos.includes(nome)) api.alternar(nome); else { ampliado = null; render(); focarEl(nome); } },
     alternar(nome) {
-      ampliado = null; mudar(M.alternar(a, nome));
+      ampliado = null; mudar(M.alternar(a, nome), { anim: true });
       focarEl(a.foco);
       return a.abertos.includes(nome);
     },
@@ -155,14 +207,33 @@ export function criarMosaico(grade, { blocos, arranjo, aoMudar = () => {}, aoFoc
       const v = M.vizinho(a, a.foco, direcao); if (!v) return false;
       focarEl(v); return true;
     },
+    /** Alt X: troca o bloco em foco pelo que está escondido (só com 2 abertos). Devolve se mexeu. */
+    substituir() {
+      const n = M.substituir(a); if (n === a) return false;
+      ampliado = null; mudar(n, { anim: true }); focarEl(a.foco); return true;
+    },
+    /** Alt T · Alt F · Alt B: vai para a barra de topo, o campo ou a barra de baixo do bloco em foco. Devolve se foi. */
+    irPara(secao) {
+      const n = a.foco, b = n && mostrados.has(n) ? blocos[n] : null; if (!b) return false;
+      if (secao === 'campo') { b.focar(); return true; }
+      const c = controles(raizDa(b, secao))[0]; if (!c) return false;
+      c.focus({ preventScroll: true }); return true;
+    },
+    /** Alt , · Alt . : elemento anterior ou próximo dentro da seção (só nas barras). */
+    passo(d) {
+      const n = a.foco, b = n && mostrados.has(n) ? blocos[n] : null; if (!b) return false;
+      const sec = secaoDoFoco(b); if (sec === 'campo') return false;
+      const l = controles(raizDa(b, sec)), i = l.indexOf(document.activeElement); if (i < 0) return false;
+      const alvo = l[Math.min(l.length - 1, Math.max(0, i + d))]; alvo.focus({ preventScroll: true }); return true;
+    },
     trocarCom(direcao) {
       const v = ampliado ? null : M.vizinho(a, a.foco, direcao); if (!v) return false;
-      mudar(M.trocar(a, a.foco, v)); return true;
+      mudar(M.trocar(a, a.foco, v), { anim: true }); return true;
     },
     redimensionar(eixo, delta) { mudar(M.redimensionar(a, eixo, delta)); },
     padraoTamanhos() { ampliado = null; mudar(M.tamanhosPadrao(a)); },
     padraoOrdem() { ampliado = null; mudar(M.ordemPadrao(a)); },
-    destruir() { removeEventListener('resize', aoRedimJanela); obs.disconnect(); },
+    destruir() { trilha.remove(); removeEventListener('resize', aoRedimJanela); obs.disconnect(); },
   };
   render();
   return api;

@@ -50,6 +50,14 @@ export function trocar(a, nomeA, nomeB) {
   return { ...a, ordem, foco: nomeA };
 }
 
+/** Com 2 blocos abertos: o bloco em foco cede o lugar (e o tamanho) ao que está escondido, como um Alt+Tab. Repetir desfaz. */
+export function substituir(a, nome = a.foco) {
+  if (a.abertos.length !== 2 || !a.abertos.includes(nome)) return a;
+  const novo = a.ordem.find((n) => !a.abertos.includes(n)); if (!novo) return a;
+  const ordem = [...a.ordem], i = ordem.indexOf(nome), j = ordem.indexOf(novo); [ordem[i], ordem[j]] = [ordem[j], ordem[i]];
+  return { ...a, ordem, abertos: a.abertos.map((n) => (n === nome ? novo : n)), foco: novo };
+}
+
 export function definirTamanho(a, eixo, valor) {
   if (eixo !== 'largura' && eixo !== 'altura') return a;
   return { ...a, [eixo]: numero(valor) };

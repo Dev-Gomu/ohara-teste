@@ -1,12 +1,12 @@
 // Casca do teclado: liga as regras de nucleo/teclado.js ao navegador (foco, janelas "Ir para…" e "Atalhos"). Sem regra de negócio aqui.
-import { interpretar, vizinho, AJUDA } from '../nucleo/teclado.js';
+import { interpretar, vizinho, proximaZona, AJUDA } from '../nucleo/teclado.js';
 import { filtrar, itensDoLancador } from '../nucleo/lancador.js';
 import { escaparHtml } from '../nucleo/texto.js';
 
-const SELETOR = 'a[href],button,input:not([type="hidden"]),select,textarea,summary,[tabindex]:not([tabindex="-1"]),.ql-editor';
+const SELETOR = 'a[href],button,input:not([type="hidden"]),select,textarea,summary,[tabindex]:not([tabindex="-1"]),.ql-editor,[contenteditable="true"],.mo-bloco';
 const digitando = (el) => !!el && (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
 
-/** `app`: { estado(), barra: { alternar(), aberta(), abrir(), fixa() }, foco: { alternar(), ativo(), sair() } }. */
+/** `app`: { estado(), barra: { alternar(), aberta(), abrir(), fixa() } }. */
 export function iniciarTeclado(app) {
   const html = document.documentElement;
   const lancador = document.createElement('div'), ajuda = document.createElement('div');
@@ -36,7 +36,7 @@ export function iniciarTeclado(app) {
   function ativar(i) {
     const it = itens[i]; if (!it) return;
     const volta = voltarPara; voltarPara = null; fechar(); voltarPara = null;
-    if (it.hash) location.hash = it.hash; else if (it.acao === 'barra') app.barra.alternar(); else if (it.acao === 'foco') app.foco.alternar(); else if (it.acao === 'ajuda') abrirAjuda();
+    if (it.hash) location.hash = it.hash; else if (it.acao === 'ajuda') abrirAjuda();
     if (!it.hash && volta && document.contains(volta)) volta.focus();
   }
   lancador.addEventListener('input', (e) => { if (e.target.id !== 'lanc-q') return; sel = 0; itens = filtrar(itensDoLancador(app.estado()), e.target.value, 9); desenharLista(); });
@@ -52,26 +52,50 @@ export function iniciarTeclado(app) {
   const dentroDaBarraFechada = (el) => el.closest('#nav') && html.dataset.barra === 'solta' && !html.dataset.barraAberta;
   function focaveis() {
     const escopo = !lancador.hidden ? lancador : !ajuda.hidden ? ajuda : document;
-    return [...escopo.querySelectorAll(SELETOR)].filter((el) => visivel(el) && !dentroDaBarraFechada(el) && !(html.dataset.foco && el.closest('#nav')));
+    const meu = document.activeElement?.closest?.('.mo-bloco');
+    return [...escopo.querySelectorAll(SELETOR)].filter((el) => visivel(el) && !dentroDaBarraFechada(el) && (el.classList.contains('mo-bloco') ? !meu || el !== meu : (!el.closest('.mo-bloco') || el.closest('.mo-bloco') === meu)));
   }
-  function irParaFoco(el) { el.focus(); el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); }
-  function mover(direcao) {
-    const lista = focaveis(), atual = document.activeElement, i = lista.indexOf(atual);
+  function irParaFoco(el) { el.focus({ preventScroll: true }); if (!el.closest('.mo-bloco')) el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); }   // a Mesa não rola: foco sem deslocar o PDF
+  function mover(direcao, { exigeFoco = false, simples = false } = {}) {   // devolve se o foco andou
+    const atual = document.activeElement, bloco = simples ? atual?.closest?.('.mo-bloco') : null;   // sem Alt dentro de um bloco: não sai dele
+    const lista = focaveis().filter((el) => !bloco || bloco.contains(el)), i = lista.indexOf(atual);
+    if (i < 0 && exigeFoco) return false;
     if (i < 0) {                                       // nada em foco: entra pelo conteúdo (ou pelo menu, se pediu esquerda)
-      if (direcao === 'esq' && abrirBarraEIrPara()) return;
-      ((lista.filter((el) => !el.closest('#nav')))[0] ?? lista[0])?.focus(); return;
+      if (direcao === 'esq' && abrirBarraEIrPara()) return true;
+      const p = (lista.filter((el) => !el.closest('#nav')))[0] ?? lista[0]; p?.focus({ preventScroll: true }); return !!p;
     }
     const noMenu = !!atual.closest('#nav');
-    if (noMenu && direcao === 'dir') {                 // do menu para a direita: o item do conteúdo na altura mais próxima
-      const y = atual.getBoundingClientRect().y, alvo = lista.filter((el) => !el.closest('#nav')).sort((p, q) => Math.abs(p.getBoundingClientRect().y - y) - Math.abs(q.getBoundingClientRect().y - y))[0];
-      if (alvo) { irParaFoco(alvo); if (html.dataset.barra === 'solta') html.removeAttribute('data-barra-aberta'); return; }
+    if (noMenu) {                                       // menu de cima: ← → andam entre os itens, ↓ entra no conteúdo
+      const nav = lista.filter((el) => el.closest('#nav')), k = nav.indexOf(atual);
+      if (direcao === 'dir' || direcao === 'esq') { const alvo = nav[k + (direcao === 'dir' ? 1 : -1)]; if (alvo) { irParaFoco(alvo); return true; } return false; }
+      if (direcao === 'baixo') return entrarNoConteudo();
+      return false;
     }
     const j = vizinho(lista.map((el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; }), i, direcao);
-    if (j >= 0) { irParaFoco(lista[j]); return; }
-    if (direcao === 'esq' && !noMenu) abrirBarraEIrPara();
+    if (j >= 0) { irParaFoco(lista[j]); return true; }
+    return direcao === 'esq' && !noMenu && !bloco && abrirBarraEIrPara();   // dentro de um bloco, o fim da fila é o fim
+  }
+  // Tab entre zonas: o menu e cada bloco do mosaico. Sem mosaico na tela, o Tab segue normal.
+  function zonas() {
+    const z = [...document.querySelectorAll('.mo-bloco')].filter((el) => !el.hidden && el.getClientRects().length);
+    if (!z.length) return [];
+    const nav = document.querySelector('#nav');
+    if (nav && !(html.dataset.barra === 'solta' && !html.dataset.barraAberta)) z.unshift(nav);
+    return z;
+  }
+  function saltarZona(passo) {
+    const z = zonas(); if (!z.length) return false;
+    let i = z.findIndex((el) => el.contains(document.activeElement)); if (i < 0 && passo > 0 && z[0].id === 'nav' && z.length > 1) i = 0;   // de fora de tudo, o Tab entra direto no primeiro bloco
+    const alvo = z[proximaZona(z.length, i, passo)];
+    if (alvo.id === 'nav') (alvo.querySelector('a.on') ?? alvo.querySelector('a,button'))?.focus(); else alvo.focus({ preventScroll: true });
+    return true;
+  }
+  function entrarNoConteudo() {
+    const b = document.querySelector('.mo-bloco.mo-foco:not([hidden])') ?? [...document.querySelectorAll('.mo-bloco')].find((x) => !x.hidden);
+    const alvo = b ?? focaveis().find((el) => !el.closest('#nav'));
+    if (!alvo) return false; alvo.focus({ preventScroll: true }); return true;
   }
   function abrirBarraEIrPara() {
-    if (html.dataset.foco) return false;
     if (html.dataset.barra === 'solta') app.barra.abrir();
     const alvo = document.querySelector('#nav a.on') ?? document.querySelector('#nav a');
     if (alvo) { alvo.focus(); return true; } return false;
@@ -82,25 +106,27 @@ export function iniciarTeclado(app) {
     const r = interpretar(e, { digitando: digitando(document.activeElement) });
     if (!r) return;
     if (aberto() && r.acao !== 'sair' && r.acao !== 'lancador' && r.acao !== 'ajuda') return;
+    if (r.acao === 'lembrete') { e.preventDefault(); fechar(); app.novoLembrete?.(); return; }
     switch (r.acao) {
       case 'tela': e.preventDefault(); fechar(); location.hash = '#' + r.tela; break;
-      case 'barra': e.preventDefault(); app.barra.alternar(); break;
-      case 'foco': e.preventDefault(); app.foco.alternar(); break;
       case 'lancador': e.preventDefault(); if (!lancador.hidden) fechar(); else abrirLancador(); break;
       case 'ajuda': e.preventDefault(); if (!ajuda.hidden) fechar(); else abrirAjuda(); break;
-      case 'divisoria': e.preventDefault(); document.dispatchEvent(new CustomEvent('ohara-divisoria', { detail: r.delta })); break;
       case 'mover': {
-        e.preventDefault();
-        const ev = new CustomEvent('ohara-mover', { detail: { direcao: r.direcao }, cancelable: true, bubbles: true });
-        if ((document.activeElement ?? document.body).dispatchEvent(ev)) mover(r.direcao);       // a tela (ex.: Aula) pode tratar e cancelar
+        if (!r.seta) e.preventDefault();
+        const ev = new CustomEvent('ohara-mover', { detail: { direcao: r.direcao, simples: !!r.simples }, cancelable: true, bubbles: true });
+        const livre = (document.activeElement ?? document.body).dispatchEvent(ev);                // a tela (ex.: Mesa) pode tratar e cancelar
+        const dentro = !!document.activeElement?.closest?.('.mo-bloco');
+        if (r.seta) { if (!livre || mover(r.direcao, { exigeFoco: true, simples: true })) e.preventDefault(); }  // seta solta só toma a tecla se foi para algum lugar
+        else if (livre) mover(r.direcao, { exigeFoco: dentro, simples: !!r.simples });
         break;
       }
+      case 'zona': if (saltarZona(r.passo)) e.preventDefault(); break;
       case 'sair':
         if (aberto()) { e.preventDefault(); fechar(); }
-        else if (html.dataset.foco) { e.preventDefault(); app.foco.sair(); }
+        else if (document.activeElement?.closest?.('#nav') && entrarNoConteudo()) e.preventDefault();   // Esc no menu de cima volta ao conteúdo
         else if (html.dataset.barraAberta) { e.preventDefault(); html.removeAttribute('data-barra-aberta'); }
         break;
     }
   });
-  return { abrirLancador, abrirAjuda, fechar, alternarFoco: () => app.foco.alternar() };
+  return { abrirLancador, abrirAjuda, fechar };
 }

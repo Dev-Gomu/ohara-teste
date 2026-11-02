@@ -4,8 +4,8 @@
 
 import { normalizarNome } from './texto.js';
 import { ativas, proximoId } from './materias.js';
-import { camposDaAgenda, aulasDaProva, criarProva, alterarProva, excluirProva, restaurarProva } from './planejador.js';
-import { somarDias } from './datas.js';
+import { camposDaAgenda, aulasDaProva, aulasDoConteudo, criarProva, alterarProva, excluirProva, restaurarProva } from './planejador.js';
+import { somarDias, diasEntre } from './datas.js';
 
 export const TIPOS_EVENTO = ['trabalho', 'compromisso', 'lembrete'];
 const FREQUENCIAS = ['semanal', 'mensal'];
@@ -141,5 +141,36 @@ export function salvarItem(estado, { tipo, id = null, ...dados }, agora) {
 /** Exclui (lixeira) ou restaura um item pelo par { origem: 'prova' | 'evento', id }. */
 export const excluirItem = (estado, origem, id, agora) => (origem === 'prova' ? excluirProva(estado, id, agora) : excluirEvento(estado, id, agora));
 export const restaurarItem = (estado, origem, id) => (origem === 'prova' ? restaurarProva(estado, id) : restaurarEvento(estado, id));
+
+/**
+ * Próximas provas e trabalhos (ainda não entregues) de uma matéria, a partir de `hoje`, para o Acervo e para a matéria:
+ * [{ origem, id, tipo, titulo, dia, hora, em (dias até a data) }]. `limite` corta a lista.
+ */
+export function proximasDatas(estado, disciplinaId, hoje, limite = 3) {
+  return itensDaAgenda(estado, hoje, somarDias(hoje, 365))
+    .filter((x) => x.disciplina_id === disciplinaId && (x.tipo === 'prova' || x.tipo === 'trabalho') && !x.feito)
+    .slice(0, limite).map((x) => ({ origem: x.origem, id: x.id, tipo: x.tipo, titulo: x.titulo, dia: x.dia, hora: x.hora, em: diasEntre(hoje, x.dia) }));
+}
+
+/** Provas com data (de hoje em diante) em que esta aula cai, na ordem das datas: [{ id, titulo, dia, em }]. Para o "Cai na prova…" da Mesa. */
+export function provasDaAula(estado, aulaId, hoje) {
+  const aula = ativas(estado.aulas).find((a) => a.id === aulaId);
+  if (!aula) return [];
+  return ativas(estado.provas ?? []).filter((p) => p.disciplina_id === aula.disciplina_id && p.data && p.data >= hoje && aulasDoConteudo(estado, p).includes(aulaId))
+    .sort((a, b) => a.data.localeCompare(b.data)).map((p) => ({ id: p.id, titulo: p.titulo, dia: p.data, em: diasEntre(hoje, p.data) }));
+}
+
+/** Trabalhos ainda não entregues entre `de` e `ate`, por dia: Map dia → [disciplina_id, …] (para a marca do calendário da Hub). */
+export function entregasPorDia(estado, de, ate) {
+  const mapa = new Map();
+  for (const x of itensDaAgenda(estado, de, ate)) if (x.tipo === 'trabalho' && !x.feito) { if (!mapa.has(x.dia)) mapa.set(x.dia, []); mapa.get(x.dia).push(x.disciplina_id); }
+  return mapa;
+}
+
+/** O que há num dia além das aulas: provas, trabalhos, compromissos e lembretes não concluídos, em ordem de hora (sem hora por último). */
+export function itensDoDia(estado, dia) {
+  return itensDaAgenda(estado, dia, dia).filter((x) => !x.feito)
+    .sort((a, b) => (a.hora ?? '99:99').localeCompare(b.hora ?? '99:99') || a.titulo.localeCompare(b.titulo));
+}
 
 export { aulasDaProva };

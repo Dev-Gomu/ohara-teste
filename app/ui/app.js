@@ -22,6 +22,7 @@ import { criarServicoFoco } from './foco_servico.js';
 import { criarServicoSincronia } from './sincronia.js';
 import { iniciarTeclado } from './teclado.js';
 import * as pref from './preferencias.js';
+import { abrirNovoItem } from './blocos/novo_item.js';
 
 const ICONES = {
   hoje: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
@@ -67,7 +68,6 @@ const barra = {
   fechar() { html.removeAttribute('data-barra-aberta'); },
   alternar() { /* sem barra solta por enquanto: Alt B não faz nada */ },
 };
-const modoFoco = { ativo: () => !!html.dataset.foco, sair() { html.removeAttribute('data-foco'); }, alternar() { if (html.dataset.foco) html.removeAttribute('data-foco'); else { html.dataset.foco = '1'; barra.fechar(); } } };
 function corDaBarra() {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue('--nav').trim() || '#0B5A44';
@@ -102,7 +102,7 @@ function desenhar() {
   document.getElementById('nav').innerHTML = '<div class="logo">Ohara</div>' +
     TELAS.map((t) => `<a href="#${t.chave}" title="${escaparHtml(t.nome)}" class="${t.chave === tela ? 'on' : ''}" ${t.chave === tela ? 'aria-current="page"' : ''}>` +
       `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[t.chave]}</svg>${escaparHtml(t.nome)}</a>`).join('') +
-    `<div class="fim"><button id="ver-atalhos" type="button" title="?">Atalhos (?)</button></div>`;
+    `<div class="fim"><button id="ver-atalhos" type="button" title="Atalhos de teclado (?)" aria-label="Atalhos de teclado"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17v.01"/></svg></button></div>`;
   document.getElementById('ver-atalhos').onclick = () => teclado.abrirAjuda();
   document.getElementById('nav').onclick = (ev) => { if (ev.target.closest('a') && !barra.fixa()) barra.fechar(); };
   const [titulo, texto] = TEXTOS[tela];
@@ -144,12 +144,17 @@ escalarPc(); addEventListener('resize', escalarPc);
 aplicarBarra(lerBarra());
 document.addEventListener('click', (ev) => { if (barra.aberta() && !ev.target.closest('#nav') && !ev.target.closest('#abrir-barra')) barra.fechar(); });
 document.getElementById('abrir-barra').onclick = () => (barra.aberta() ? barra.fechar() : barra.abrir());
-document.getElementById('sair-foco').onclick = () => modoFoco.sair();
 addEventListener('hashchange', () => barra.fechar());
 aplicarTema(escolherTema(guardar.ler(), false));   // claro por padrão; o escuro só se a pessoa escolher
 addEventListener('hashchange', desenhar);
 desenhar();
-const teclado = iniciarTeclado({ estado: () => sessao?.estado() ?? { disciplinas: [], aulas: [] }, barra, foco: modoFoco });
+// Alt I: anota um lembrete para hoje de qualquer tela (a janelinha é a do "+" da Hub, já na aba Lembrete)
+function novoLembrete() {
+  if (!sessao || document.querySelector('.novo-item-fundo')) return;
+  const agora = () => new Date(window.ohara?.agoraFalsoMs ?? Date.now()).toISOString();
+  abrirNovoItem({ sessao, agora, dia: diaDe(window.ohara?.agoraFalsoMs ?? Date.now()), aviso, tipo: 'lembrete', aoSalvar: () => { if (['#hoje', '#planejar', ''].includes(location.hash.split('?')[0])) desenhar(); else aviso('Lembrete anotado.'); } });
+}
+const teclado = iniciarTeclado({ estado: () => sessao?.estado() ?? { disciplinas: [], aulas: [] }, barra, novoLembrete });
 
 iniciarSessao({ aoFalhar: (e) => aviso('Não consegui salvar: ' + e.message) })
   .then((s) => {

@@ -7,6 +7,7 @@ import { siglaDaMateria, ativas, criarMateria, alterarMateria, excluirMateria, r
 import { rotuloDoCard } from '../../nucleo/aulas.js';
 import { diaDaSemana } from '../../nucleo/datas.js';
 import { diaDe } from '../foco_servico.js';
+import { proximasDatas } from '../../nucleo/eventos.js';
 
 const dois = (n) => String(n).padStart(2, '0');
 const agoraLocal = (ms) => { const d = new Date(ms); return `${diaDe(ms)}T${dois(d.getHours())}:${dois(d.getMinutes())}`; };
@@ -31,6 +32,12 @@ export function desenharMaterias(raiz, ctx) {
     else if (foco != null) { raiz.querySelector(`.mc[data-id="${foco}"] .mc-abrir`)?.focus({ preventScroll: true }); }
   }
 
+  /** A próxima prova ou entrega da matéria, em chip discreto no rodapé do card (a Agenda é a fonte). */
+  function proxima(id) {
+    const x = proximasDatas(ctx.sessao.estado(), id, diaDe(ctx.agora()), 1)[0];
+    return x ? `<span class="pdt" title="${escaparHtml(x.titulo)} · ${Number(x.dia.slice(8))}/${x.dia.slice(5, 7)}">${x.tipo === 'prova' ? 'prova' : 'entrega'} ${x.em === 0 ? 'hoje' : `${x.em}d`}</span>` : '';
+  }
+
   function card(d) {
     const sigla = siglaDaMateria(d), r = rotuloDoCard(ctx.sessao.estado(), d.id, agoraLocal(ctx.agora()), diaDaSemana);
     const nome = renomeando === d.id
@@ -39,7 +46,7 @@ export function desenharMaterias(raiz, ctx) {
     return `<div class="mc${r.agora ? ' ag' : ''}" role="listitem" data-id="${d.id}" style="--c:${corCss(d.cor)}">` +
       `<a class="mc-abrir" href="#materias/${d.id}" aria-label="Abrir ${escaparHtml(d.nome)}${r.texto ? `. Próxima aula: ${escaparHtml(r.texto)}` : ''}"></a>` +
       `<div class="mc-topo"><span class="gg">${escaparHtml(sigla)}</span>${nome}</div>` +
-      `<div class="mc-pe"><span class="rt">${escaparHtml(r.texto)}</span><button class="mais" type="button" tabindex="-1" data-a="menu" data-id="${d.id}" aria-label="Mais opções de ${escaparHtml(d.nome)}" aria-haspopup="menu">⋯</button></div></div>`;
+      `<div class="mc-pe"><span class="rt">${escaparHtml(r.texto)}</span>${proxima(d.id)}<button class="mais" type="button" tabindex="-1" data-a="menu" data-id="${d.id}" aria-label="Mais opções de ${escaparHtml(d.nome)}" aria-haspopup="menu">⋯</button></div></div>`;
   }
 
   function tentar(acao) {

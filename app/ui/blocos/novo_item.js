@@ -6,9 +6,9 @@ import { salvarItem } from '../../nucleo/eventos.js';
 
 const TIPOS = { prova: 'Prova', trabalho: 'Trabalho', compromisso: 'Compromisso', lembrete: 'Lembrete' };
 
-/** Abre a janelinha. `dia` = data sugerida (AAAA-MM-DD). `aoSalvar()` roda depois de gravar. Devolve uma função que fecha. */
-export function abrirNovoItem({ sessao, agora, dia, aoSalvar, aviso }) {
-  let tipo = 'prova', erro = '';
+/** Abre a janelinha. `dia` = data sugerida (AAAA-MM-DD); `tipo` = aba inicial (padrão prova). `aoSalvar()` roda depois de gravar. Devolve uma função que fecha. */
+export function abrirNovoItem({ sessao, agora, dia, aoSalvar, aviso, tipo: tipoInicial = 'prova' }) {
+  let tipo = tipoInicial, erro = '';
   const fundo = document.createElement('div');
   fundo.className = 'novo-item-fundo';
   const mats = () => ativas(sessao.estado().disciplinas);

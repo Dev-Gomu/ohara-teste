@@ -8,7 +8,7 @@ const ROTULOS = {
   h1: 'H1', h2: 'H2', bold: '<b>B</b>', italic: '<i>I</i>', underline: '<u>U</u>',
   realce: svg('<path d="M11 3l4 4-6 6H5v-4z"/><path d="M3 16h12"/>'),
   bullet: svg('<circle cx="3.5" cy="5" r="1" fill="currentColor"/><circle cx="3.5" cy="9" r="1" fill="currentColor"/><circle cx="3.5" cy="13" r="1" fill="currentColor"/><path d="M7 5h9M7 9h9M7 13h9"/>'),
-  ordered: '1.',
+  ordered: svg('<path d="M8 5h8M8 9h8M8 13h8"/><path d="M3 4.2l1-.6v3.4M2.8 12.8h2.4l-2.4-2.4h2.4" stroke-width="1.2"/>'),
   check: svg('<rect x="2.5" y="2.5" width="13" height="13" rx="3"/><path d="M6 9l2.5 2.5L12.5 7"/>'),
   link: svg('<path d="M7.5 10.5a3 3 0 004.2 0l2.6-2.6a3 3 0 00-4.2-4.2L9 4.8"/><path d="M10.5 7.5a3 3 0 00-4.2 0L3.7 10.1a3 3 0 004.2 4.2L9 13.2"/>'),
 };

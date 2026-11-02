@@ -23,7 +23,7 @@ export function itensDoLancador(estado) {
   const materias = mats.map((m) => ({ tipo: 'matéria', titulo: m.nome, detalhe: 'matéria', hash: `#materias/${m.id}` }));
   const aulas = ativas(estado.aulas).filter((a) => porId.has(a.disciplina_id)).sort((x, y) => (y.inicio ?? '').localeCompare(x.inicio ?? ''))
     .map((a) => ({ tipo: 'aula', titulo: a.titulo, detalhe: `${porId.get(a.disciplina_id).nome}${a.inicio ? ' · ' + a.inicio.slice(8, 10) + '/' + a.inicio.slice(5, 7) : ''}`, hash: `#aula/${a.id}` }));
-  const acoes = [{ tipo: 'ação', titulo: 'Fixar ou soltar a barra lateral', detalhe: 'Alt B', acao: 'barra' }, { tipo: 'ação', titulo: 'Tela cheia de foco', detalhe: 'Alt Enter', acao: 'foco' }, { tipo: 'ação', titulo: 'Atalhos do teclado', detalhe: '?', acao: 'ajuda' }];
+  const acoes = [{ tipo: 'ação', titulo: 'Atalhos do teclado', detalhe: '?', acao: 'ajuda' }];
   return [...telas, ...materias, ...aulas, ...acoes];
 }
 

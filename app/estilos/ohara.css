@@ -128,3 +128,10 @@ textarea.in{min-height:76px;resize:vertical;font-family:inherit}
 @media(max-width:820px){.semana{grid-template-columns:repeat(4,1fr)}}
 #p-notas.modo-cartoes #editor,#p-notas.modo-cartoes .ql-toolbar,#p-notas.modo-cartoes>.marc-pop,#p-notas.modo-cartoes #hist-lista{display:none}#cartoes-modo{flex:1;overflow:auto;min-height:0}
 .prova-linha{display:flex;gap:10px;align-items:center;font-size:14px;border-top:1px solid var(--ln);margin-top:14px;padding-top:14px}.prova-linha i{width:10px;height:10px;border-radius:50%;flex:none}.prova-linha span{margin-left:auto;color:var(--tx2);text-align:right}.feito{font-size:13px;color:var(--tx2)}
+
+/* Barra de rolagem "pílula solta": 6 px de pílula em tom suave, afastada 3 px da borda; ganha a cor principal ao passar o mouse. */
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--cx3);border:3px solid transparent;background-clip:padding-box;border-radius:9px}
+::-webkit-scrollbar-thumb:hover,::-webkit-scrollbar-thumb:active{background:var(--pr);background-clip:padding-box}
+@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:var(--cx3) transparent}}

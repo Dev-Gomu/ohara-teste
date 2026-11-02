@@ -2,16 +2,18 @@
 .mo-grade{position:relative;display:grid;gap:12px;flex:1;min-height:0;margin:0 16px 12px;grid-template-columns:minmax(0,1fr)}
 .mo-grade.mo-empilha{display:flex;flex-direction:column;overflow:auto;margin:0 12px 12px}
 .mo-grade.mo-empilha>.mo-bloco{flex:none;height:72vh;min-height:420px}
-.mo-bloco{container-type:inline-size;container-name:mo;display:flex;flex-direction:column;min-width:0;min-height:0;border:1.5px solid var(--ln);border-radius:16px;background:var(--cx);overflow:hidden;position:relative;outline:0}
+.mo-bloco{container-type:inline-size;container-name:mo;display:flex;flex-direction:column;min-width:0;min-height:0;border:2px solid transparent;border-radius:var(--mo-r);background:var(--cx2);overflow:hidden;position:relative;outline:0}
 .mo-bloco[hidden]{display:none}
-.mo-bloco.mo-foco{border-color:var(--bd);box-shadow:inset 0 0 0 1px var(--bd)}
+.mo-bloco.mo-foco{border-color:transparent}
 .mo-bloco.mo-arrasta{opacity:.82;z-index:30;box-shadow:0 14px 40px #2a2c4544;pointer-events:none}
 .mo-bloco.mo-alvo{border-color:var(--ac);box-shadow:inset 0 0 0 2.5px var(--ac)}
 .mo-cab{display:flex;align-items:center;gap:6px;padding:8px 10px 8px 14px;min-height:56px;flex:none;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);font-weight:600;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
 .mo-cab:active{cursor:grabbing}
 .mo-cab :is(button,select,input,a,[data-sem-alca]){cursor:pointer;touch-action:manipulation}
 .mo-esp{flex:1;min-width:0}
-.mo-tit{white-space:nowrap}
+.mo-tit{white-space:nowrap;display:inline-grid;place-items:center;width:32px;height:32px;flex:none;margin-right:2px;color:var(--tx2);transition:color .2s}
+.mo-tit svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mo-bloco.mo-foco .mo-tit{color:var(--pr)}
 .mo-ib{width:40px;height:40px;border:0;border-radius:99px;background:transparent;color:var(--tx2);font:inherit;font-size:16px;display:inline-grid;place-items:center;cursor:pointer;text-transform:none;letter-spacing:0;flex:none;padding:0;min-height:0}
 .mo-ib:hover{background:var(--cx2);color:var(--tx)}
 .mo-ib[aria-pressed=true]{background:var(--cx2);color:var(--tx)}
@@ -22,3 +24,30 @@
 .mo-v::after{left:11px;top:calc(50% - 22px);width:4px;height:44px}.mo-h::after{top:11px;left:calc(50% - 22px);height:4px;width:44px}
 .mo-vao:hover::after,.mo-vao.mo-on::after{opacity:.9}
 .mo-grade.mo-redim .mo-bloco.mo-foco{border-color:var(--ac);box-shadow:inset 0 0 0 2px var(--ac)}
+
+/* foco que acompanha o teclado: transição curta e suave (some com "reduzir movimento") */
+.mo-bloco>.mo-cab{transition:background-color .16s ease,color .16s ease}
+.mo-cab :is(button,select),.at-rodape button{transition:background-color .12s ease,color .12s ease}
+@media (prefers-reduced-motion:reduce){.mo-bloco,.mo-bloco>.mo-cab,.mo-cab :is(button,select),.at-rodape button{transition:none}}
+
+/* ---- visual do foco por teclado (protótipo da Mesa): o bloco em foco fica claro com um halo; os outros recuam; a seção e o elemento em foco ganham tom */
+.mo-bloco.mo-foco{background:var(--cx);border-color:var(--ac)}
+/* estilo Hyprland: a borda do bloco em foco muda de cor (fade 200 ms, easeOutQuint) e os blocos sem foco escurecem um pouco (dim_inactive) */
+.mo-grade{--mo-dim:.06;--mo-eq:cubic-bezier(.23,1,.32,1)}
+html:root[data-tema="escuro"] .mo-grade{--mo-dim:.3}
+.mo-bloco::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;z-index:5;transition:opacity .2s var(--mo-eq)}
+.mo-grade:has(.mo-foco):not(.mo-empilha) .mo-bloco:not(.mo-foco)::after{opacity:var(--mo-dim)}
+/* recuo + anel: o que sai de foco recua um fio e esmaece, o novo ganha o anel (220 ms; só transform, opacidade e sombra) */
+.mo-bloco{transition:border-color .2s var(--mo-eq)}
+@media (prefers-reduced-motion:reduce){.mo-bloco,.mo-bloco::after{transition:none}}
+.mo-cab{margin:6px 6px 0;border-radius:var(--mo-ri);padding-left:12px}
+.mo-bloco .at-rodape{margin:0 6px 6px;border-radius:var(--mo-ri)}
+.mo-bloco[data-sec="topo"]>.mo-cab,.mo-bloco[data-sec="base"]>.at-rodape{background:var(--cx2)}
+.mo-cab :is(button,select):focus-visible,.at-rodape :is(button,select):focus-visible,.mo-cab .at-redondo:focus-visible{background:var(--pr);color:var(--prt);outline:0}
+.mo-bloco:focus-visible{outline:0}
+/* trilha: onde o foco está e o que as teclas fazem aqui */
+.mo-trilha{flex:none;display:flex;gap:14px;justify-content:space-between;align-items:center;min-height:30px;margin:0 22px 8px;color:var(--tx2);font-size:12.5px;opacity:0;pointer-events:none;transition:opacity .16s ease;white-space:nowrap;overflow:hidden}
+.mo-trilha.on{opacity:1}
+.mo-trilha b{color:var(--tx);font-weight:600}.mo-trilha em{font-style:normal;opacity:.7}.mo-trilha .dica{overflow:hidden;text-overflow:ellipsis}
+@media (prefers-reduced-motion:reduce){.mo-trilha{transition:none}}
+.mo-grade.mo-empilha+.mo-trilha{display:none}

@@ -8,6 +8,7 @@ import { registrarPendencia } from '../pendencias.js';
 import * as pref from '../preferencias.js';
 import { reguaHtml, bolhaHtml, ICONE_MARCAR, marcarAtivos, aplicarFormato, perguntarLink } from './regua.js';
 import { REALCE, GRUPOS, caberRegua } from '../../nucleo/formatacao.js';
+import { tituloDoBloco } from './icones.js';
 
 const carregarScript = (src) => new Promise((ok, erro) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => erro(new Error('Não consegui carregar o editor.')); document.head.appendChild(s); });
 async function carregarQuill() {
@@ -25,9 +26,9 @@ const CHAVE_BARRA = 'ohara.barraEd';   // 'visivel' = régua fixa; qualquer outr
 export function criarBlocoAnotacoes({ sessao, ctx, aulaId, slides, abrirSlides = () => {} }) {
   const el = document.createElement('section'), cabecalho = document.createElement('header');
   el.className = 'at-bloco at-notas'; cabecalho.className = 'at-cab';
-  cabecalho.innerHTML = `<b class="mo-tit" data-g="titulo">Anotações</b><span class="at-regua" data-k="regua" role="toolbar" aria-label="Formatação">${reguaHtml()}<button type="button" class="at-fi at-mais" data-k="mais" aria-expanded="false" aria-label="Mais formatações" title="Mais formatações" hidden>⋯</button><div class="at-mais-painel" data-k="mais-painel" hidden></div></span><span class="mo-esp"></span>` +
+  cabecalho.innerHTML = `${tituloDoBloco('anotacoes', ' data-g="titulo"')}<span class="at-regua" data-k="regua" role="toolbar" aria-label="Formatação">${reguaHtml()}<button type="button" class="at-fi at-mais" data-k="mais" aria-expanded="false" aria-label="Mais formatações" title="Mais formatações" hidden>⋯</button><div class="at-mais-painel" data-k="mais-painel" hidden></div></span><span class="mo-esp"></span>` +
     `<button type="button" class="at-redondo" data-k="marcar" aria-label="Marcar a linha com a página do slide (Ctrl M)" title="Marcar a linha · Ctrl M">${ICONE_MARCAR}</button>` +
-    `<button type="button" class="at-redondo at-aa" data-k="aa" aria-pressed="false" aria-label="Barra de formatação (Alt T)" title="Barra de formatação · Alt T">Aa</button>` +
+    `<button type="button" class="at-redondo at-aa" data-k="aa" aria-pressed="false" aria-label="Barra de formatação" title="Barra de formatação · Alt T">Aa</button>` +
     `<button type="button" class="mo-ib" data-k="menu" aria-label="Mais opções das anotações" aria-haspopup="menu" title="Opções das anotações"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="3.8" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="14.2" r="1.4" fill="currentColor" stroke="none"/></svg></button>`;
   el.append(cabecalho);
   el.insertAdjacentHTML('beforeend', `<div class="at-corpo"><div class="at-editor" data-k="editor"></div>` +
@@ -150,7 +151,7 @@ export function criarBlocoAnotacoes({ sessao, ctx, aulaId, slides, abrirSlides =
       abrirMenu($('menu'), [
         { rotulo: `Ver marcados (${n})`, fazer: () => alternarPainel('marcados') },
         { rotulo: 'Histórico de versões do texto', fazer: () => alternarPainel('historico') },
-        { rotulo: fixa ? 'Ocultar a barra de formatação (Alt T)' : 'Mostrar a barra de formatação (Alt T)', fazer: alternarBarra },
+        { rotulo: fixa ? 'Ocultar a barra de formatação' : 'Mostrar a barra de formatação', fazer: alternarBarra },
       ]);
     }
   });
@@ -179,7 +180,7 @@ export function criarBlocoAnotacoes({ sessao, ctx, aulaId, slides, abrirSlides =
     // Atalhos de formatação (Ctrl no Linux/Windows, Cmd no Mac). Alt sozinho é do sistema (ver nucleo/teclado.js).
     quill.root.addEventListener('keydown', (e) => {
       const ctrl = e.ctrlKey || e.metaKey, c = e.code;
-      if (e.key.toLowerCase() === 'm' && !e.metaKey && (e.ctrlKey || e.altKey)) { e.preventDefault(); marcar(); return; }   // Ctrl+M ou Alt+M: marcar a linha
+      if (e.key.toLowerCase() === 'm' && !e.metaKey && e.ctrlKey) { e.preventDefault(); marcar(); return; }   // Ctrl+M: marcar a linha
       if (ctrl && e.altKey && !e.shiftKey && /^Digit[123]$/.test(c)) { e.preventDefault(); const n = Number(c.slice(5)); quill.format('header', quill.getFormat().header === n ? false : n, 'user'); }
       else if (ctrl && e.shiftKey && !e.altKey && c === 'Digit7') { e.preventDefault(); aplicarFormato(quill, 'ordered'); }
       else if (ctrl && e.shiftKey && !e.altKey && c === 'Digit8') { e.preventDefault(); aplicarFormato(quill, 'bullet'); }

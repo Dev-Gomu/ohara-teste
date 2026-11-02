@@ -8,7 +8,6 @@ main.at .at-topo{display:flex;align-items:center;gap:10px;min-height:52px;paddin
 .at-tg button{min-height:40px;padding:0 16px;border:0;border-radius:99px;background:transparent;color:var(--tx2);font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center}
 .at-tg button[aria-pressed=true]{background:var(--cx);color:var(--tx)}
 .at-tg .at-ini{display:none}
-.at-foco{width:40px;height:40px;border:0;border-radius:99px;background:var(--cx2);color:var(--tx);font:inherit;font-size:16px;cursor:pointer;display:inline-grid;place-items:center;flex:none;padding:0}
 .at-grade{display:flex;flex-direction:column;flex:1;min-height:0}
 .at-grade.mo-grade{display:grid}.at-grade.mo-grade.mo-empilha{display:flex}
 @media(max-width:1000px){.at-tg .at-rot{display:none}.at-tg .at-ini{display:inline}.at-tg button{padding:0 14px}}
@@ -153,3 +152,18 @@ html[data-tema="escuro"]{--at-lamina:#262A4F}
 .at-sv-acoes button{min-height:36px;padding:0 16px;border:0;border-radius:99px;background:var(--cx);color:var(--tx);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .at-sv-acoes .perigo{color:var(--ur,#b3261e)}
 .at-gav-x .at-s{width:12px;height:12px;stroke-width:2}
+
+/* ---- R1: folha branca, ícones e barra por Alt T (escolha do usuário em 2/11) ---- */
+.at-notas .at-corpo{margin:0 14px 14px;border-radius:12px;background:var(--cx);overflow:hidden}
+.at-notas .at-editor .ql-editor{padding-top:18px}
+.at-cartoes .at-edwrap{margin:0 14px;border-radius:12px 12px 0 0;overflow:hidden;background:var(--cx)}
+.at-cartoes .at-edwrap .fc-ed{background:var(--cx)}
+.at-cartoes .at-rodape{margin:0 14px 14px;padding:8px 12px 12px 18px;border-radius:0 0 12px 12px;background:var(--cx)}
+.at-cartoes .at-salvos{margin:0 14px 14px;padding:8px;border-radius:12px;background:var(--cx)}
+.at-seg button .at-s,.at-salvar .at-s{width:15px;height:15px}
+.at-cap button .at-s{width:15px;height:15px}
+.at-tg .at-ti{width:18px;height:18px}.at-tg .at-ini{display:none}
+.at-tg button{gap:8px}
+@media(max-width:1000px){.at-tg .at-ini{display:none}}
+/* a folha branca fica acima do escurecimento dos blocos sem foco (a folha continua branca) */
+.mo-bloco .at-notas .at-corpo,.mo-bloco.at-notas .at-corpo,.at-notas .at-corpo,.at-cartoes .at-edwrap,.at-cartoes .at-rodape,.at-cartoes .at-salvos{position:relative;z-index:6}

@@ -8,6 +8,7 @@ import { paraGuardado, paraDigitado } from '../../nucleo/flashcards_editor.js';
 import { cartoesDaAula, importarTexto, excluirCartao, restaurarCartao, LIMITE_IMAGEM_BYTES, MAX_IMAGENS_LADO } from '../../nucleo/cartoes.js';
 import { criarEditorCartoes } from '../componentes/editor_cartoes.js';
 import * as pref from '../preferencias.js';
+import { tituloDoBloco } from './icones.js';
 
 const ICO = '<svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="3" width="14" height="12" rx="3"/><circle cx="6.5" cy="7.5" r="1.4"/><path d="M3 14l4-4 3 3 2-2 3 3"/></svg>';
 const MAIS = '<svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="3" width="14" height="12" rx="3"/><path d="M9 6.5v5M6.5 9h5"/></svg>';
@@ -17,8 +18,8 @@ const EH_IMAGEM = /^image\/(png|jpeg|webp|gif)$/;
 export function criarBlocoCartoes({ sessao, ctx, aulaId, slides, slidesAberto = () => false, aoMudarContagem = () => {} }) {
   const el = document.createElement('section'), cabecalho = document.createElement('header');
   el.className = 'at-bloco at-cartoes'; cabecalho.className = 'at-cab';
-  cabecalho.innerHTML = `<b class="mo-tit">Cartão</b><select class="at-selaula" data-k="aula" aria-label="Aula do cartão"></select>` +
-    `<span class="at-seg at-abas" role="tablist" aria-label="Novo cartão ou cartões salvos"><button type="button" role="tab" data-aba="novo" aria-selected="true" class="on">Novo</button><button type="button" role="tab" data-aba="salvos" aria-selected="false">Salvos <span class="at-num" data-k="nsalvos">0</span></button></span><span class="mo-esp"></span>` +
+  cabecalho.innerHTML = `${tituloDoBloco('cartoes')}<select class="at-selaula" data-k="aula" aria-label="Aula do cartão" hidden></select>` +
+    `<span class="at-seg at-abas" role="tablist" aria-label="Novo cartão ou cartões salvos"><button type="button" role="tab" data-aba="novo" aria-selected="true" class="on"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 9h10M9 4v10"/></svg>Novo</button><button type="button" role="tab" data-aba="salvos" aria-selected="false"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="6" width="10.5" height="8.5" rx="2"/><path d="M5.5 3.5h8.5a2 2 0 0 1 2 2V12"/></svg>Salvos <span class="at-num" data-k="nsalvos">0</span></button></span><span class="mo-esp"></span>` +
     `<button type="button" class="mo-ib" data-k="opcoes" aria-expanded="false" aria-controls="at-opc-${aulaId}" aria-label="Opções dos cartões (Alt O)" title="Opções: etiquetas, código, importar (Alt O)"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="3.8" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="14.2" r="1.4" fill="currentColor" stroke="none"/></svg></button>`;
   el.append(cabecalho);
   el.insertAdjacentHTML('beforeend',
@@ -31,7 +32,7 @@ export function criarBlocoCartoes({ sessao, ctx, aulaId, slides, slidesAberto = 
     `<div class="at-edwrap" data-k="wrap"><div class="fc-ed" data-k="ed" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Editor do cartão" spellcheck="true"></div><div class="at-ovl" data-k="ovl"></div></div>` +
     `<textarea class="fc-codigo" data-k="txt" hidden spellcheck="false" aria-label="Texto do flashcard com as marcas"></textarea>` +
     `<p class="erro at-erro" data-k="erro" hidden role="alert"></p>` +
-    `<footer class="at-rodape"><span class="at-dica" data-k="rodape"></span><span class="mo-esp"></span><button type="button" class="at-salvar" data-k="salvar">Salvar <kbd>Ctrl Enter</kbd></button></footer>` +
+    `<footer class="at-rodape"><span class="at-dica" data-k="rodape"></span><span class="mo-esp"></span><button type="button" class="at-salvar" data-k="salvar"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><path d="M3.5 9.5l3.5 3.5 7.5-8"/></svg>Salvar <kbd>Ctrl Enter</kbd></button></footer>` +
     `<div class="at-salvos" data-k="salvos" role="tabpanel" hidden></div>` +
     `<div class="at-gav" data-k="gav" hidden></div><div class="at-vis" data-k="vis" hidden></div>` +
     `<input type="file" data-k="arq" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>`);
@@ -45,9 +46,8 @@ export function criarBlocoCartoes({ sessao, ctx, aulaId, slides, slidesAberto = 
     return mats.map((m) => ({ m, aulas: ativas(e.aulas).filter((a) => a.disciplina_id === m.id).sort((x, y) => (y.inicio ?? '').localeCompare(x.inicio ?? '')) })).filter((g) => g.aulas.length);
   };
   const aulaValida = (id) => grupos().some((g) => g.aulas.some((a) => String(a.id) === String(id)));
-  /** O rascunho em andamento continua na aula dele; sem rascunho, vale a aula da Área. */
+  /** O cartão vai sempre para a aula aberta na Mesa (é a que a barra do topo mostra); o seletor de aula ficou escondido. */
   function aulaInicial() {
-    if ((rasc.texto || '').trim() && aulaValida(rasc.aula)) return String(rasc.aula);
     if (aulaValida(aulaId)) return String(aulaId);
     const g = grupos(); return g[0] ? String(g[0].aulas[0].id) : '';
   }

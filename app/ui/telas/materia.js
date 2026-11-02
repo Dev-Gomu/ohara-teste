@@ -12,6 +12,7 @@ import { anosEncerrados } from '../../nucleo/anos.js';
 import { capaDoArquivo } from '../componentes/leitor.js';
 import { desenharCartoes } from './flashcards/gerenciar.js';
 import { desenharNotas } from './notas.js';
+import { proximasDatas } from '../../nucleo/eventos.js';
 import * as pref from '../preferencias.js';
 
 const DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -60,13 +61,20 @@ export function desenharMateria(raiz, ctx, materiaId) {
       `<button type="button" role="tab" data-aba="notas" aria-selected="${aba === 'notas'}" class="${aba === 'notas' ? 'on' : ''}">Notas</button></div>` +
       (so || aba === 'notas' ? '' : `<button type="button" class="mt-btn" data-a="nova">Nova aula</button>`) + '</div>' +
       (so ? `<div class="mt-so"><b>${escaparHtml(ano?.nome ?? 'Ano arquivado')}</b> · só consulta. Para editar, reabra o ano no Acervo.</div>` : '') +
-      (aba === 'aulas' ? faixaPastas(pastas, estado, so) + `<div class="mt-cols"><div class="mt-col"><div class="mt-cap">${escaparHtml(pastaSel == null ? 'Aulas' : 'Aulas · ' + pastas.find((p) => p.id === pastaSel).nome)} <em>${aulas.length}</em></div><div class="mt-card mt-lista">${lista(aulas, estado, so)}</div></div>${painel(aulas, estado)}</div>` : aba === 'notas' ? '<div class="mt-notas" id="mt-notas"></div>' : '<div class="mt-cartoes" id="mt-cartoes"></div>');
+      (aba === 'aulas' ? datas(estado) + faixaPastas(pastas, estado, so) + `<div class="mt-cols"><div class="mt-col"><div class="mt-cap">${escaparHtml(pastaSel == null ? 'Aulas' : 'Aulas · ' + pastas.find((p) => p.id === pastaSel).nome)} <em>${aulas.length}</em></div><div class="mt-card mt-lista">${lista(aulas, estado, so)}</div></div>${painel(aulas, estado)}</div>` : aba === 'notas' ? '<div class="mt-notas" id="mt-notas"></div>' : '<div class="mt-cartoes" id="mt-cartoes"></div>');
     if (aba === 'notas' && limpezaNotas) { limpezaNotas(); limpezaNotas = null; }
     if (aba === 'cartoes') { limpezaCartoes?.(); limpezaCartoes = desenharCartoes(raiz.querySelector('#mt-cartoes'), m.ano_id != null ? { ...ctx, sessao: { ...sessao, estado: sessao.estadoCompleto } } : ctx, { disciplinaId: materiaId }); }
     else { limpezaCartoes?.(); limpezaCartoes = null; if (aba === 'aulas') carregarCapa(); }
     if (aba === 'notas') { if (!limpezaNotas) limpezaNotas = desenharNotas(raiz.querySelector('#mt-notas'), ctx, materiaId); }
     else { limpezaNotas?.(); limpezaNotas = null; }
     const campo = raiz.querySelector('input[name="titulo"], input[name="pasta"]'); if (campo) campo.focus();
+  }
+
+  /** Próximas provas e entregas desta matéria (até 3), vindas da Agenda; um toque abre a Agenda. Some se não há nenhuma. */
+  function datas(estado) {
+    const lista = proximasDatas(estado, materiaId, agoraLocal().slice(0, 10), 3);
+    if (!lista.length) return '';
+    return '<div class="mt-datas">' + lista.map((x) => `<a class="mt-dat${x.tipo === 'trabalho' ? ' vz' : ''}" href="#planejar" title="Abrir na Agenda"><b>${x.tipo === 'prova' ? 'Prova' : 'Entrega'}</b> ${escaparHtml(x.titulo)} · ${Number(x.dia.slice(8))} ${MESES[Number(x.dia.slice(5, 7)) - 1]}<em>${x.em === 0 ? 'hoje' : `${x.em}d`}</em></a>`).join('') + '</div>';
   }
 
   function faixaPastas(pastas, estado, so = false) {

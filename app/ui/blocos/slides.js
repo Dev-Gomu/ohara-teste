@@ -5,13 +5,14 @@ import { arquivosDaAula, excluirArquivo, restaurarArquivo, ehPdf } from '../../n
 import { zoomEmPorcento } from '../../nucleo/gestos.js';
 import { criarLeitor } from '../componentes/leitor.js';
 import { abrirMenu } from '../menu.js';
+import { tituloDoBloco } from './icones.js';
 
 export function criarBlocoSlides({ sessao, ctx, aulaId }) {
   const el = document.createElement('section'), cabecalho = document.createElement('header');
   el.className = 'at-bloco at-slides'; cabecalho.className = 'at-cab';
-  cabecalho.innerHTML = `<b class="mo-tit">Slide</b><span class="at-arq" data-k="arq"></span><span class="mo-esp"></span>` +
-    `<span class="at-cap" aria-label="Página"><button type="button" data-k="ant" aria-label="Página anterior" title="Página anterior (Alt [)">◀</button><span data-k="pg" aria-live="polite">—</span><button type="button" data-k="prox" aria-label="Próxima página" title="Próxima página (Alt ])">▶</button></span>` +
-    `<span class="at-cap at-cap-zoom" aria-label="Zoom"><button type="button" data-k="menos" aria-label="Diminuir o zoom" title="Diminuir (−)">−</button><span data-k="zoom">100%</span><button type="button" data-k="mais" aria-label="Aumentar o zoom" title="Aumentar (+)">+</button></span>` +
+  cabecalho.innerHTML = `${tituloDoBloco('slides')}<span class="at-arq" data-k="arq"></span><span class="mo-esp"></span>` +
+    `<span class="at-cap" aria-label="Página"><button type="button" data-k="ant" aria-label="Página anterior" title="Página anterior (Alt [)"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3.5L5.5 9l5.5 5.5"/></svg></button><span data-k="pg" aria-live="polite">—</span><button type="button" data-k="prox" aria-label="Próxima página" title="Próxima página (Alt ])"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><path d="M7 3.5L12.5 9 7 14.5"/></svg></button></span>` +
+    `<span class="at-cap at-cap-zoom" aria-label="Zoom"><button type="button" data-k="menos" aria-label="Diminuir o zoom" title="Diminuir (−)"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 9h10"/></svg></button><span data-k="zoom">100%</span><button type="button" data-k="mais" aria-label="Aumentar o zoom" title="Aumentar (+)"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 9h10M9 4v10"/></svg></button></span>` +
     `<button type="button" class="mo-ib" data-k="menu" aria-label="Mais opções do slide" aria-haspopup="menu" title="Opções do slide"><svg class="at-s" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="3.8" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="14.2" r="1.4" fill="currentColor" stroke="none"/></svg></button>`;
   el.append(cabecalho);
   el.insertAdjacentHTML('beforeend', `<p class="erro at-erro" data-k="erro" hidden></p><div class="at-lamina"><div id="leitor" class="at-leitor" tabindex="0" aria-label="Slide (setas e Page Down passam de página; J e K rolam; + e − dão zoom)"></div>` +
@@ -83,7 +84,7 @@ export function criarBlocoSlides({ sessao, ctx, aulaId }) {
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     const k = e.key;
     if (k === 'PageDown' || k === 'ArrowRight' || k === ' ') { leitor.proximo(); e.preventDefault(); } else if (k === 'PageUp' || k === 'ArrowLeft') { leitor.anterior(); e.preventDefault(); }
-    else if (k === 'j') { leitorEl.scrollBy({ top: 90 }); e.preventDefault(); } else if (k === 'k') { leitorEl.scrollBy({ top: -90 }); e.preventDefault(); }
+    else if (k === 'j' || k === 'ArrowDown') { leitorEl.scrollBy({ top: 90 }); e.preventDefault(); } else if (k === 'k' || k === 'ArrowUp') { leitorEl.scrollBy({ top: -90 }); e.preventDefault(); }
     else if (k === '+' || k === '=') { leitor.mais(); e.preventDefault(); } else if (k === '-') { leitor.menos(); e.preventDefault(); } else if (k === '0') { leitor.normal(); e.preventDefault(); }
   });
   desenharEstado();

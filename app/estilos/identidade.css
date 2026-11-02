@@ -174,13 +174,12 @@ html:root .fc-ed .l[data-t=secao]{letter-spacing:.08em}
  html:root main:not(.cheia){padding:14px 18px 24px}
  html:root .fc-topo h1{display:none}
  html:root .fc-topo{position:fixed;top:12px;right:138px;margin:0;z-index:5}
- html:root[data-foco] .fc-topo{display:none}
 }
 
 /* Aula: o cabeçalho (voltar, título, slide, Foco) sobe para a barra do topo, ao lado das pílulas; fora do modo foco e a partir de 821 px */
 @media(min-width:821px){
- html:root:not([data-foco]) main.cheia .topo{position:fixed;top:12px;left:456px;right:140px;height:40px;min-height:0;margin:0;padding:0;border:0;background:transparent;z-index:5;flex-wrap:nowrap;overflow:hidden;gap:8px}
- html:root:not([data-foco]) main.cheia{padding-top:8px}
+ html:root main.cheia .topo{position:fixed;top:12px;left:456px;right:140px;height:40px;min-height:0;margin:0;padding:0;border:0;background:transparent;z-index:5;flex-wrap:nowrap;overflow:hidden;gap:8px}
+ html:root main.cheia{padding-top:8px}
  html:root main.cheia .topo .btn.peq,html:root main.cheia .topo .gp button{height:40px;padding:0 14px}
  html:root main.cheia .topo .gp,html:root main.cheia .topo .gp button,html:root main.cheia .topo #pag{color:var(--tx)}
  html:root main.cheia .topo .tt small{display:none}
@@ -191,3 +190,7 @@ html:root .fc-ed .l[data-t=secao]{letter-spacing:.08em}
    Tamanhos f1 rótulo · f2 secundário · f3 texto · f4 título de bloco · f5 título de tela · f6 número grande; e1–e6 espaços;
    3 raios (r1 peças · r2 blocos · rp botões); uma borda (b, só no foco); nenhuma sombra; alvo de toque 44 px. */
 html:root h1{font-size:var(--f5);font-weight:var(--peso-tit)}
+/* "Atalhos (?)" virou só o ícone, um círculo como os botões do menu */
+html:root nav .fim #ver-atalhos{width:40px;height:40px;padding:0;display:inline-grid;place-items:center;border-radius:50%}
+html:root nav .fim #ver-atalhos svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
