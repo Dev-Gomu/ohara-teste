@@ -1,0 +1,38 @@
+/* Tokens do Ohara: ÚNICA fonte das cores, fontes, tamanhos, espaços e raios. Identidade vigente: "Névoa enxuta" (lavanda e índigo, Poppins).
+   Para trocar a identidade, edite só este arquivo. Telas novas devem usar sempre estas variáveis (o tema escuro sai de graça).
+   Escuro: só o que difere do claro. A cor da matéria é guardada como posição (m1…m8), nunca como valor. */
+
+/* ---- Tema claro ---- */
+html:root{
+  /* superfícies e texto */
+  --bg:#EEEFFC;--cx:#FFFFFF;--cx2:#E4E6FA;--cx3:#D6D9F5;--tx:#23254A;--tx2:#54577A;--ln:#B8BCE2;--bd:#B8BCE2;
+  /* cor principal e destaque */
+  --pr:#3F4290;--prt:#FFFFFF;--ac:#3F4290;--acf:#E3E4FA;--faixa:#E3E4FA;--faixa-tom:72%;--faixa-cab:55%;
+  /* menu lateral */
+  --nav:#2A2C45;--navt:#C9CBEA;
+  /* sistema: sucesso e erro */
+  --ok:#2B7A62;--okf:#DDF1EA;--ur:#B3261E;--urt:#fff;
+  /* notas: o bimestre atual é o tom mais forte; o semestre fora de curso recua inteiro. Âmbar = "parcial" (sem vermelho) */
+  --nt-now:#4A4EA3;--nt-nowt:#FFFFFF;--nt-nowi:#FFFFFF;--nt-semcur:#D3D6F4;--nt-semoth:#EAEBFA;--nt-hdoth:#C9CCF0;--nt-hdotht:#2E3170;--nt-bcoth:#F7F7FE;--nt-warn:#8A5A00;--nt-warnbg:#F6E7C4;--nt-pend:#8F94D0;
+  /* as 8 matérias */
+  --m1:#34709F;--m2:#2B7A62;--m3:#B3475E;--m4:#B5532E;--m5:#7A4EA8;--m6:#1F7A86;--m7:#8A6A0A;--m8:#5D6D7E;
+  /* fontes */
+  --fonte-t:"Poppins",system-ui,sans-serif;--texto:"Poppins",system-ui,sans-serif;--mono:"Fira Code",ui-monospace,monospace;
+  /* escala de texto · f4 título de bloco · f5 título de tela · f6 número grande */
+  --f1:12px;--f2:13.5px;--f3:15.5px;--f4:19px;--f5:28px;--f6:36px;--peso-tit:300;--lh:1.6;
+  /* espaços, raios (r1 itens · r2 blocos · rp botões), borda de foco e alvo de toque */
+  --e1:4px;--e2:8px;--e3:12px;--e4:16px;--e5:24px;--e6:32px;--g:16px;--pad:22px;
+  --r1:12px;--r2:24px;--rp:999px;--raio-cartao:20px;
+  /* regra dos raios: canto de dentro = canto de fora − recuo (mínimo 8). Bloco da Mesa: 22 px, borda 2 + margem 6 → 14 px por dentro */
+  --mo-r:22px;--mo-recuo:8px;--mo-ri:max(calc(var(--mo-r) - var(--mo-recuo)),8px);--b:1.5px;--alvo:44px;
+}
+
+/* ---- Tema escuro ---- */
+html:root[data-tema="escuro"]{
+  --bg:#14152B;--cx:#1D1F40;--cx2:#2A2D5C;--cx3:#34387A;--tx:#EDEEFB;--tx2:#B3B6DD;--ln:#4A4F96;--bd:#4A4F96;
+  --pr:#A3A6FA;--prt:#14152B;--ac:#A3A6FA;--acf:#2A2D5C;--faixa:#2A2D5C;--faixa-tom:50%;--faixa-cab:38%;
+  --nav:#0E0F20;--navt:#B3B6DD;
+  --ok:#6BCBAA;--okf:#16301F;--ur:#FF9C9C;
+  --nt-now:#A3A6FA;--nt-nowt:#14152B;--nt-nowi:#14152B;--nt-semcur:#2A2D5C;--nt-semoth:#1A1B38;--nt-hdoth:#262955;--nt-hdotht:#B3B6DD;--nt-bcoth:#14152B;--nt-warn:#F0C777;--nt-warnbg:#3A2F14;--nt-pend:#6A70BC;
+  --m1:#8FC2EA;--m2:#6BCBAA;--m3:#F29DB0;--m4:#EE9A7C;--m5:#C9A8F0;--m6:#6FCBD6;--m7:#E2C46A;--m8:#A9B6C4;
+}

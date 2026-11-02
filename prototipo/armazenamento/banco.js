@@ -1,0 +1,144 @@
+// Banco SQLite (sql.js) com migrações. Sem I/O de arquivo: quem chama entrega o módulo SQL e,
+// se houver, os bytes do banco salvo. Gravar no IndexedDB é tarefa da 1.6.
+
+export const MIGRACOES = [
+  // v1
+  `CREATE TABLE disciplina (
+     id INTEGER PRIMARY KEY, nome TEXT NOT NULL, cor TEXT NOT NULL,
+     criado_em TEXT NOT NULL, excluido_em TEXT);
+   CREATE TABLE aula (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL REFERENCES disciplina(id),
+     titulo TEXT NOT NULL, tipo TEXT NOT NULL DEFAULT 'aula',
+     inicio TEXT, fim TEXT, anotacoes TEXT NOT NULL DEFAULT '',
+     criado_em TEXT NOT NULL, excluido_em TEXT);
+   CREATE TABLE arquivo (
+     id INTEGER PRIMARY KEY, aula_id INTEGER NOT NULL REFERENCES aula(id),
+     nome TEXT NOT NULL, tipo_mime TEXT NOT NULL, tamanho INTEGER NOT NULL,
+     criado_em TEXT NOT NULL, excluido_em TEXT);
+   CREATE TABLE config (chave TEXT PRIMARY KEY, valor TEXT NOT NULL);
+   CREATE TABLE horario_cobranca (
+     id INTEGER PRIMARY KEY, dia_semana INTEGER NOT NULL, hora TEXT NOT NULL);`,
+  // v2 (Etapa 2): marcadores da aula e histórico das anotações
+  `CREATE TABLE marcador (
+     id INTEGER PRIMARY KEY, aula_id INTEGER NOT NULL REFERENCES aula(id), arquivo_id INTEGER, pagina INTEGER,
+     trecho TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);
+   CREATE TABLE anotacao_versao (
+     id INTEGER PRIMARY KEY, aula_id INTEGER NOT NULL REFERENCES aula(id), conteudo TEXT NOT NULL, criado_em TEXT NOT NULL);`,
+  // v3 (Etapa 3): blocos da Sala de Foco. disciplina_id sem chave estrangeira: o histórico de estudo sobrevive à matéria apagada.
+  `CREATE TABLE bloco_foco (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER, tarefa TEXT NOT NULL DEFAULT '', tipo TEXT NOT NULL DEFAULT 'foco',
+     dia TEXT NOT NULL, inicio TEXT NOT NULL, minutos_previstos INTEGER NOT NULL, minutos_feitos INTEGER NOT NULL,
+     estado TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);`,
+  // v4 (Etapas 5 e 6): planejador (dificuldade, provas, tarefas do plano, código do evento .ics) e cartões
+  `ALTER TABLE disciplina ADD COLUMN dificuldade INTEGER NOT NULL DEFAULT 2;
+   ALTER TABLE aula ADD COLUMN ics_uid TEXT;
+   ALTER TABLE bloco_foco ADD COLUMN tarefa_id INTEGER;
+   CREATE TABLE prova (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, titulo TEXT NOT NULL, data TEXT NOT NULL,
+     aulas TEXT NOT NULL DEFAULT '[]', criado_em TEXT NOT NULL, excluido_em TEXT);
+   CREATE TABLE tarefa (
+     id INTEGER PRIMARY KEY, chave TEXT NOT NULL, tipo TEXT NOT NULL, disciplina_id INTEGER NOT NULL, aula_id INTEGER, prova_id INTEGER,
+     titulo TEXT NOT NULL, minutos INTEGER NOT NULL, dia TEXT NOT NULL, dia_original TEXT NOT NULL, sem_vaga INTEGER NOT NULL DEFAULT 0,
+     feita_em TEXT, criado_em TEXT NOT NULL, excluido_em TEXT);
+   CREATE TABLE cartao (
+     id INTEGER PRIMARY KEY, aula_id INTEGER NOT NULL REFERENCES aula(id), pagina INTEGER, frente TEXT NOT NULL, verso TEXT NOT NULL,
+     etiquetas TEXT NOT NULL DEFAULT '', tem_imagem INTEGER NOT NULL DEFAULT 0, guid TEXT NOT NULL,
+     criado_em TEXT NOT NULL, atualizado_em TEXT NOT NULL, exportado_em TEXT, excluido_em TEXT);`,
+  // v5: sigla de até 4 letras da matéria (vazia = as 3 primeiras letras do nome)
+  `ALTER TABLE disciplina ADD COLUMN sigla TEXT;`,
+  // v6: pastas da matéria (ex.: bimestres); a aula guarda a pasta em `pasta_id` (sem chave estrangeira: excluir a pasta não mexe nas aulas)
+  `CREATE TABLE pasta (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, nome TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);
+   ALTER TABLE aula ADD COLUMN pasta_id INTEGER;`,
+  // v7: anos letivos arquivados ("Encerrar o ano"); `disciplina.ano_id` vazio = ano atual
+  `CREATE TABLE ano (id INTEGER PRIMARY KEY, nome TEXT NOT NULL, criado_em TEXT NOT NULL, excluido_em TEXT);
+   ALTER TABLE disciplina ADD COLUMN ano_id INTEGER;`,
+  // v8: revisão dos cartões no Treino (agenda por cartão e registro das respostas); sem chave estrangeira: o histórico sobrevive ao cartão
+  `CREATE TABLE revisao (
+     cartao_id INTEGER PRIMARY KEY, facilidade REAL NOT NULL, intervalo INTEGER NOT NULL, repeticoes INTEGER NOT NULL,
+     lapsos INTEGER NOT NULL DEFAULT 0, vence_dia TEXT NOT NULL, ultima_em TEXT NOT NULL);
+   CREATE TABLE revisao_log (
+     id INTEGER PRIMARY KEY, cartao_id INTEGER NOT NULL, dia TEXT NOT NULL, resposta TEXT NOT NULL, novo INTEGER NOT NULL DEFAULT 0, criado_em TEXT NOT NULL);`,
+  // v9: cartão marcado durante a revisão (estrela) e baralhos do Treino (estudo personalizado: provas e/ou aulas escolhidas, guardadas como listas de ids em JSON)
+  `ALTER TABLE cartao ADD COLUMN marcado INTEGER NOT NULL DEFAULT 0;
+   CREATE TABLE baralho (
+     id INTEGER PRIMARY KEY, nome TEXT NOT NULL, provas TEXT NOT NULL DEFAULT '[]', aulas TEXT NOT NULL DEFAULT '[]', criado_em TEXT NOT NULL, excluido_em TEXT);`,
+  // v10 (Agenda): a prova passa a aceitar data vazia (cadastro só com a matéria) e ganha hora, local, observação e peso (a tabela é refeita
+  // porque o SQLite não tira o NOT NULL de uma coluna). `evento` guarda trabalho, compromisso e lembrete; `repete` é um JSON ({freq, ate}) ou vazio.
+  `CREATE TABLE prova_nova (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, titulo TEXT NOT NULL, data TEXT, hora TEXT, local TEXT NOT NULL DEFAULT '',
+     observacao TEXT NOT NULL DEFAULT '', peso REAL, aulas TEXT NOT NULL DEFAULT '[]', criado_em TEXT NOT NULL, excluido_em TEXT);
+   INSERT INTO prova_nova (id, disciplina_id, titulo, data, aulas, criado_em, excluido_em)
+     SELECT id, disciplina_id, titulo, data, aulas, criado_em, excluido_em FROM prova;
+   DROP TABLE prova;
+   ALTER TABLE prova_nova RENAME TO prova;
+   CREATE TABLE evento (
+     id INTEGER PRIMARY KEY, tipo TEXT NOT NULL, disciplina_id INTEGER, titulo TEXT NOT NULL, data TEXT, hora TEXT, hora_fim TEXT,
+     local TEXT NOT NULL DEFAULT '', observacao TEXT NOT NULL DEFAULT '', peso REAL, repete TEXT NOT NULL DEFAULT '', feito_em TEXT,
+     criado_em TEXT NOT NULL, excluido_em TEXT);`,
+  // v11 (Grade): horários semanais (regra; `ate` vazio = sem fim; `ancora` só na quinzenal), exceções por data (cancelada ou movida) e o elo
+  // da aula de verdade com o horário que a gerou (`grade_id` + `grade_dia`, a data original), sem chave estrangeira.
+  `CREATE TABLE grade (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, dia_semana INTEGER NOT NULL, inicio TEXT NOT NULL, fim TEXT NOT NULL,
+     repete TEXT NOT NULL DEFAULT 'semanal', ancora TEXT, desde TEXT NOT NULL, ate TEXT, rotulo TEXT NOT NULL DEFAULT '', local TEXT NOT NULL DEFAULT '',
+     criado_em TEXT NOT NULL, excluido_em TEXT);
+   CREATE TABLE grade_excecao (
+     id INTEGER PRIMARY KEY, grade_id INTEGER NOT NULL, dia TEXT NOT NULL, tipo TEXT NOT NULL, novo_dia TEXT, novo_inicio TEXT, novo_fim TEXT, criado_em TEXT NOT NULL);
+   ALTER TABLE aula ADD COLUMN grade_id INTEGER;
+   ALTER TABLE aula ADD COLUMN grade_dia TEXT;`,
+  // v12 (bimestres): a pasta com estrela é o bimestre atual da matéria; a prova guarda o "bimestre da nota" (pasta) e o "conteúdo" (lista de pastas, em JSON)
+  `ALTER TABLE pasta ADD COLUMN estrela INTEGER NOT NULL DEFAULT 0;
+   ALTER TABLE prova ADD COLUMN bimestre_id INTEGER;
+   ALTER TABLE prova ADD COLUMN conteudo TEXT NOT NULL DEFAULT '[]';`,
+  // v13 (notas): item avaliado (bimestre 1 a 4; peso relativo dentro do bimestre; nota vazia = pendente; `reposicao_de` aponta o item que ela substitui;
+  // `origem` = "prova:ID" quando veio da Agenda) e o esquema de avaliação da matéria (JSON: mínimo, pesos e bônus; vazio = padrão). Sem chave estrangeira.
+  `CREATE TABLE avaliacao (
+     id INTEGER PRIMARY KEY, disciplina_id INTEGER NOT NULL, bimestre INTEGER NOT NULL, titulo TEXT NOT NULL, tipo TEXT NOT NULL DEFAULT 'prova',
+     peso REAL NOT NULL DEFAULT 1, nota REAL, bonus REAL NOT NULL DEFAULT 0, reposicao_de INTEGER, origem TEXT NOT NULL DEFAULT '',
+     criado_em TEXT NOT NULL, excluido_em TEXT);
+   ALTER TABLE disciplina ADD COLUMN notas_cfg TEXT;`,
+];
+
+export function versaoDoBanco(db) {
+  const r = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='meta'");
+  if (!r.length) return 0;
+  const v = db.exec("SELECT versao FROM meta");
+  return v.length ? v[0].values[0][0] : 0;
+}
+
+// Aplica as migrações que faltam, cada uma dentro de uma transação. Recusa banco de versão futura.
+export function migrar(db, migracoes = MIGRACOES) {
+  const atual = versaoDoBanco(db);
+  if (atual > migracoes.length) {
+    throw new Error(`Banco na versão ${atual}, mas este app só entende até a ${migracoes.length}. Atualize o app.`);
+  }
+  if (atual === 0) db.run('CREATE TABLE IF NOT EXISTS meta (versao INTEGER NOT NULL)');
+  for (let v = atual; v < migracoes.length; v++) {
+    db.run('BEGIN');
+    try {
+      db.run(migracoes[v]);
+      db.run('DELETE FROM meta');
+      db.run('INSERT INTO meta (versao) VALUES (?)', [v + 1]);
+      db.run('COMMIT');
+    } catch (e) {
+      db.run('ROLLBACK');
+      throw e;
+    }
+  }
+  return versaoDoBanco(db);
+}
+
+// SQL: o módulo devolvido por initSqlJs. dados: Uint8Array de um banco salvo (opcional).
+export function abrirBanco(SQL, dados, migracoes = MIGRACOES) {
+  const db = dados ? new SQL.Database(dados) : new SQL.Database();
+  db.run('PRAGMA foreign_keys = ON');
+  migrar(db, migracoes);
+  return db;
+}
+
+/** Exporta os bytes do banco. O sql.js desliga as chaves estrangeiras depois de exportar; aqui elas voltam. */
+export function exportarBanco(db) {
+  const bytes = db.export();
+  db.run('PRAGMA foreign_keys = ON');
+  return bytes;
+}

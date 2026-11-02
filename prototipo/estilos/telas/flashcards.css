@@ -1,0 +1,166 @@
+/* Cartões (Gerenciar e criação). Só variáveis do tema: serve ao claro e ao escuro. */
+.fc{display:flex;flex-direction:column;min-height:100%}
+.fc-topo{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.fc-topo h1{margin:0}
+.fc-abas{display:inline-flex;gap:6px;background:var(--cx2);border-radius:99px;padding:4px}
+.fc-abas button{min-height:44px;padding:0 18px;border:0;border-radius:99px;background:transparent;color:var(--tx2);font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.fc-abas button.on{background:var(--pr);color:var(--prt)}
+kbd{font:600 10.5px system-ui;letter-spacing:.04em;border:1px solid currentColor;border-radius:6px;padding:1px 6px;opacity:.65;white-space:nowrap}
+.btn kbd{opacity:.7;margin-left:8px}
+.fc-corpo{flex:1;min-height:0}
+
+/* ---- Criar: dois tiles lado a lado ---- */
+.fc-tile{display:flex;flex-direction:column;min-width:0;border:1.5px solid var(--ln);border-radius:16px;background:var(--cx);overflow:hidden;outline:0}
+.fc-tile:focus-within,.fc-tile:focus{border-color:var(--bd);box-shadow:inset 0 0 0 1px var(--bd)}
+.fc-tile>header{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--ln);font-size:12px;letter-spacing:.06em;color:var(--tx2);flex:none}
+.fc-tile>header b{font-weight:700}.fc-tile .esp{flex:1}
+.fc-modo{display:inline-flex;background:var(--cx2);border-radius:99px;padding:3px}
+.fc-modo button{min-height:36px;padding:0 14px;border:0;border-radius:99px;background:transparent;color:var(--tx2);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.fc-modo button.on{background:var(--pr);color:var(--prt)}
+.fc-modelos{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--ln);flex:none}
+.fc-modelos .rot{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);font-weight:700;margin-right:4px}
+.chip{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1.5px solid var(--ln);border-radius:99px;background:var(--cx);color:var(--tx);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.chip:hover{border-color:var(--bd)}.chip.novo{border-style:dashed;color:var(--tx2)}
+.chip.dupla{padding:0;gap:0;overflow:hidden}.chip.dupla button{min-height:38px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;padding:0 12px}.chip.dupla .x{padding:0 12px 0 4px;color:var(--tx2);font-size:16px}
+.fc-modelo-novo{display:flex;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--ln);flex-wrap:wrap}.fc-modelo-novo[hidden]{display:none}
+.fc-modelo-novo .in{flex:1;min-width:160px}
+.fc-barra{display:flex;gap:4px;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid var(--ln);flex:none}
+.fc-barra button{min-height:40px;min-width:40px;padding:0 10px;border:0;border-radius:10px;background:transparent;color:var(--tx2);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.fc-barra button:hover{background:var(--cx2);color:var(--tx)}.fc-barra .b{font-weight:800;color:var(--tx)}
+.fc-tile>footer .botoes{margin-left:auto;display:flex;gap:8px}.fc-tile>footer{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--ln);flex:none}
+.fc-tile>footer .c{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--tx2);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.fc-tile>footer select{min-width:0;max-width:200px}.fc-tile>footer #etq{width:110px;min-width:0}
+.fc-tile .erro{margin:0;padding:8px 14px;color:var(--ur);font-size:13px;flex:none}
+
+
+/* ---- Criar: controles ao redor do editor (o editor, os blocos e o cartão pronto têm CSS próprio em estilos/componentes/) ---- */
+.fc-linha-ctl{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:10px 14px;border-bottom:1px solid var(--ln);flex:none}
+.fc-linha-ctl .c{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--tx2);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.fc-linha-ctl select{max-width:280px;min-width:0}.fc-linha-ctl #etq{width:150px;min-width:0}
+.fc-tile>footer .dica{font-size:13px;color:var(--tx2);font-weight:500;min-width:0}.fc-tile>footer .esp{flex:1}.fc-tile>footer{align-items:center}
+.fc-tile .ib{width:44px;height:44px;flex:none;border:0;border-radius:12px;background:transparent;color:var(--tx2);font-size:15px;cursor:pointer}.fc-tile .ib:hover{background:var(--cx2);color:var(--tx)}.fc-tile .ib[disabled]{opacity:.4;cursor:default}
+.fc-tile .pg{font-size:13px;font-weight:600;color:var(--tx2);min-width:48px;text-align:center}
+.fc-tile>header select.in{max-width:220px;min-height:40px}
+/* editor formatado: cada cartão é um bloco contínuo; a frente vira a faixa na cor da matéria; o nome da seção fica acima do texto */
+
+/* ---- cartões (prévia e treino) ---- */
+.fc-pager{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600}.fc-pager[hidden]{display:none}
+.fc-pager button{width:44px;height:40px;border:0;border-radius:10px;background:var(--cx2);color:var(--tx);cursor:pointer}
+.fc-previa{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.fc-card{border:1.5px solid var(--ln);border-radius:14px;background:var(--cx);overflow:hidden}
+.fc-card>header{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--cx2);font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--tx2)}
+.fc-card>header .k{font-size:10px;border-radius:99px;background:var(--cx);padding:1px 8px}
+.fc-card .corpo{padding:14px 16px;font-size:15px;line-height:1.55}
+.fc-card .frente{text-align:center;font-family:var(--fonte-t,inherit);font-weight:800;font-size:22px;text-transform:uppercase;letter-spacing:.01em}
+.fc-card .frente p{margin:0 0 4px}
+.fc-card .vazio{color:var(--tx2);font-size:13px;font-weight:400;text-transform:none;margin:0}
+.fc-card .fc-sec{margin:0 0 12px;padding-left:12px;border-left:2px solid var(--ac,var(--tx2))}.fc-card .fc-sec:last-child{margin-bottom:0}
+.fc-card h4{margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ac,var(--tx))}
+.fc-card h5{margin:8px 0 2px;font-size:13px;font-weight:700}
+.fc-card p{margin:0 0 4px}.fc-card ul,.fc-card ol{margin:0 0 4px;padding-left:20px}
+.fc-card mark{background:rgba(255,196,46,.45);color:inherit;border-radius:3px;padding:0 2px}
+.fc-card code{font-family:ui-monospace,"DejaVu Sans Mono",monospace;background:var(--cx2);border-radius:5px;padding:0 5px;font-size:.9em}
+.fc-card ul.fc-mk{list-style:none;padding-left:0}.fc-card .fc-mk li{display:flex;gap:8px}.fc-card .fc-mk li b{width:18px;text-align:center;flex:none}
+.fc-card .fc-mk .mais b{color:var(--ok,var(--ac))}.fc-card .fc-mk .menos b{color:var(--ur)}.fc-card .fc-mk .duvida b{color:var(--tx2)}
+.fc-card .fc-cols{display:grid;gap:10px;margin:4px 0}.fc-cols-2{grid-template-columns:repeat(2,1fr)}.fc-cols-3{grid-template-columns:repeat(3,1fr)}.fc-cols-4{grid-template-columns:repeat(4,1fr)}
+.fc-card .fc-cols>div{border:1px solid var(--ln);border-radius:8px;padding:6px 8px}
+.fc-aviso{margin:0;font-size:12px;color:var(--tx2);text-align:center}
+
+/* ---- Gerenciar: aproveita a tela de cartões; o título dela some (já há o da tela) ---- */
+.fc-gerenciar>h1{display:none}
+
+/* ---- Treinar ---- */
+.fc-treino-inicio{max-width:560px;margin:6vh auto 0;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.fc-treino-inicio h2{margin:0;font-size:24px}.fc-treino-inicio .sub{margin:0}
+.fc-treino-inicio .c{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--tx2);font-weight:600}
+.fc-res{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%}
+.fc-res li{border:1.5px solid var(--ln);border-radius:14px;background:var(--cx);padding:12px;text-align:center;font-size:13px;color:var(--tx2)}.fc-res b{display:block;font-size:28px;color:var(--tx)}
+.fc-treino{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.fc-prog{height:6px;border-radius:6px;background:var(--cx2);overflow:hidden}.fc-prog span{display:block;height:100%;background:var(--tx)}
+.fc-treino .fc-cab{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--tx2);font-weight:600}
+.fc-card.grande .corpo{padding:22px 24px;font-size:17px}.fc-card.grande .frente{font-size:28px;padding:34px 24px}
+.fc-resp{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.fc-resp .btn{min-width:130px}
+
+@media(max-width:1000px){.fc-res{grid-template-columns:repeat(2,1fr)}}
+/* cartão pronto (bloco ao lado do editor): faixa na cor da matéria */
+.fc-previa{background:var(--cx2)}
+@container (max-width:560px){.fc-tile>footer{gap:6px}.fc-tile>footer kbd{display:none}.fc-tile>footer .dica{flex-basis:100%}.fc-tile>footer .btn{padding:9px 13px}.fc-tile>footer .btn.peq{padding:8px 11px}}
+.fc-grade{--mc:var(--ac);height:calc(100vh - 150px);min-height:480px}
+/* Criar enxuto: no alto só a aula e o botão de opções; o resto fica no painel de opções (Alt O). */
+.fc-topo-ed{border-bottom:0;padding:10px 12px 4px}
+.fc-topo-ed select{max-width:420px;min-width:0}
+.fc-opcoes{display:flex;flex-direction:column;gap:10px;padding:10px 14px 12px;background:var(--cx2);border-bottom:1px solid var(--ln);flex:none}
+.fc-opcoes[hidden]{display:none}
+.fc-op-linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.fc-op-linha .esp{flex:1}
+.fc-op-linha .c{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--tx2);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.fc-op-linha #etq{width:200px;min-width:0}
+.fc-grade .fc-tile>footer{border-top:0;padding:8px 14px 12px}
+.fc-barra[hidden],.fc-modelos[hidden]{display:none}
+
+/* ---- Gerenciar cartões (ui/telas/flashcards/gerenciar.js): lista à esquerda, cartão no editor à direita. Prefixo gc-. ---- */
+.fc:has(.gc){height:100%}.fc-corpo:has(.gc){min-height:0}
+.gc{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0;position:relative}
+.gc-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:none}
+.gc-esp{flex:1}
+.gc-i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.gc-pt{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.gc-btn{min-height:44px;padding:0 18px;border:0;border-radius:99px;background:var(--pr);color:var(--prt);font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.gc-btn.gc-sec{background:var(--cx2);color:var(--tx)}.gc-btn[disabled]{opacity:.45;cursor:default}.gc-btn kbd{margin-left:2px}
+.gc-cols{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr);gap:18px}
+.gc-cols[hidden],.gc-mais[hidden]{display:none}
+.gc-lista,.gc-pan{background:var(--cx);border-radius:20px;min-height:0;min-width:0}
+.gc-lista{padding:8px;overflow:auto;display:flex;flex-direction:column}
+.gc-lin{flex:none;display:flex;align-items:center;gap:14px;min-height:62px;padding:6px 14px 6px 12px;border:0;border-radius:14px;background:transparent;color:var(--tx);font:inherit;text-align:left;cursor:pointer}
+.gc-lin.sel{background:var(--cx2)}
+.gc-tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.gc-tx b{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gc-tx small{font-size:12.5px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gc-tag{font-size:11.5px;font-weight:600;color:var(--tx2);background:var(--cx2);border-radius:99px;padding:3px 10px;white-space:nowrap}
+.gc-tag.n{background:var(--pr);color:var(--prt)}.gc-lin.sel .gc-tag{background:var(--cx)}.gc-lin.sel .gc-tag.n{background:var(--pr)}
+.gc-vazio{margin:auto;padding:24px;color:var(--tx2);font-size:14px;text-align:center}
+.gc-pan{padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.gc-pan .gc-ed{flex:1;min-height:0;border-radius:14px;padding:14px}
+.gc-imgs{display:flex;gap:8px;overflow:auto;flex:none}.gc-imgs img{height:56px;border-radius:8px;background:var(--cx2)}
+.gc-et{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);flex:none}
+.gc-in{flex:1;min-width:0;min-height:40px;border:0;border-radius:12px;background:var(--cx2);color:var(--tx);font:inherit;font-size:14px;padding:0 14px;letter-spacing:0;text-transform:none}
+.gc-info{margin:0;font-size:12.5px;color:var(--tx2);flex:none}.gc-erro{margin:0;font-size:13px;color:var(--ur);flex:none}
+.gc-acoes{display:flex;gap:10px;align-items:center;flex:none}
+.gc-mais{flex:1;min-height:0;overflow:auto}
+@media(max-width:900px){.gc-cols{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}}
+
+/* Gerenciar: marcar, seleção em massa, busca avançada e limpeza */
+.gc-btn.on{background:var(--pr);color:var(--prt)}
+.gc-marc .gc-i{width:14px;height:14px}.gc-marc.on .gc-i,.gc-star .gc-i,.gc-btn.on .gc-i{fill:currentColor}
+.gc-star{color:var(--ac);display:inline-flex;flex:none}.gc-star .gc-i{width:15px;height:15px}
+.gc-ck{width:22px;height:22px;border-radius:7px;border:2px solid var(--tx2);display:grid;place-items:center;color:transparent;flex:none}.gc-ck .gc-i{width:14px;height:14px;stroke-width:2.6}.gc-ck.on{background:var(--pr);border-color:var(--pr);color:var(--prt)}
+.gc-lin.pick{background:var(--cx2)}
+.gc-mais h2 em,.gc-mais .bloco h2 em{font-style:normal;font-size:13px;color:var(--tx2);margin-left:6px}
+.gc-grupo{border-radius:16px;background:var(--cx2);padding:6px 6px 8px;margin-top:12px}
+.gc-grupo-t{display:flex;align-items:center;gap:10px;padding:8px 12px;font-size:13px}
+.gc-l2{display:flex;align-items:center;gap:12px;min-height:58px;padding:4px 12px;border-radius:12px}
+.gc-grupo .gc-l2{background:var(--cx);margin-top:4px}
+.gc-limp-vazio{color:var(--tx2)}
+.gc-pop{position:fixed;z-index:120;width:min(440px,calc(100vw - 16px));background:var(--cx);color:var(--tx);border-radius:18px;padding:14px 16px;box-shadow:0 18px 44px -14px #2a2c4577;display:flex;flex-direction:column;gap:2px}.gc-pop[hidden]{display:none}
+.gc-pop-t{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);margin-bottom:6px}
+.gc-pop-l{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:baseline;padding:4px 0}.gc-pop-l code{font-size:13px;font-weight:600;color:var(--ac);background:none;padding:0}.gc-pop-l span{font-size:12.5px;color:var(--tx2)}
+
+/* Gerenciar, proposta C1: UMA barra (campo com fichas, + de filtros, ⋯), barra de seleção que a substitui, menus e cabeçalho dos modos */
+.gc-bar{flex-wrap:nowrap}
+.gc-campo{flex:1;min-width:0;display:flex;align-items:center;gap:8px;min-height:48px;padding:0 6px 0 16px;border-radius:99px;background:var(--cx);color:var(--tx2);overflow:hidden}
+.gc-campo input{flex:1;min-width:80px;border:0;background:transparent;color:var(--tx);font:inherit;font-size:14px;outline:0}
+.gc-fichas{display:inline-flex;gap:6px;flex:none}
+.gc-tok{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 6px 0 12px;border:0;border-radius:99px;background:var(--cx2);color:var(--tx);font:inherit;font-size:13px;font-weight:600;white-space:nowrap;flex:none;cursor:pointer}
+.gc-tok .gc-i{width:14px;height:14px}.gc-tok button{border:0;background:none;color:inherit;width:24px;height:24px;display:grid;place-items:center;cursor:pointer;padding:0}
+.gc-mw .gc-tok{min-height:40px;padding:0 14px}.gc-tok.on{background:var(--pr);color:var(--prt)}.gc-tok.on .gc-i{fill:currentColor}
+.gc-ib{width:48px;height:48px;border:0;border-radius:50%;background:var(--cx);color:var(--tx2);display:grid;place-items:center;flex:none;cursor:pointer;padding:0}
+.gc-ib.peq{width:36px;height:36px;background:var(--cx2)}
+.gc-lote{flex:none;position:relative;display:flex;align-items:center;gap:6px;min-height:48px;padding:0 6px 0 20px;border-radius:99px;background:var(--pr);color:var(--prt);font-weight:600;font-size:13px}.gc-lote[hidden]{display:none}
+.gc-lote b{margin-right:auto;white-space:nowrap}
+.gc-lb{height:38px;padding:0 14px;border:0;border-radius:99px;background:transparent;color:inherit;font:inherit;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer}.gc-lb[disabled]{opacity:.45;cursor:default}
+.gc-menu{position:absolute;z-index:30;top:60px;background:var(--cx);color:var(--tx);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:240px;box-shadow:0 18px 44px -14px #2a2c4577}.gc-menu[hidden]{display:none}
+.gc-menu-filtro{right:62px;max-width:430px}.gc-menu-mais{right:0;min-width:270px}.gc-lote .gc-menu{top:calc(100% + 8px);right:0;gap:2px}
+.gc-mh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2)}.gc-mw{display:flex;flex-wrap:wrap;gap:8px}
+.gc-mi{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:var(--tx);font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer}.gc-mi:hover{background:var(--cx2)}.gc-mi kbd{margin-left:auto}
+.gc-topo{padding:0 4px}.gc-topo b{font-size:18px}
+.gc-ib:focus-visible,.gc-lb:focus-visible,.gc-mi:focus-visible,.gc-tok:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+@media(max-width:1100px){.gc-btn kbd,.gc-mi kbd{display:none}}

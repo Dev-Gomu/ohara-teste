@@ -1,0 +1,103 @@
+/* Tela Hoje (Layout 4): tela cheia e fluida. Próximas provas em faixa no alto (um bloco por data); embaixo, calendário compacto à esquerda e agenda alta à direita.
+   Nada tem tamanho fixo de tela: vale para o tablet (Tab S7 FE, ~1280×800 em CSS) e para o PC em Full HD (1920×1080). Os chips sobem para a barra de cima. */
+html:root main.tcheia{padding:10px 18px 14px;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+html:root .hj{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;max-width:none;padding-bottom:0}
+/* chips: na barra de cima, ao lado das pílulas (telas largas); em telas estreitas ficam no começo da página */
+html:root .hj .chip{background:var(--cx);border-radius:999px;padding:0 16px;height:40px;display:inline-flex;align-items:center;font-size:13px;color:var(--tx2);white-space:nowrap}
+html:root .hj .chip b{display:inline;color:var(--tx);font-weight:600}
+/* ESCALA PROPORCIONAL (versão E): o desenho é o do tablet (1280×800, 16:10) e a tela inteira cresce junto (textos, pílulas, recuos) conforme o espaço:
+   --z vem do JavaScript (menor entre largura/1280 e altura/800, de 1 a 1,5). Os chips da barra de cima não escalam (seguem do tamanho das pílulas). */
+html:root .hj{--u:1;zoom:var(--z,1)}
+html:root .hj .hgrade{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,25fr) minmax(0,50fr) minmax(0,25fr);grid-template-rows:auto minmax(0,1fr);gap:14px;align-items:stretch}
+html:root .hj .hgrade>.hprov{grid-column:1/-1}
+html:root .hj .hdir{display:flex;flex-direction:column;min-width:0;min-height:0}
+/* topo dos 3 cartões: mesma fonte (caixa-alta, 11,5 px, 600, .08em), título cinza, informação e ação em roxo, 28 px de altura e 12 px até o conteúdo */
+html:root .hj .hcab,html:root .hj .hprov .hph{display:flex;align-items:center;gap:10px;margin:0 0 12px;height:28px;flex:none}
+html:root .hj .hcab h2,html:root .hj .hprov h2,html:root .hj .hcab .ano,html:root .hj .hcab .sub,html:root .hj .hprov .mais{margin:0;font-size:calc(11.5px * var(--u));letter-spacing:.08em;text-transform:uppercase;font-weight:600;line-height:1}
+html:root .hj .hcab h2,html:root .hj .hprov h2{color:var(--tx2)}
+html:root .hj .hcab .esp{flex:1}html:root .hj .hcab .ano,html:root .hj .hcab .sub{color:var(--ac)}
+html:root .hj .seta{width:28px;height:28px;border:0;border-radius:50%;background:var(--cx2);color:var(--tx2);font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+html:root .hj .seta:hover,html:root .hj .seta:focus-visible{background:var(--acf);color:var(--ac)}
+/* calendário: as semanas dividem a altura; número, pílulas e círculo de hoje crescem com a célula (unidades do recipiente) */
+html:root .hj .hcal{padding:18px 20px 18px;display:flex;flex-direction:column;min-height:0}
+html:root .hj .hds{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:calc(11.5px * var(--u));letter-spacing:.08em;color:var(--tx2);margin:0 0 2px;flex:none}
+html:root .hj .hsems{flex:1;min-height:0;display:grid;grid-template-rows:repeat(var(--sem,6),minmax(0,1fr));container-type:size}
+html:root .hj .hsem{display:grid;grid-template-columns:repeat(7,1fr);min-height:0;border-radius:14px}
+html:root .hj .hsem.at{background:color-mix(in srgb,var(--ac) 6%,var(--cx))}
+html:root .hj .hdia{--cel:min(14.2857cqw,calc(100cqh / var(--sem,6)));--fs:clamp(14px,calc(var(--cel) * .27),34px);--pw:clamp(12px,calc(var(--cel) * .26),32px);--ph:clamp(5px,calc(var(--cel) * .09),11px);position:relative;min-width:0;min-height:0}
+html:root .hj .hdia .n{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:var(--fs);font-weight:500;line-height:1.1;z-index:2;color:var(--tx)}
+html:root .hj .hdia.p .n{font-weight:700}
+html:root .hj .hdia.h .n{color:var(--ac);font-weight:700}
+/* hoje = cápsula suave atrás do número (mesma família das pílulas de prova, que ficam logo abaixo) */
+html:root .hj .hdia.h::before{content:"";position:absolute;left:50%;top:50%;width:calc(var(--fs) * 3);height:calc(var(--fs) * 1.7);transform:translate(-50%,-50%);border-radius:999px;background:color-mix(in srgb,var(--ac) 16%,var(--cx))}
+html:root .hj .hdia .mm{position:absolute;top:calc(50% - var(--fs) * 1.35);left:0;right:0;text-align:center;font-size:max(8px,calc(var(--fs) * .42));letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);font-weight:600;z-index:2;margin:0}
+html:root .hj .hdia .pils{position:absolute;left:3px;right:3px;top:calc(50% + var(--fs) * .75);display:flex;flex-wrap:wrap;justify-content:center;gap:max(3px,calc(var(--ph) * .5));z-index:2}
+/* dia de hoje: as pílulas das provas descem para ficar abaixo da cápsula */
+html:root .hj .hdia.h .pils{top:calc(50% + var(--fs) * 1.05)}
+html:root .hj .hdia .pils i{width:var(--pw);height:var(--ph);border-radius:999px;display:block}
+/* próximas provas: faixa no alto, um bloco por data (a próxima em destaque); sem divisórias */
+html:root .hj .hprov{flex:none;padding:18px 20px 18px;display:flex;flex-direction:column}
+html:root .hj .hprov .cont{color:var(--ac);letter-spacing:.08em}
+html:root .hj .hprov .hph .esp{flex:1}
+html:root .hj .hprov .mais{margin-left:0;color:var(--ac);text-decoration:none;white-space:nowrap}
+/* a faixa tem sempre a altura de quando está preenchida (76 px de blocos, em escala no PC), com ou sem provas */
+html:root .hj .htiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;min-height:calc(76px * var(--u))}
+html:root .hj .hvazio{min-height:calc(76px * var(--u));background:var(--bg);border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--tx2);font-size:calc(14px * var(--u))}html:root .hj .hvazio a{color:var(--ac)}
+html:root .hj .hbl{background:var(--bg);border-radius:14px;padding:calc(12px * var(--u)) calc(14px * var(--u));display:flex;flex-direction:column;gap:calc(8px * var(--u));min-width:0}
+html:root .hj .hbl.px{background:var(--acf)}
+html:root .hj .hbl .hl1{display:flex;align-items:center;justify-content:space-between;gap:8px}
+html:root .hj .hbl .hd{display:flex;align-items:baseline;gap:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
+html:root .hj .hbl .hd b,html:root .hj .hbl .hd small{font-size:calc(14px * var(--u));font-weight:600;line-height:1.3;color:var(--tx);text-transform:none;letter-spacing:.04em}
+html:root .hj .hsg{display:flex;flex-wrap:wrap;gap:3px 14px;align-items:center;min-width:0}
+html:root .hj .sg{display:inline-flex;align-items:center;gap:7px;font-size:calc(14px * var(--u));font-weight:600;letter-spacing:.04em;white-space:nowrap}html:root .hj .sg i{width:calc(22px * var(--u));height:calc(9px * var(--u));border-radius:5px;flex:none}
+html:root .hj .hbl .hr{min-width:calc(40px * var(--u));box-sizing:border-box;text-align:center;font-size:calc(13px * var(--u));font-weight:600;color:var(--ac);background:var(--acf);border-radius:8px;padding:3px 10px;white-space:nowrap}html:root .hj .hbl.px .hr{background:var(--ac);color:var(--cx)}
+html:root .hj .vazio{margin:6px 0 0;color:var(--tx2)}
+/* agenda compacta: cada aula é um bloco de 46 px; livre = 28 px; vão de 6 px (nucleo/hoje.js usa as mesmas medidas para o marcador de agora) */
+html:root .hj .hag{flex:1 1 0;min-height:0;display:flex;flex-direction:column;padding:16.5px 18.5px 16.5px;border:1.5px solid var(--ac)}
+html:root .hj .hscroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:14px 2px 2px;margin-top:-14px}
+html:root .hj .hlista{position:relative;display:flex;flex-direction:column;gap:6px}
+html:root .hj .hev{display:grid;grid-template-columns:50px 1fr;align-items:center;height:46px;flex:none;color:var(--tx);text-decoration:none}
+html:root .hj .hev .eh{font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums;padding-left:6px}
+html:root .hj .hev .evb{height:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;border-radius:14px;background:color-mix(in srgb,var(--c) 34%,var(--cx));font-size:calc(14px * var(--u));min-width:0}
+html:root .hj .hev .evb b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .hj .hev .evb span{font-size:calc(12.5px * var(--u));color:color-mix(in srgb,var(--c) 60%,var(--tx));white-space:nowrap;font-variant-numeric:tabular-nums}
+html:root .hj .hev.passou{opacity:.5}
+html:root .hj .hev.agora .evb{background:var(--c);color:var(--cx);box-shadow:0 0 0 2px var(--cx),0 0 0 4px var(--c)}
+html:root .hj .hev.agora .evb span{color:color-mix(in srgb,var(--cx) 90%,transparent)}html:root .hj .hev.agora .evb::after{content:"›";font-size:20px;margin-left:2px}
+html:root .hj .hev:focus-visible .evb{outline:2px solid var(--ac);outline-offset:2px}
+html:root .hj .hlivre{height:28px;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--tx2);letter-spacing:.06em}
+html:root .hj .hagora{position:absolute;left:-2px;right:-4px;border-top:2px solid var(--tx);box-shadow:0 0 0 1px color-mix(in srgb,var(--cx) 85%,transparent);z-index:3;pointer-events:none}
+html:root .hj .hagora span{position:absolute;left:0;top:-13px;width:46px;height:26px;display:grid;place-items:center;border-radius:999px;background:var(--tx);color:var(--cx);font-size:13px;font-weight:600;box-shadow:0 0 0 3px var(--cx)}
+/* telas estreitas ou baixas: sem altura fixa, a página rola e tudo vira uma coluna */
+@media(max-width:1000px),(max-height:620px){
+ html:root main.tcheia{overflow:auto}
+ html:root .hj{flex:none;zoom:1}
+ html:root .hj .hgrade{grid-template-columns:1fr;flex:none}
+ html:root .hj .hsems{grid-template-rows:repeat(var(--sem,6),64px);container-type:normal}
+ html:root .hj .hdia{--cel:60px}
+ html:root .hj .hag{flex:none}
+ html:root .hj .hlem{flex:none}
+ html:root .hj .hscroll{overflow:visible}
+ html:root .hj .htiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+ html:root .hj .hgrade>.hprov{grid-column:auto}
+}
+html:root .hj [hidden]{display:none!important}
+/* lembretes de hoje (terceira coluna): linha em tom, círculo de marcar, feitos riscados */
+html:root .hj .hlem{min-height:0;display:flex;flex-direction:column;padding:16.5px 18.5px}
+html:root .hj .hlem .hcab h2{color:var(--tx2)}
+html:root .hj .hlems{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto}
+html:root .hj .hlm{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 14px;border-radius:14px;background:var(--cx2);font-size:calc(14px * var(--u));cursor:pointer}
+html:root .hj .hlm small{margin-left:auto;color:var(--tx2);font-size:12px}
+html:root .hj .hlm .ck{width:22px;height:22px;border-radius:50%;background:var(--cx);box-shadow:inset 0 0 0 1.5px var(--cx3);flex:none;display:grid;place-items:center}
+html:root .hj .hlm.f{color:var(--tx2)}html:root .hj .hlm.f span{text-decoration:line-through}
+html:root .hj .hlm.f .ck{background:var(--pr);box-shadow:none}
+html:root .hj .hlm.f .ck::after{content:"";width:10px;height:5px;border-left:2px solid var(--prt);border-bottom:2px solid var(--prt);transform:rotate(-45deg) translate(1px,-1px)}
+html:root .hj .hlm:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+html:root .hj .hlrod{margin-top:auto;padding-top:10px;font-size:12px;color:var(--tx2);text-align:center}
+/* entrega de trabalho no calendário: pílula vazada (a prova é cheia) */
+html:root .hj .hdia .pils i.e{background:none;box-shadow:inset 0 0 0 max(1.5px,calc(var(--ph) * .22)) currentColor}
+/* outros itens do dia, em uma linha, sem aviso */
+html:root .hj .hmais{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;flex:none}
+html:root .hj .hit{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:32px;padding:0 12px;border-radius:999px;background:color-mix(in srgb,var(--c) 18%,var(--cx));color:var(--tx);font-size:12.5px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .hj .hit i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+
